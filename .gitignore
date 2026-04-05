@@ -1,0 +1,22 @@
+# Data
+data/
+**/data/
+
+# Logs
+logs/
+*.log
+
+# Secrets
+.env
+.env.*
+
+# Certificates / keys
+*.pem
+*.key
+*.crt
+
+# Temp/editor
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

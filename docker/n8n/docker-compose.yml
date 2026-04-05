@@ -1,0 +1,22 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+
+    environment:
+      - N8N_HOST=flow.livskin.site
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://flow.livskin.site
+
+    volumes:
+      - ./data:/home/node/.n8n
+
+    networks:
+      - revops_net
+
+networks:
+  revops_net:
+    external: true

@@ -14,3 +14,11 @@ Infraestructura base del proyecto Livskin VPS Operaciones.
 
 ## Objetivo
 Construir una arquitectura RevOps personal-profesional reproducible, versionada y documentada.
+
+
+## FASE 2 COMPLETADA
+
+- Nginx reverse proxy funcionando
+- n8n desplegado y accesible en flow.livskin.site
+- Cloudflare configurado (Flexible)
+- Arquitectura protegida (sin exposición directa de servicios)
