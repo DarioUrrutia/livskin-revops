@@ -1,0 +1,35 @@
+services:
+  vtiger:
+    image: vtigercrm/vtigercrm-8.2.0:latest
+    container_name: vtiger
+    restart: always
+   # ports:
+   #  - "8080:80"
+    environment:
+      - DB_HOST=vtiger-db
+      - DB_PORT=3306
+      - DB_NAME=livskin_db
+      - DB_USER=livskin
+      - DB_PASSWORD=livskin
+    volumes:
+      - ./data:/var/www/html
+    networks:
+      - revops_net
+
+  vtiger-db:
+    image: mariadb:10.6
+    container_name: vtiger-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=livskin
+      - MYSQL_DATABASE=livskin_db
+      - MYSQL_USER=livskin
+      - MYSQL_PASSWORD=livskin
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - revops_net
+
+networks:
+  revops_net:
+    external: true
