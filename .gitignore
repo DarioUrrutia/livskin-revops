@@ -4,6 +4,10 @@
 *.key
 *.crt
 
+# SSH keys (NEVER upload private keys)
+.ssh/
+*.ppk
+
 # Data volumes
 data/
 db/
@@ -22,3 +26,6 @@ logs/
 # IDE
 .vscode/
 .idea/
+
+# Claude Code local config
+.claude/
