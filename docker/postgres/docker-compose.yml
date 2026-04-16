@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-analytics
+    restart: always
+    environment:
+      - POSTGRES_DB=analytics
+      - POSTGRES_USER=analytics_user
+      - POSTGRES_PASSWORD=livskin
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - revops_net
+
+networks:
+  revops_net:
+    external: true

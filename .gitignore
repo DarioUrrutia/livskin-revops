@@ -1,22 +1,24 @@
-# Data
-data/
-**/data/
-
-# Logs
-logs/
-*.log
-
 # Secrets
 .env
-.env.*
-
-# Certificates / keys
 *.pem
 *.key
 *.crt
 
-# Temp/editor
-*.swp
-*.swo
+# Data volumes
+data/
+db/
+
+# Backups (too large for git)
+backups/
+
+# OS files
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
