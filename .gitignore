@@ -55,6 +55,15 @@ logs/
 *.swp
 *.swo
 
+# --- Obsidian vault (workspace personal) ---
+.obsidian/
+*.obsidian
+*.obsidian-cache
+
+# --- Notas privadas del usuario (por máquina, no se comparten) ---
+notes/privado/*
+!notes/privado/README.md
+
 # --- Claude Code local config ---
 .claude/
 

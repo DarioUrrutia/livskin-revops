@@ -480,8 +480,67 @@ Evals automáticos                                 ██
 | **Acquisition Engine** | Tool calls n8n | Performance histórica, learnings |
 | **Growth Agent** | Tool calls n8n + SQL directo | Análisis transversal para escribir learnings |
 | **Claude Code (yo)** | MCP server | Consulta proyecto, ayuda a usuaria |
-| **Usuaria (tú)** | Metabase (L3+L5+L6) | Dashboards, exploración |
+| **Usuaria — vista analítica** | Metabase (L3+L5+L6) | Dashboards numéricos, exploración SQL |
+| **Usuaria — vista visual** | **Obsidian (L2 human layer)** | Ver grafo de docs, explorar ADRs, tomar notas, buscar full-text |
 | **Langfuse** | Observación pasiva | Trackea qué retrievals hicieron los agentes |
+
+### 9.2 Obsidian como capa humana del conocimiento del proyecto
+
+**Propósito:** segunda interfaz (complementaria a Metabase) para que la usuaria explore, lea y anote el conocimiento acumulado del proyecto.
+
+**Tecnología:** [Obsidian](https://obsidian.md) — app gratuita, local, lee markdown. Compatible nativo con la estructura del repo (todo `docs/` y `integrations/` y `agents/` son `.md`).
+
+**Arquitectura:**
+
+```
+Repo del proyecto (.md files)
+    │
+    ├─► Git/GitHub — sync cross-máquina
+    │
+    ├─► Obsidian Vault — interfaz humana local
+    │     - Graph view: backlinks automáticos
+    │     - Search full-text
+    │     - Notas personales en notes/
+    │
+    └─► Indexer cron (Fase 2) → pgvector L2 project_knowledge
+          → agentes + MCP de Claude Code
+```
+
+**Características aprovechadas:**
+
+- **Backlinks nativos:** Obsidian detecta todos los `[link](path.md)` markdown y construye grafo automático
+- **Graph view:** visualización interconectada de ADRs, sesiones, master plan
+- **Dataview plugin** (opcional): queries sobre metadata (frontmatter YAML) para generar tablas vivas
+- **Templater plugin:** atajo de teclado para crear nuevo ADR con plantilla pre-llenada
+- **Folder structure:** el repo ya está organizado (docs/, integrations/, agents/, analytics/)
+
+**Notas personales:**
+
+- Carpeta `notes/compartido/` — versionada en git, colaborativa
+- Carpeta `notes/privado/` — gitignored, solo tuya (brainstorms, dudas, hipótesis libres)
+
+**Workspace de Obsidian:**
+
+- `.obsidian/` del vault se gitignora (preferencias personales no se versionan)
+- Plugins recomendados quedan documentados en `docs/runbooks/obsidian-setup.md`
+
+**Sincronización entre máquinas:**
+
+- No usamos Obsidian Sync (pago)
+- Cada máquina tiene su clon del repo git
+- `git pull` baja cambios del repo y Obsidian los ve automáticamente
+- `notes/privado/` es por-máquina (no se sincroniza entre laptop personal y trabajo — es deseable)
+
+**Cuándo usas Obsidian vs Claude Code:**
+
+| Tarea | Herramienta |
+|---|---|
+| Leer ADR rápido | Obsidian (grafo + search) |
+| Tomar nota de idea | Obsidian notes/privado/ |
+| Pedir cambio estructural | Claude Code (yo ejecuto) |
+| Ver qué ADR referencia a cuál | Obsidian graph view |
+| Hacer búsqueda semántica ("qué dijimos de prompts") | Claude Code (MCP del cerebro) |
+| Ver métricas de negocio | Metabase |
 
 ### 9.2 Patrón de consumo típico
 
@@ -570,11 +629,14 @@ El cerebro se considera exitoso si al final de la Fase 6:
 - Portfolio piece concreto: "Implementé RAG de 6 capas con pgvector self-hosted sobre conversaciones reales"
 - Posibilidad futura de empaquetar el sistema como plantilla SaaS RevOps para clínicas peruanas
 - Capacidad de evaluación continua con LLM-as-judge desde Fase 6
+- **Obsidian como capa humana complementaria**, aprovechando el repo markdown existente
 
 ### Tareas derivadas (pendientes)
+- [ ] Fase 0: configurar Obsidian como vault (runbook `docs/runbooks/obsidian-setup.md`)
+- [ ] Fase 0: crear carpetas `notes/compartido/` y `notes/privado/`
 - [ ] Fase 1: provisionar VPS 3 + Postgres + pgvector + embeddings service
 - [ ] Fase 2: escribir script de populación L1 (con input de la doctora)
-- [ ] Fase 2: escribir indexador de repo para L2
+- [ ] Fase 2: escribir indexador de repo para L2 (lee markdown del vault)
 - [ ] Fase 2: crear vistas SQL de L3
 - [ ] Fase 2: desarrollar MCP server `livskin-brain-mcp`
 - [ ] Fase 4: integrar L4 en Conversation Agent
@@ -604,3 +666,4 @@ El cerebro se considera exitoso si al final de la Fase 6:
 ## 16. Changelog
 
 - 2026-04-18 — v1.0 — Creada, aprobada en sesión estratégica de Fase 0
+- 2026-04-18 — v1.1 — Añadida Obsidian como capa humana del conocimiento (sección 9.2). Estructura `notes/compartido/` + `notes/privado/`. Integración zero-migration: el repo ya es compatible como vault.

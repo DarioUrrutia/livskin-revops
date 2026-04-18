@@ -29,7 +29,7 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 | [0002](0002-arquitectura-de-datos-y-3-vps.md) | Arquitectura de datos (3 VPS, 5 DBs) | ✅ | 0 |
 | [0003](0003-seguridad-baseline-y-auditorias.md) | Seguridad baseline y auditorías | ✅ | 0 |
 | 0004 | Comunicación entre VPS — DigitalOcean VPC | ✅ | 1 |
-| 0005 | Orquestación agentes — n8n + Agent SDK híbrido | ✅ | 4 |
+| 0005 | Orquestación agentes — n8n único orquestador + Claude API con tool use (Agent SDK diferido) | ✅ | 4 |
 | 0006 | Embeddings — multilingual-e5-small self-hosted | ✅ | 1 |
 | 0007 | Observabilidad — Langfuse desde Fase 3 | ✅ | 3 |
 | 0008 | Staging environment — mismo VPS 3 con compose separado | ✅ | 1 |

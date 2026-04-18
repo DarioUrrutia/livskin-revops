@@ -24,9 +24,11 @@ Lee en este orden antes de cualquier tarea sustantiva:
 
 1. **[docs/master-plan-mvp-livskin.md](docs/master-plan-mvp-livskin.md)** — plan maestro vivo, referencia autoritativa
 2. **[docs/decisiones/README.md](docs/decisiones/README.md)** — index de 40+ ADRs con estado
-3. **[docs/sesiones/](docs/sesiones/)** — último log de sesión para entender dónde quedamos
-4. **Blueprint original** — [docs/livskin_pensamientos para una implemetacion profesional basica pero basada en ia.docx](docs/livskin_pensamientos%20para%20una%20implemetacion%20profesional%20basica%20pero%20basada%20en%20ia.docx)
-5. **Memoria Claude Code** — ya cargada automáticamente (`user_profile`, `project_livskin_overview`, `project_stack`, `project_roadmap`, `feedback_operating_principles`, `vps_access`)
+3. **[docs/backlog.md](docs/backlog.md)** — backlog vivo de ideas/cambios/dudas (revisar qué retomar)
+4. **[notes/compartido/](notes/compartido/)** — notas colaborativas recientes si las hay
+5. **[docs/sesiones/](docs/sesiones/)** — último log de sesión para entender dónde quedamos
+6. **Blueprint original** — [docs/livskin_pensamientos para una implemetacion profesional basica pero basada en ia.docx](docs/livskin_pensamientos%20para%20una%20implemetacion%20profesional%20basica%20pero%20basada%20en%20ia.docx)
+7. **Memoria Claude Code** — ya cargada automáticamente (`user_profile`, `project_livskin_overview`, `project_stack`, `project_roadmap`, `feedback_operating_principles`, `vps_access`, `project_adr_system`, `reference_docs`)
 
 ---
 
@@ -57,6 +59,7 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 │
 ├── docs/
 │   ├── master-plan-mvp-livskin.md       ← ⭐ plan autoritativo
+│   ├── backlog.md                       ← 📋 backlog vivo de ideas/cambios/dudas
 │   ├── decisiones/                      ← ADRs (Architecture Decision Records)
 │   │   ├── README.md                    ← index vivo de 40+ dossiers
 │   │   ├── _template.md                 ← plantilla para nuevos
@@ -66,12 +69,16 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 │   ├── sesiones/                        ← log cronológico de sesiones
 │   ├── audits/                          ← audits periódicos
 │   ├── seguridad/                       ← políticas y runbooks seguridad
-│   ├── runbooks/                        ← procedimientos operativos
+│   ├── runbooks/                        ← procedimientos operativos (incl. obsidian-setup)
 │   ├── diagramas/                       ← diagramas de arquitectura
 │   ├── system-audit-2026-04-16.md       ← audit histórico
 │   ├── consultas-y-decisiones.md        ← bitácora sesión anterior
 │   ├── Datos Livskin.xlsx               ← datos reales (74 ventas, 135 clientes)
 │   └── livskin_pensamientos....docx     ← blueprint original
+│
+├── notes/                               ← notas colaborativas + personales (Obsidian)
+│   ├── compartido/                      ← versionada, colaborativa
+│   └── privado/                         ← ⚠️ gitignored, solo tuya
 │
 ├── infra/                               ← infraestructura (era raíz, ahora agrupado)
 │   ├── docker/                          ← compose files por servicio
@@ -198,11 +205,25 @@ Ver [memoria persistente vps_access](~/.claude/projects/.../memory/vps_access.md
 
 ### Rituales de sesión
 
-**Arranque (mío, 2 min):** leo CLAUDE.md + última sesión + memoria, te digo en 3 líneas dónde quedamos y qué propongo.
+**Arranque (mío, 2 min):** leo CLAUDE.md + `docs/backlog.md` + `notes/compartido/` + última sesión + memoria, te digo en 3 líneas dónde quedamos, qué hay en backlog relevante, y qué propongo hacer.
 
-**Cierre (mío, 2 min):** genero `docs/sesiones/YYYY-MM-DD-titulo.md` con qué se hizo, qué quedó pendiente, próximo paso.
+**Cierre (mío, 2 min):** 
+- Genero `docs/sesiones/YYYY-MM-DD-titulo.md` con qué se hizo, qué quedó pendiente, próximo paso
+- Muevo items de backlog a "Hecho" si corresponde
+- Actualizo CLAUDE.md, master plan, memoria si hubo cambios estructurales
+- Si surgió idea nueva no-urgente → la agrego a `docs/backlog.md` con tu aprobación
 
 **Antes de cambios riesgosos:** plan explícito + tu aprobación. Nunca ejecuto destructivas sin check.
+
+### Obsidian como interfaz visual del vault
+
+El repo completo **es un vault de Obsidian**. Abres Obsidian, haces "Open folder as vault" sobre la raíz, y ves:
+- Grafo de conexiones entre todos los docs
+- Búsqueda full-text instantánea
+- Tus notas personales en `notes/privado/` (gitignored)
+- Notas colaborativas en `notes/compartido/` (versionadas)
+
+Setup completo: [docs/runbooks/obsidian-setup.md](docs/runbooks/obsidian-setup.md).
 
 ### Si no entiendes algo
 
