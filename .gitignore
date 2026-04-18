@@ -1,31 +1,77 @@
-# Secrets
+# ==========================================================
+# .gitignore — Livskin RevOps central hub
+# Evita commits de: secretos, claves, data local, código ajeno
+# ==========================================================
+
+# --- Secretos y credenciales ---
 .env
+.env.*
+!.env.example
 *.pem
 *.key
 *.crt
 
-# SSH keys (NEVER upload private keys)
+# --- Claves SSH ---
 .ssh/
 *.ppk
 
-# Data volumes
+# --- Claves y tokens locales del proyecto ---
+keys/
+!keys/.gitkeep
+!keys/ssh_config.example
+
+# --- ERP Livskin (repo separado, clonado aquí solo local) ---
+# Nunca subir código del ERP a este repo; tiene su propio repo GitHub
+erp/
+
+# --- Data operativa (no pertenece al repo) ---
 data/
 db/
 
-# Backups (too large for git)
+# --- Backups pulled localmente (pueden ser grandes) ---
 backups/
+!backups/.gitkeep
 
-# OS files
+# --- Docker volumes y caches ---
+**/volumes/
+**/.docker-compose-override.yml
+
+# --- Extracciones temporales ---
+docs/datos_livskin_extract/
+docs/pensamientos.txt
+
+# --- OS ---
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Logs
+# --- Logs ---
 *.log
 logs/
 
-# IDE
+# --- IDE ---
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Claude Code local config
+# --- Claude Code local config ---
 .claude/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# --- Node ---
+node_modules/
+dist/
+build/
+
+# --- Coverage / testing ---
+.coverage
+htmlcov/
+.pytest_cache/
+
