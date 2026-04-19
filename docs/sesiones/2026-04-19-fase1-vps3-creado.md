@@ -1,7 +1,7 @@
-# Sesión 2026-04-19 — Fase 1: VPS 3 creado y hardened
+# Sesión 2026-04-19 — Fase 1: VPS 3 creado, hardened y data layer deployed
 
-**Duración:** ~4 horas (con pausas)  
-**Tipo:** ejecución guiada + Claude Code directo (segunda mitad)  
+**Duración:** ~5-6 horas (con pausas)  
+**Tipo:** ejecución guiada + Claude Code directo (segunda mitad en adelante)  
 **Participantes:** Dario (decisora + operadora) + Claude Code  
 **Fase del roadmap:** Fase 1 (Semana 2)
 
@@ -147,10 +147,117 @@ Dario siguió el checklist pero los tags `livskin`, `erp`, `prod` no quedaron re
 
 ---
 
+---
+
+## Parte 2 — Data layer (Postgres + pgvector + embeddings service)
+
+Continuación en la misma sesión, tras snapshot baseline del VPS 3.
+
+### Snapshot baseline tomado
+
+Snapshot manual `livskin-vps-erp-baseline-post-hardening-2026-04-19` tomado en DO panel antes de iniciar deploys. Punto de retorno limpio si algo sale mal en las próximas 1-2 semanas. Programado para borrar cuando Fase 1 esté estable (backlog entry).
+
+### Postgres 16 + pgvector desplegado
+
+- Container `postgres-data` (imagen oficial `pgvector/pgvector:pg16`)
+- Volumen persistente `postgres-data-vol`
+- Puerto 5432 **NO expuesto al host ni internet** — solo accesible dentro de `data_net`
+- Init scripts aplicados en primera creación:
+  - `01-roles.sh`: 4 roles con least privilege (erp_user, analytics_etl_reader, brain_user, brain_reader)
+  - `02-databases.sh`: DBs `livskin_erp` y `livskin_brain` con owners y grants correctos
+  - `03-brain-schema.sh`: pgvector + pgcrypto extensiones + 6 tablas del cerebro (clinic_knowledge, project_knowledge, conversations, creative_memory, learnings, embedding_runs) con 5 índices HNSW para búsqueda semántica
+- Passwords generadas con `openssl rand -hex 24` (192 bits de entropía), guardadas en `/srv/livskin/postgres-data/.env` (perms 600, owner livskin, nunca commitear)
+
+Verificaciones pasadas:
+- 5 DBs listadas (postgres, template0, template1, livskin_erp, livskin_brain)
+- 3 extensiones en livskin_brain: plpgsql, vector 0.8.2, pgcrypto 1.3
+- 6 tablas del cerebro con brain_user como owner
+- 5 índices HNSW creados
+- 4 roles app con login=t
+
+### Embeddings service desplegado
+
+- Container `embeddings-service` (imagen propia `livskin/embeddings-service:multilingual-e5-small`)
+- FastAPI + sentence-transformers
+- Modelo `intfloat/multilingual-e5-small` (384 dims, multilingüe)
+- Modelo bakeado en build time → runtime rápido
+- En red `data_net`, NO expuesto al host
+
+Endpoints:
+- `GET /health` → estado
+- `POST /embed` → genera embedding(s) con prefijo `query` o `passage`
+
+### Test end-to-end verificado ✅
+
+**Pipeline completo funcionando:**
+
+```
+Python client → embeddings-service:8000/embed
+                  (genera vector 384-dim multilingual-e5-small)
+              → psycopg2 INSERT en clinic_knowledge con pgvector
+              → SELECT con operador <=> (cosine distance)
+                  + índice HNSW para ordenamiento semántico
+```
+
+**Test ejecutado:**
+1. Embebió 2 passages clínicos (botox frente, hialurónico ojeras)
+2. Insertó en `livskin_brain.clinic_knowledge` con embeddings 384-dim
+3. Query semántica: "¿cuánto dura el botox en frente?"
+4. Resultados por similitud coseno:
+
+| Passage | Similitud | ¿Match correcto? |
+|---|---|---|
+| botox_frente ("Botox frente/entrecejo, 4-6 meses, S/.550") | **0.8943** | ✅ Sí — match semántico |
+| hialuronico_ojeras ("Ác. hialurónico para ojeras, S/.1600") | 0.8070 | correctamente menor |
+
+**Diferencia de 9 puntos** entre el match correcto y el incorrecto — retrieval quality sólido. El modelo `multilingual-e5-small` entiende español técnico (botox, tratamiento, precio, frente) sin problema.
+
+**Cleanup:** test data eliminada post-verificación, `clinic_knowledge` de vuelta vacía.
+
+Este es el momento donde el **segundo cerebro de Livskin empezó a existir operativamente**. Desde aquí escalamos a poblar L1 (catálogo completo), L2 (indexación del repo), MCP server, y eventualmente L4 (conversaciones WhatsApp) en Fase 4.
+
+### Estructura en VPS 3 al cierre de Fase 1 parte 2
+
+```
+/srv/livskin/
+├── postgres-data/
+│   ├── docker-compose.yml
+│   ├── .env              [gitignored, perms 600]
+│   └── init/
+│       ├── 01-roles.sh
+│       ├── 02-databases.sh
+│       └── 03-brain-schema.sh
+└── embeddings-service/
+    ├── Dockerfile
+    ├── app.py
+    ├── requirements.txt
+    └── docker-compose.yml
+
+Containers running:
+- postgres-data    (pgvector/pgvector:pg16)      healthy
+- embeddings-service (livskin/embeddings-service) healthy
+
+Networks:
+- data_net (bridge, external)
+
+Volumes:
+- postgres-data-vol
+```
+
+### Decisiones importantes de esta parte
+
+- **Passwords aleatorios hex 48 chars en lugar de base64** — evita caracteres `/=+` que pueden complicar connection strings/escaping.
+- **Init scripts como `.sh` no `.sql`** — bash permite expansión de env vars para passwords sin hardcodear en SQL.
+- **Puertos DB no expuestos al host** — aislamiento por Docker network; acceso cross-VPS pendiente configurar reglas UFW VPC cuando se conecte n8n (VPS 2 → VPS 3).
+- **Modelo de embeddings bakeado en imagen** — reproducibilidad total; re-build si se cambia de modelo.
+
+---
+
 ## Commits derivados de esta sesión
 
-1. `feat(vps3): provisioning + hardening VPS 3 livskin-vps-erp`  
-   Actualización de: ssh_config, master plan, CLAUDE.md, ADR-0002, decisions README, backlog, memoria, session log, audit inicial.
+1. `feat(vps3): provisioning + hardening VPS 3 livskin-vps-erp` (commit 6961f61)
+2. `feat(vps3): data layer — Postgres 16 + pgvector + embeddings service`  
+   Incluye: infra/docker/postgres-data/, infra/docker/embeddings-service/, actualización backlog, session log, audit follow-up.
 
 ---
 

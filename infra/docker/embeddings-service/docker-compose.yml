@@ -1,0 +1,38 @@
+# Embeddings service para VPS 3 — self-hosted multilingual-e5-small
+#
+# Expone HTTP 8000 DENTRO de data_net (no al host, no a internet).
+# Los clientes (ERP Flask, n8n vía VPC, scripts de populación) lo llaman por:
+#   http://embeddings-service:8000/embed
+#
+# Primer build ~3-5 min (baja modelo ~450MB).
+# Primer run ~5-10s (el modelo ya viene cacheado en la imagen).
+
+services:
+  embeddings-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: livskin/embeddings-service:multilingual-e5-small
+    container_name: embeddings-service
+    restart: unless-stopped
+    environment:
+      MODEL_NAME: intfloat/multilingual-e5-small
+      MODEL_VERSION: multilingual-e5-small-v1
+    networks:
+      - data_net
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  data_net:
+    name: data_net
+    external: true

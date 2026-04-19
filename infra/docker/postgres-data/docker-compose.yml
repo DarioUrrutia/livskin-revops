@@ -1,0 +1,57 @@
+# Postgres 16 + pgvector para VPS 3 (livskin-vps-erp)
+#
+# Contiene 2 DBs operativas + roles con least privilege:
+#   - livskin_erp   (OLTP ERP, owner erp_user, ETL reader analytics_etl_reader)
+#   - livskin_brain (segundo cerebro, owner brain_user, reader brain_reader)
+#
+# Red: data_net (externa, compartida con embeddings-service y futuro ERP Flask)
+# Puerto 5432: NO expuesto al host, NO expuesto a internet
+# Acceso cross-VPS: vía DO VPC 10.114.0.0/20 (reglas UFW pendientes en fase posterior)
+#
+# Init scripts en ./init/ corren solo en primera creación del volumen postgres-data-vol.
+
+services:
+  postgres-data:
+    image: pgvector/pgvector:pg16
+    container_name: postgres-data
+    restart: unless-stopped
+    environment:
+      # Superuser admin — para migrations, backups, admin tasks
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?superuser password required}
+      POSTGRES_DB: postgres
+      # Passwords de roles app — consumidas por init scripts
+      ERP_USER_PASSWORD: ${ERP_USER_PASSWORD:?erp_user password required}
+      ANALYTICS_ETL_READER_PASSWORD: ${ANALYTICS_ETL_READER_PASSWORD:?analytics_etl_reader password required}
+      BRAIN_USER_PASSWORD: ${BRAIN_USER_PASSWORD:?brain_user password required}
+      BRAIN_READER_PASSWORD: ${BRAIN_READER_PASSWORD:?brain_reader password required}
+      # Config sana Postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - postgres-data-vol:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - data_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    # Logs con rotación
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres-data-vol:
+    name: postgres-data-vol
+
+networks:
+  data_net:
+    name: data_net
+    external: true

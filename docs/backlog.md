@@ -42,11 +42,11 @@ La IP pública actual (`78.208.67.189`) es solo de la laptop personal en Milán.
 
 ---
 
-### 🟡 Tomar snapshot manual baseline del VPS 3 antes de instalar Postgres
-Snapshot pre-Postgres como punto de retorno limpio por si algo sale mal en los próximos pasos de Fase 1.
+### 🔴 Borrar snapshot VPS 3 cuando Fase 1 esté estable
+Snapshot `livskin-vps-erp-baseline-post-hardening-2026-04-19` cuesta ~$3/mes si se mantiene permanente. Debe borrarse cuando la Fase 1 esté operativamente estable (típicamente 1-2 semanas post-deploy sin incidentes). Mientras tanto es cobertura por si algo falla y necesitamos rollback al estado pre-Postgres.
 
-**Cómo:** desde DO panel → Backups/Snapshots del droplet → Take Snapshot → nombre `livskin-vps-erp-baseline-post-hardening`. Alt: script automatizado en `infra/scripts/`.  
-**Fase sugerida:** antes del siguiente paso de Fase 1 (Postgres)  
+**Cuándo borrarlo:** ~2 semanas después de que Postgres + embeddings service estén corriendo sin incidentes (probable fecha: semana del 2026-05-03).  
+**Dónde:** DO panel → droplet livskin-vps-erp → Backups & Snapshots → Delete.  
 **Agregado por:** Claude Code · 2026-04-19
 
 ---
