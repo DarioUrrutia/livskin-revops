@@ -187,6 +187,45 @@ Endpoints:
 - `GET /health` → estado
 - `POST /embed` → genera embedding(s) con prefijo `query` o `passage`
 
+### Nginx reverse proxy + TLS público
+
+**Paralelo al data layer**, se desplegó también el reverse proxy público del VPS 3.
+
+**DNS agregado en Cloudflare:**
+- `erp.livskin.site` → 139.59.214.7 (Proxied) ✅
+- `erp-staging.livskin.site` → 139.59.214.7 (Proxied) ✅
+
+**Nginx container `nginx-vps3` (imagen nginx:stable) desplegado:**
+- Ports 80 + 443 expuestos al host
+- TLS terminación con Cloudflare Origin Cert wildcard (reutilizado de VPS 2, válido hasta 2041)
+- HTTP → HTTPS redirect
+- Security headers: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- Staging con `X-Robots-Tag: noindex,nofollow`
+- Catch-all 444 para hosts desconocidos (bloquea bots de escaneo)
+- Log format incluye `CF-Connecting-IP` (IP real cliente tras Cloudflare, no la de CF)
+
+**Maintenance pages** en `/var/www/prod` y `/var/www/staging`. Cuando se despliegue ERP Flask en Fase 2, se cambia el bloque `location /` por `proxy_pass http://erp-flask:5000`.
+
+**Verificación end-to-end desde internet:**
+
+```
+curl -sI https://erp.livskin.site
+→ HTTP/1.1 200 OK
+→ Server: cloudflare
+→ + todos los security headers
+
+curl -sI https://erp-staging.livskin.site
+→ HTTP/1.1 200 OK
+→ + X-Robots-Tag: noindex, nofollow, noarchive
+
+curl -sI http://erp.livskin.site
+→ HTTP/1.1 301 Moved Permanently → https://erp.livskin.site/
+```
+
+La usuaria puede abrir `https://erp.livskin.site` en navegador y ver la página de maintenance con branding Livskin.
+
+---
+
 ### Test end-to-end verificado ✅
 
 **Pipeline completo funcionando:**
@@ -227,15 +266,29 @@ Este es el momento donde el **segundo cerebro de Livskin empezó a existir opera
 │       ├── 01-roles.sh
 │       ├── 02-databases.sh
 │       └── 03-brain-schema.sh
-└── embeddings-service/
-    ├── Dockerfile
-    ├── app.py
-    ├── requirements.txt
-    └── docker-compose.yml
+├── embeddings-service/
+│   ├── Dockerfile
+│   ├── app.py
+│   ├── requirements.txt
+│   └── docker-compose.yml
+└── nginx/
+    ├── docker-compose.yml
+    ├── nginx.conf
+    ├── sites/
+    │   ├── 00-default.conf
+    │   ├── erp.livskin.site.conf
+    │   └── erp-staging.livskin.site.conf
+    ├── html/
+    │   ├── prod/index.html
+    │   └── staging/index.html
+    └── certs/
+        ├── livskin-origin.crt
+        └── livskin-origin.key  (perms 600)
 
 Containers running:
-- postgres-data    (pgvector/pgvector:pg16)      healthy
-- embeddings-service (livskin/embeddings-service) healthy
+- postgres-data       (pgvector/pgvector:pg16)       healthy
+- embeddings-service  (livskin/embeddings-service)   healthy
+- nginx-vps3          (nginx:stable, ports 80+443)   healthy
 
 Networks:
 - data_net (bridge, external)

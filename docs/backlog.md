@@ -51,6 +51,21 @@ Snapshot `livskin-vps-erp-baseline-post-hardening-2026-04-19` cuesta ~$3/mes si 
 
 ---
 
+### 🟢 Configurar email para `livskin.site` (MX + SPF + DKIM + DMARC)
+Cloudflare alerta sobre falta de MX records. No bloquea nada operativo, pero:
+- Sin MX: nadie puede mandar email a info@livskin.site, doctora@livskin.site, etc.
+- Sin SPF/DKIM/DMARC: spammers pueden suplantar @livskin.site (afecta deliverability de marketing)
+
+**Decisiones pendientes:**
+- ¿Email propio en livskin.site? ¿O solo usan Gmail/Yahoo personales?
+- Si sí: ¿qué proveedor? Google Workspace ($6/user/mes), Zoho Mail ($1/user/mes), ProtonMail (más caro), o self-hosted (descartado — dolor de cabeza para PYME)
+- Dario confirma si necesita este canal de comunicación formal
+
+**Fase sugerida:** no crítico hasta lanzamiento comercial formal. Si se decide email propio, 30 min de setup.  
+**Agregado por:** Claude Code · 2026-04-19
+
+---
+
 ### 🟡 Crear Dossier ADR-0019 (tracking architecture) en versión full
 Actualmente es stub en el index. Al llegar a Fase 3 debe escribirse completo. Incluye server-side tracking, eventos, consent, match quality targets.
 

@@ -1,0 +1,41 @@
+# Nginx reverse proxy para VPS 3 (livskin-vps-erp)
+#
+# Termina TLS con Cloudflare Origin Cert wildcard *.livskin.site.
+# Sirve erp.livskin.site y erp-staging.livskin.site.
+# Rechaza cualquier otro host con 444 (sin respuesta — bloqueo silencioso).
+#
+# Los certs viven en ./certs/ (gitignored) — se copian desde VPS 2 (mismo wildcard).
+# Los sitios en ./sites/ (versionados) — fáciles de revisar y editar.
+# El HTML en ./html/ — maintenance pages mientras no esté ERP Flask en producción.
+
+services:
+  nginx:
+    image: nginx:stable
+    container_name: nginx-vps3
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./sites:/etc/nginx/sites:ro
+      - ./html:/var/www:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - data_net
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  data_net:
+    name: data_net
+    external: true
