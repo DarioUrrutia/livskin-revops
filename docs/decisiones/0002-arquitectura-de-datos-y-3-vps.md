@@ -143,11 +143,13 @@ DO Managed Postgres ($15-30/mes entry) + mantener ERP en Render.
 
 ### 4.2 Roles
 
-| VPS | Rol | Responsabilidades |
-|---|---|---|
-| **VPS 1 — WordPress** | Presencia pública | Web pública, SEO, captura leads, tracking client-side |
-| **VPS 2 — Operations** | Orquestación + analítica | n8n flows, Vtiger CRM, Metabase dashboards, Langfuse, Postgres analytics |
-| **VPS 3 — Data** | OLTP + memoria | ERP transaccional refactorizado, Postgres + pgvector para segundo cerebro, embeddings service |
+| VPS | Hostname | IP pública | IP VPC | Rol | Responsabilidades |
+|---|---|---|---|---|---|
+| **VPS 1 — WordPress** | Livskin-WP-01 | 46.101.97.246 | 10.114.0.3 | Presencia pública | Web pública, SEO, captura leads, tracking client-side |
+| **VPS 2 — Operations** | livskin-vps-operations | 167.172.97.197 | 10.114.0.2 | Orquestación + analítica | n8n flows, Vtiger CRM, Metabase dashboards, Langfuse, Postgres analytics |
+| **VPS 3 — ERP** | livskin-vps-erp | 139.59.214.7 | 10.114.0.4 | OLTP + memoria | ERP transaccional refactorizado, Postgres + pgvector para segundo cerebro, embeddings service |
+
+**VPS 3 provisionado 2026-04-19** con hardening baseline completo (UFW, Fail2Ban+whitelist, SSH endurecido, unattended-upgrades, Docker 29.4.0, swap 2GB). Lynis hardening index: 65/100.
 
 ### 4.3 Comunicación
 
@@ -549,3 +551,4 @@ Snapshot manual de los 3 VPS cada fase de roadmap (tier `manual`, retenido indef
 ## 14. Changelog
 
 - 2026-04-18 — v1.0 — Creada, aprobada en sesión estratégica de Fase 0
+- 2026-04-19 — v1.1 — VPS 3 provisionado (`livskin-vps-erp` @ 139.59.214.7). IPs VPC de los 3 VPS confirmadas (10.114.0.2-4). Conectividad VPC verificada en vivo con ping <2ms entre los 3. ADR-0004 (DO VPC) pasa a estado implementado. Ver [session log 2026-04-19](../sesiones/2026-04-19-fase1-vps3-creado.md) y [audit](../audits/2026-04-19-vps3-baseline.md).

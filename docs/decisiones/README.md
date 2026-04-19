@@ -28,7 +28,7 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 | [0001](0001-segundo-cerebro-filosofia-y-alcance.md) | Segundo cerebro — filosofía y 6 capas | ✅ | 0 |
 | [0002](0002-arquitectura-de-datos-y-3-vps.md) | Arquitectura de datos (3 VPS, 5 DBs) | ✅ | 0 |
 | [0003](0003-seguridad-baseline-y-auditorias.md) | Seguridad baseline y auditorías | ✅ | 0 |
-| 0004 | Comunicación entre VPS — DigitalOcean VPC | ✅ | 1 |
+| 0004 | Comunicación entre VPS — DigitalOcean VPC | ✅ **Implementada** 2026-04-19 (VPC 10.114.0.0/20, latencia <2ms verificada) | 1 |
 | 0005 | Orquestación agentes — n8n único orquestador + Claude API con tool use (Agent SDK diferido) | ✅ | 4 |
 | 0006 | Embeddings — multilingual-e5-small self-hosted | ✅ | 1 |
 | 0007 | Observabilidad — Langfuse desde Fase 3 | ✅ | 3 |

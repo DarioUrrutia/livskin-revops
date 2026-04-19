@@ -1,0 +1,44 @@
+# SSH config local al proyecto Livskin RevOps.
+# Uso: ssh -F keys/ssh_config <alias>
+# Aliases:
+#   livskin-wp   — VPS 1 (WordPress)       46.101.97.246
+#   livskin-ops  — VPS 2 (Operations)      167.172.97.197
+#   livskin-erp  — VPS 3 (ERP + cerebro)   139.59.214.7
+#
+# IPs privadas VPC 10.114.0.0/20:
+#   livskin-wp   10.114.0.3
+#   livskin-ops  10.114.0.2
+#   livskin-erp  10.114.0.4
+
+Host livskin-wp
+    HostName 46.101.97.246
+    User livskin
+    Port 22
+    IdentityFile keys/claude-livskin
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+    UserKnownHostsFile keys/known_hosts
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+
+Host livskin-ops
+    HostName 167.172.97.197
+    User livskin
+    Port 22
+    IdentityFile keys/claude-livskin
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+    UserKnownHostsFile keys/known_hosts
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+
+Host livskin-erp
+    HostName 139.59.214.7
+    User livskin
+    Port 22
+    IdentityFile keys/claude-livskin
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+    UserKnownHostsFile keys/known_hosts
+    ServerAliveInterval 30
+    ServerAliveCountMax 3

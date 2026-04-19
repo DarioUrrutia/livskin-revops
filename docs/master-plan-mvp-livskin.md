@@ -83,11 +83,13 @@ Este plan maestro:
 
 ### 2.4 Infraestructura heredada (al iniciar Fase 0)
 
-| VPS | IP | Rol actual | Stack |
-|---|---|---|---|
-| WP (`livskin-wp`) | 46.101.97.246 | WordPress público | Ubuntu 22.04 + Nginx + PHP-FPM 8.1 + MariaDB 10.6 + WP 6.9.4 |
-| Ops (`livskin-ops`) | 167.172.97.197 | Orquestación + analítica | Ubuntu 22.04 + Docker 29.3.1 + 6 contenedores (nginx, n8n, vtiger, vtiger-db, postgres-analytics, metabase) |
-| Data (`livskin-data`) | pendiente | ERP + segundo cerebro | Docker + Postgres 16 + pgvector + ERP Flask refactorizado — **a crear en Fase 1** |
+| VPS | IP pública | IP VPC | Rol | Stack |
+|---|---|---|---|---|
+| WP (`livskin-wp`) | 46.101.97.246 | 10.114.0.3 | WordPress público | Ubuntu 22.04 + Nginx + PHP-FPM 8.1 + MariaDB 10.6 + WP 6.9.4 |
+| Ops (`livskin-ops`) | 167.172.97.197 | 10.114.0.2 | Orquestación + analítica | Ubuntu 22.04 + Docker 29.3.1 + 6 contenedores (nginx, n8n, vtiger, vtiger-db, postgres-analytics, metabase) |
+| ERP (`livskin-erp`) | **139.59.214.7** | **10.114.0.4** | ERP + segundo cerebro | Ubuntu 22.04.5 + Docker 29.4.0 — provisionado 2026-04-19, Postgres+pgvector y servicios pendientes |
+
+Los 3 VPS en DO VPC `10.114.0.0/20` Frankfurt, latencia inter-VPS <2ms verificada.
 
 ### 2.5 Referencias documentales
 
@@ -154,7 +156,7 @@ Rigen cada decisión técnica y estratégica. No son aspiracionales — son vinc
 | Cloud provider | DigitalOcean (Frankfurt FRA1) | Activo |
 | VPS 1 — WordPress público | DO Basic 1GB ($6/mes) | Activo |
 | VPS 2 — Operaciones | DO Basic 4GB ($24/mes) | Activo |
-| VPS 3 — Datos + cerebro | DO Basic 2GB/50GB ($12/mes) | **Pendiente Fase 1** |
+| VPS 3 — ERP + cerebro | DO Basic 2GB/50GB ($12/mes) | ✅ Provisionado 2026-04-19, hardened |
 | Red privada entre VPS | **DigitalOcean VPC** (gratis, <1ms) | **Fase 1** |
 | DNS + SSL + WAF + proxy público | Cloudflare | Activo |
 | Containerización | Docker + Docker Compose | Activo |

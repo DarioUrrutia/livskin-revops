@@ -25,6 +25,32 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🟡 Agregar passphrase a `livskin-vps-erp.ppk` al cerrar Fase 2
+Durante Fase 1-2 la `.ppk` no tiene passphrase (decisión consciente por fricción de setup). Al terminar Fase 2 (cutover ERP completo), agregarle passphrase y guardar en Bitwarden.
+
+**Cómo:** PuTTYgen → Load → tipear nueva passphrase + confirm → Save private key.  
+**Fase sugerida:** cierre de Fase 2 (semana 4)  
+**Agregado por:** Claude Code · 2026-04-19
+
+---
+
+### 🟡 Agregar IP de laptop de trabajo de Dario al whitelist Fail2Ban
+La IP pública actual (`78.208.67.189`) es solo de la laptop personal en Milán. Cuando Dario conecte desde la laptop de trabajo por primera vez, si Fail2Ban la banea automáticamente, lo arreglamos y agregamos esa IP al `ignoreip` en `/etc/fail2ban/jail.d/ignoreip.local` en los 3 VPS.
+
+**Fase sugerida:** cuando aparezca por primera vez (reactivo)  
+**Agregado por:** Claude Code · 2026-04-19
+
+---
+
+### 🟡 Tomar snapshot manual baseline del VPS 3 antes de instalar Postgres
+Snapshot pre-Postgres como punto de retorno limpio por si algo sale mal en los próximos pasos de Fase 1.
+
+**Cómo:** desde DO panel → Backups/Snapshots del droplet → Take Snapshot → nombre `livskin-vps-erp-baseline-post-hardening`. Alt: script automatizado en `infra/scripts/`.  
+**Fase sugerida:** antes del siguiente paso de Fase 1 (Postgres)  
+**Agregado por:** Claude Code · 2026-04-19
+
+---
+
 ### 🟡 Crear Dossier ADR-0019 (tracking architecture) en versión full
 Actualmente es stub en el index. Al llegar a Fase 3 debe escribirse completo. Incluye server-side tracking, eventos, consent, match quality targets.
 
@@ -121,6 +147,13 @@ Originalmente aprobada como híbrido; revisada por Dario en misma sesión. Agent
 ### ✅ Obsidian integrado al plan como capa humana del segundo cerebro
 Dario propuso, se aprobó, se actualizó ADR-0001 con sección 9.2.
 2026-04-18.
+
+### ✅ VPS 3 provisionado y hardened
+`livskin-vps-erp` @ 139.59.214.7 (VPC 10.114.0.4). Ubuntu 22.04.5, Docker 29.4.0, swap 2GB, UFW+Fail2Ban+unattended-upgrades activos. Lynis score 65/100. VPC connectivity a VPS 1 y 2 verificada (<2ms).
+2026-04-19. Ver `docs/sesiones/2026-04-19-fase1-vps3-creado.md`.
+
+### ✅ Whitelist Fail2Ban con ignoreip
+Tras incidente de auto-ban en instalación de UFW: whitelist permanente creada en `/etc/fail2ban/jail.d/ignoreip.local` con 127.0.0.1/8, ::1, 10.114.0.0/20 (VPC), 78.208.67.189 (Dario Milan). 2026-04-19.
 
 ---
 

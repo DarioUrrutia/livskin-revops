@@ -174,18 +174,20 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 
 ### VPS actuales
 
-| Alias | IP | Hostname | Rol |
-|---|---|---|---|
-| `livskin-wp` | 46.101.97.246 | Livskin-WP-01 | WordPress (VPS 1) |
-| `livskin-ops` | 167.172.97.197 | livskin-vps-operations | Orquestación + analítica (VPS 2) |
-| `livskin-data` | **pendiente** | livskin-vps-data | ERP + segundo cerebro (VPS 3, Fase 1) |
+| Alias | IP pública | IP privada VPC | Hostname | Rol |
+|---|---|---|---|---|
+| `livskin-wp` | 46.101.97.246 | 10.114.0.3 | Livskin-WP-01 | WordPress (VPS 1) |
+| `livskin-ops` | 167.172.97.197 | 10.114.0.2 | livskin-vps-operations | Orquestación + analítica (VPS 2) |
+| `livskin-erp` | **139.59.214.7** | **10.114.0.4** | livskin-vps-erp | ERP + segundo cerebro (VPS 3 — provisionado 2026-04-19) |
+
+Los 3 VPS están en DO VPC `10.114.0.0/20` Frankfurt. Latencia inter-VPS <2ms.
 
 ### Cómo conectar
 
 ```bash
 ssh -F keys/ssh_config livskin-wp
 ssh -F keys/ssh_config livskin-ops
-# livskin-data cuando esté creado
+ssh -F keys/ssh_config livskin-erp
 ```
 
 Usuario: `livskin` (NO root — deshabilitado). Sudo NOPASSWD.  

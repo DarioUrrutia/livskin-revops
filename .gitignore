@@ -16,9 +16,13 @@
 *.ppk
 
 # --- Claves y tokens locales del proyecto ---
-keys/
-!keys/.gitkeep
+# Ignorar TODO en keys/ por defecto...
+keys/*
+# ...excepto estos archivos no-sensibles (IPs y paths, sin claves ni tokens)
+!keys/ssh_config
 !keys/ssh_config.example
+!keys/README.md
+!keys/.gitkeep
 
 # --- ERP Livskin (repo separado, clonado aquí solo local) ---
 # Nunca subir código del ERP a este repo; tiene su propio repo GitHub
