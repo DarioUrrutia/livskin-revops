@@ -15,8 +15,11 @@ services:
     env_file:
       - ../postgres-data/.env
     environment:
-      # brain_user tiene INSERT/UPDATE/DELETE en project_knowledge (es owner)
-      DATABASE_URL: postgresql://brain_user:${BRAIN_USER_PASSWORD}@postgres-data:5432/livskin_brain
+      # DATABASE_URL se construye en Python desde BRAIN_USER_PASSWORD
+      # (env_file lo pasa al container). No interpolamos aqui porque
+      # docker-compose leeria de shell env, no de env_file.
+      BRAIN_DB_HOST: postgres-data
+      BRAIN_DB_NAME: livskin_brain
       EMBED_URL: http://embeddings-service:8000/embed
     volumes:
       # Mount read-only del repo completo para que el indexer lea .md

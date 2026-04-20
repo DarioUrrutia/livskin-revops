@@ -24,7 +24,18 @@ import psycopg2
 
 REPO_DIR = "/repo"
 EMBED_URL = os.environ.get("EMBED_URL", "http://embeddings-service:8000/embed")
-DATABASE_URL = os.environ["DATABASE_URL"]
+
+# Construir DATABASE_URL desde env vars (evita problemas de interpolacion
+# de docker-compose que leeria shell env en vez de env_file)
+_password = os.environ.get("BRAIN_USER_PASSWORD")
+_db_host = os.environ.get("BRAIN_DB_HOST", "postgres-data")
+_db_name = os.environ.get("BRAIN_DB_NAME", "livskin_brain")
+if not _password:
+    raise RuntimeError(
+        "BRAIN_USER_PASSWORD no seteado. Revisar env_file en docker-compose.yml "
+        "(../postgres-data/.env)."
+    )
+DATABASE_URL = f"postgresql://brain_user:{_password}@{_db_host}:5432/{_db_name}"
 
 CHUNK_SIZE = 700
 CHUNK_OVERLAP = 150
