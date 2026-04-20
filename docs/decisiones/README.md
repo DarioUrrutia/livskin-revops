@@ -34,7 +34,7 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 | 0007 | Observabilidad — Langfuse desde Fase 3 | ✅ | 3 |
 | 0008 | Staging environment — mismo VPS 3 con compose separado | ✅ | 1 |
 | 0009 | CI/CD — GitHub Actions → SSH → docker compose | ✅ | 1 |
-| 0010 | Alembic migrations obligatorias desde día 1 | ✅ | 1 |
+| 0010 | Alembic migrations obligatorias desde día 1 | ✅ **Implementada** 2026-04-20 (alembic-brain + alembic-erp como containers oneshot) | 1 |
 
 ### Gobierno de datos
 

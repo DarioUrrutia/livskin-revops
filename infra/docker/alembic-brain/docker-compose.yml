@@ -1,0 +1,36 @@
+# Servicio one-shot para correr Alembic contra livskin_brain.
+#
+# NO se levanta con `docker compose up -d` (tiene profile "oneshot" +
+# el workflow CI/CD no lo incluye en su lista de `up -d`).
+#
+# Uso:
+#   docker compose run --rm alembic-brain current
+#   docker compose run --rm alembic-brain upgrade head
+#   docker compose run --rm alembic-brain revision -m "add column X"
+#   docker compose run --rm alembic-brain downgrade -1
+#   docker compose run --rm alembic-brain history
+#
+# Password se lee de ../postgres-data/.env (gitignored).
+
+services:
+  alembic-brain:
+    build:
+      context: .
+    image: livskin/alembic-brain:latest
+    container_name: alembic-brain
+    env_file:
+      - ../postgres-data/.env
+    environment:
+      ALEMBIC_DB_NAME: livskin_brain
+      ALEMBIC_DB_HOST: postgres-data
+    volumes:
+      - ./alembic.ini:/app/alembic.ini:ro
+      - ./migrations:/app/migrations
+    networks:
+      - data_net
+    profiles: [oneshot]
+
+networks:
+  data_net:
+    external: true
+    name: data_net

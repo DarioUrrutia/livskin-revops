@@ -25,6 +25,27 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🟡 Capa de auto-mantenimiento — implementar al cierre de Fase 6
+Para que Dario NO dependa de intervenir manualmente en el sistema cuando esté dirigiendo la empresa (target: 3-5 h/mes total incluyendo mantenimiento).
+
+**Componentes a implementar en Fase 6:**
+- **Watchtower** (gratis, self-hosted) — monitorea containers y aplica security updates de imágenes Docker automáticamente. Reduce el riesgo de CVEs sin intervención manual.
+- **UptimeRobot free tier** (50 monitors gratis) — monitorea cada subdominio público cada 5 min. Si cae algo, email/SMS a Dario.
+- **n8n workflows de alertas internas** — vigilan disco, RAM, costos Claude API; alertan vía WhatsApp cuando crucen umbrales (definidos en ADR-0003 § 15.2).
+- **Monthly audit auto-ejecutado** — cron job del día 1-5 de cada mes corre audit completo (Lynis + docker state + cert expiry + disk + etc.) y commitea el report a `docs/audits/`.
+- **Runbooks operativos completos** — en `docs/runbooks/` documentar procedimientos paso a paso para los 5-10 incidentes más probables (SSL expirado, disco lleno, container crash, API key comprometida, etc.). Así cualquier persona puede resolver sin experticia.
+
+**Objetivo cuantitativo:** reducir mantenimiento a <5h/mes rutinario + incidentes que alerten automáticamente.
+
+**Decisión a futuro (Año 1-2):** según volumen real de incidentes, evaluar Ruta A (tú + Claude Code), Ruta B (fractional DevOps $300-800/mo) o Ruta C (managed services DO Managed Postgres +$15/mo).
+
+**Referencia:** esta decisión fue formalizada tras consulta de Dario el 2026-04-20 sobre "cómo se mantiene esto cuando yo esté dirigiendo la empresa". Documentado en master plan § "Operación post-MVP y mantenimiento".
+
+**Fase sugerida:** Fase 6 (Semana 10) + ajustes post-lanzamiento según data real.  
+**Agregado por:** Claude Code · 2026-04-20
+
+---
+
 ### 🟢 Workflow CI/CD: agregar `nginx -s reload` tras cambios de nginx.conf/sites
 Hoy `docker compose up -d` es idempotente: si nada cambió en el compose file, nginx no reinicia. Pero los archivos `nginx.conf` y `sites/*.conf` están bind-mounted, así que cambios ahí NO disparan restart automático del container. Para que un cambio de config de nginx se aplique, hay que:
 - `docker exec nginx-vps3 nginx -t` (validar)

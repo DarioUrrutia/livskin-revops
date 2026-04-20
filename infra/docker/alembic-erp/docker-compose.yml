@@ -1,0 +1,33 @@
+# Servicio one-shot para correr Alembic contra livskin_erp.
+#
+# Gemelo de alembic-brain pero apuntando a la DB del ERP.
+# Actualmente livskin_erp esta vacia (sin tablas); en Fase 2 se
+# empiezan a crear migrations para el schema del ERP refactorizado.
+#
+# Uso:
+#   docker compose run --rm alembic-erp current
+#   docker compose run --rm alembic-erp upgrade head
+#   docker compose run --rm alembic-erp revision -m "create ventas table"
+
+services:
+  alembic-erp:
+    build:
+      context: .
+    image: livskin/alembic-erp:latest
+    container_name: alembic-erp
+    env_file:
+      - ../postgres-data/.env
+    environment:
+      ALEMBIC_DB_NAME: livskin_erp
+      ALEMBIC_DB_HOST: postgres-data
+    volumes:
+      - ./alembic.ini:/app/alembic.ini:ro
+      - ./migrations:/app/migrations
+    networks:
+      - data_net
+    profiles: [oneshot]
+
+networks:
+  data_net:
+    external: true
+    name: data_net

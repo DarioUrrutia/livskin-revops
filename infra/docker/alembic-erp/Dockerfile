@@ -1,0 +1,15 @@
+# Alembic runner para livskin_erp
+# Identico a alembic-brain — misma imagen Python + alembic + psycopg2.
+# Diferencia entre ambos: cual DB apuntan (env vars en docker-compose).
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir \
+    alembic==1.14.0 \
+    psycopg2-binary==2.9.10 \
+    sqlalchemy==2.0.35
+
+ENTRYPOINT ["alembic"]
+CMD ["--help"]

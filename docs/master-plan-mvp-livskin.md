@@ -25,7 +25,8 @@
 15. [Observabilidad y auditoría continua](#15-observabilidad-y-auditoría-continua)
 16. [Integración Claude Design](#16-integración-claude-design)
 17. [Glosario](#17-glosario)
-18. [Changelog](#18-changelog)
+18. [Operación post-MVP y mantenimiento](#18-operación-post-mvp-y-mantenimiento)
+19. [Changelog](#19-changelog)
 
 ---
 
@@ -993,7 +994,68 @@ Export PDF directo
 
 ---
 
-## 18. Changelog
+## 18. Operación post-MVP y mantenimiento
+
+Filosofía: **el sistema se construye para que Dario NO sea programadora a tiempo completo.** Al cerrar Fase 6, el mantenimiento rutinario debe ser <5 h/mes.
+
+### 18.1 Cuatro tipos de mantenimiento (y quién los hace)
+
+| Tipo | Qué es | Frecuencia | Quién |
+|---|---|---|---|
+| **Operación diaria** | Agentes respondiendo leads, generando creativos, optimizando ads | Continua 24/7 | Automático (los 4 agentes) |
+| **Rutinario** | Backups, security updates, SSL, audits | Semanal/mensual | Automatizado (cron + alertas) |
+| **Evolución** | Nuevas features, campos, integraciones | 1-3 meses | Dario + Claude Code o fractional DevOps |
+| **Incidentes** | Algo se rompió | Esporádico | Dario (alertada por WhatsApp) + Claude Code |
+
+### 18.2 Tiempo esperado de Dario post-Fase 6
+
+| Actividad | Tiempo/mes |
+|---|---|
+| Escalaciones del Conversation Agent (trabajo real del negocio) | 5-10 h |
+| Aprobar creativos semanales (Content Agent) | 1 h |
+| Revisar reporte semanal (Growth Agent) | 1 h |
+| Revisar audit mensual del sistema | 0.5 h |
+| Responder a alertas del sistema (cuando aparecen) | 1-2 h |
+| **Total mantenimiento operacional** | **~3-5 h/mes** |
+
+Esto vs alternativa sin sistema: 20-30 h/semana respondiendo leads + diseñando creativos + pausando ads manualmente. **El sistema libera ~15-25 h/semana.**
+
+### 18.3 Decisiones de diseño que reducen mantenimiento
+
+- `restart: unless-stopped` en todos los containers → auto-recovery
+- `unattended-upgrades` en los 3 VPS → security patches auto
+- Cloudflare Origin Cert válido hasta 2041 → no renovar SSL
+- Docker volumes con data persistida → survive container updates
+- CI/CD GitHub Actions → nunca tocar VPS manualmente para deploy
+- Alembic migrations versionadas → schema changes reproducibles
+- Langfuse + Metabase + logs estructurados → observabilidad auto
+
+### 18.4 Capa de auto-mantenimiento (pendiente implementar — Fase 6)
+
+Al cierre de Fase 6 se agrega (ver backlog):
+- Watchtower para updates de imágenes Docker
+- UptimeRobot para uptime monitoring externo
+- Alertas a WhatsApp vía n8n por anomalías
+- Monthly audit auto-ejecutado
+- Runbooks completos en `docs/runbooks/`
+
+### 18.5 Tres rutas de mantenimiento post-MVP
+
+**Ruta A — Dario + Claude Code:** 1-2 intervenciones/mes · $100/mo (Claude Max ya pagado) · máxima flexibilidad, cero costo extra.
+
+**Ruta B — Fractional DevOps contratado:** $300-800/mo · cero tiempo de Dario en incidentes · depende del contratado.
+
+**Ruta C — Migración a managed services** (DO Managed Postgres, etc.): +$30-100/mo · reduce superficie self-hosted · vendor lock-in parcial.
+
+**Recomendación:** Ruta A meses 0-6 post-lanzamiento → evaluar según data real → decidir B o C según patrones de incidentes.
+
+### 18.6 Principio rector
+
+Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al servicio de las personas, no al revés". Si al final de Fase 6 Dario se siente **atada** al sistema en vez de **liberada**, algo se hizo mal y se rediseña.
+
+---
+
+## 19. Changelog
 
 ### v1.0 — 2026-04-18
 - **Creación del plan maestro consolidado.**
