@@ -542,6 +542,8 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 ── = no afecta este workstream en esta semana
 ```
 
+**Interludio estratégico** (1-2 sesiones dedicadas, ~4-8h) entre Fase 3 y Fase 4 — ver § 11.5b. Produce arquetipos + segmentación + plan estratégico que alimentan Fases 4-5. No desplaza fechas si se hace con foco.
+
 ### 11.2 Fase 0 — Fundación (Semana 1)
 
 **Objetivo:** hub central listo, cero pérdida al cambiar de máquina.
@@ -641,6 +643,42 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 - Meta Events Manager muestra el server-side event con match quality "Good"
 - Langfuse captura primer request de prueba
 - Cost tracker muestra $0.00 (aún no hay agentes)
+
+### 11.5b Interludio estratégico — Definición de estrategia, segmentos y plan de negocio (entre Fase 3 y Fase 4)
+
+**Objetivo:** producir el input narrativo que los agentes de Fases 4-5 van a consumir como contexto de prompt.
+
+**Por qué aquí y no antes o después:**
+- **No antes:** violaría plumbing-first. Sin ERP + Vtiger + tracking operativos con data sintética, la discusión estratégica es abstracta y difícil de aterrizar.
+- **No después:** Fase 4 (Conversation Agent) y Fase 5 (Content Agent) necesitan arquetipos como input literal a sus prompts. Sin esto, los agentes no pueden responder contextualmente ni generar creativos que resuenen.
+- **Aquí es el único slot correcto:** plumbing validado con data sintética + antes de los agentes que consumen los outputs.
+
+**Duración estimada:** 1-2 sesiones dedicadas (4-8h totales). No interrumpe fases — se hace **entre** Fase 3 y Fase 4, no dentro.
+
+**Entregables:**
+- **Posicionamiento de Livskin** — propuesta de valor diferenciada vs competencia local Cusco (clínicas, dermatólogos, estéticas independientes). 1 pager en `docs/estrategia/posicionamiento.md`.
+- **Segmentación de clientes / arquetipos** — 3-5 perfiles tipo en `notes/compartido/arquetipos/*.md`:
+  - Demografía + psicografía
+  - Motivaciones, objeciones típicas, canales
+  - Tono de comunicación, prueba social que funciona
+  - Recorrido de compra esperado (touchpoints)
+- **Plan estratégico 6-12-24 meses** en `docs/estrategia/plan-estrategico.md`:
+  - Objetivos comerciales por horizonte
+  - KPIs primarios
+  - Roadmap de servicios/tratamientos a priorizar/desinvertir
+- **Brand voice aprobada** (consolidación de ADR-0016 con input fresco)
+
+**Exit criteria:**
+- 3-5 archivos `arquetipos/<nombre>.md` listos para referenciar en prompts de Conversation + Content Agent
+- Posicionamiento y plan estratégico commiteados
+- Validación (idealmente) con la doctora sobre realismo de arquetipos vs clientes actuales
+
+**Inputs para esta sesión:**
+- Data real existente (74 ventas, 135 clientes del Excel) — sirve como evidencia empírica
+- Métricas que Fase 3 empezó a capturar (aunque sintéticas, el modelo mental de tracking ya opera)
+- Blueprint original (livskin_pensamientos...docx)
+
+**Importante:** no es una fase numerada del roadmap (no añade semanas ni cambia exit criteria de Fases 1-6). Es un **interludio narrativo-estratégico** de 1-2 sesiones que encaja entre Fase 3 y Fase 4 sin desplazar fechas si se hace con foco.
 
 ### 11.6 Fase 4 — Conversation Agent (Semana 6)
 
@@ -1064,6 +1102,11 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 - Decisiones clave cerradas: 3er VPS a $12/mo, DO VPC (no Tailscale), refactor ERP (no rewrite), flujo citas WhatsApp (no LatePoint), 2 cuentas fijas ERP, embeddings self-hosted, Claude Design integrada al workstream creativo.
 - 3 dossiers fundacionales aprobados: 0001 segundo cerebro, 0002 arquitectura datos, 0003 seguridad.
 - Diferimentos explícitos: SUNAT, IGV, inventario, historial clínico, PDFs, offline mode, computer vision.
+
+### v1.1 — 2026-04-20
+- **Fase 1 completada al 100%** — plumbing máquina (VPS 3, Postgres+pgvector, embeddings, CI/CD, Alembic, brain-tools) + capa humana (Obsidian).
+- **§ 18 agregado** — Operación post-MVP y mantenimiento. Target <5h/mes post-cutover. 3 rutas evaluadas (A: Dario+Claude Code, B: fractional DevOps, C: managed services).
+- **§ 11.5b agregado** — Interludio estratégico entre Fase 3 y Fase 4. Define el slot correcto para la sesión estratégica (segmentación + arquetipos + plan de negocio) sin violar plumbing-first ni desplazar fases. Respuesta a observación de Dario de que sesiones estratégicas son slots programados, no alternativas ad-hoc al trabajo táctico.
 
 ---
 
