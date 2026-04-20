@@ -25,6 +25,20 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🟢 Workflow CI/CD: agregar `nginx -s reload` tras cambios de nginx.conf/sites
+Hoy `docker compose up -d` es idempotente: si nada cambió en el compose file, nginx no reinicia. Pero los archivos `nginx.conf` y `sites/*.conf` están bind-mounted, así que cambios ahí NO disparan restart automático del container. Para que un cambio de config de nginx se aplique, hay que:
+- `docker exec nginx-vps3 nginx -t` (validar)
+- `docker exec nginx-vps3 nginx -s reload` (reload sin downtime)
+
+**Mejora al workflow:** en el step Deploy, detectar si archivos bajo `infra/docker/nginx-vps3/{nginx.conf,sites/}` cambiaron en el git pull; si sí, ejecutar reload. Alternativamente, siempre intentar reload (idempotente).
+
+**Por ahora no urgente** — cambios de HTML (en `html/prod|staging/`) sí se reflejan automáticamente porque nginx los lee en cada request. Solo configs del server requieren reload.
+
+**Fase sugerida:** cuando hagamos el primer cambio real a nginx.conf o sites/*.conf (probablemente en Fase 2 al agregar el proxy_pass al ERP Flask).  
+**Agregado por:** Claude Code · 2026-04-20
+
+---
+
 ### 🟡 Agregar passphrase a `livskin-vps-erp.ppk` al cerrar Fase 2
 Durante Fase 1-2 la `.ppk` no tiene passphrase (decisión consciente por fricción de setup). Al terminar Fase 2 (cutover ERP completo), agregarle passphrase y guardar en Bitwarden.
 
