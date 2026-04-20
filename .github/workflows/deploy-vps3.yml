@@ -50,13 +50,23 @@ jobs:
           echo "known_hosts entries: $(wc -l < ~/.ssh/known_hosts)"
 
       # Paso 3: SSH al VPS 3 -> git pull -> docker compose up -d
-      # Uso secrets.XXX directo (substitucion a nivel YAML, no env vars)
-      # para evitar problemas de expansion bash con env block.
+      # Strip defensivo de whitespace (los secrets pueden tener \n extras
+      # si se pegaron con Enter al final). tr -d '[:space:]' quita todo.
       # <<'ENDSSH' con comilla simple previene expansion local;
       # el bash remoto del VPS 3 hace la expansion de $svc, etc.
       - name: Deploy to VPS 3
+        env:
+          RAW_HOST: ${{ secrets.VPS3_HOST }}
+          RAW_USER: ${{ secrets.VPS3_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${{ secrets.VPS3_USER }}@${{ secrets.VPS3_HOST }}" 'bash -s' <<'ENDSSH'
+          TARGET_HOST=$(printf '%s' "$RAW_HOST" | tr -d '[:space:]')
+          TARGET_USER=$(printf '%s' "$RAW_USER" | tr -d '[:space:]')
+          echo "Lengths: user=${#TARGET_USER} host=${#TARGET_HOST}"
+          if [ -z "$TARGET_USER" ] || [ -z "$TARGET_HOST" ]; then
+            echo "ERROR: TARGET_USER or TARGET_HOST empty after strip"
+            exit 1
+          fi
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" 'bash -s' <<'ENDSSH'
           set -e
           echo "=== Git pull ==="
           cd /srv/livskin-revops
