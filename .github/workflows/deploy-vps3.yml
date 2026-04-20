@@ -29,27 +29,37 @@ jobs:
         uses: actions/checkout@v4
 
       # Paso 2: preparar SSH key desde secret + anadir host a known_hosts
+      # Nota: usamos VPS_HOST (no HOST) para evitar conflictos con env
+      # estandar del runner. ssh-keyscan se verifica con grep.
       - name: Setup SSH
         env:
           SSH_KEY: ${{ secrets.VPS3_SSH_KEY }}
-          HOST: ${{ secrets.VPS3_HOST }}
+          VPS_HOST: ${{ secrets.VPS3_HOST }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          # Verificar que la key carga
           ssh-keygen -l -f ~/.ssh/deploy_key
+          # Populate known_hosts (si falla, falla el workflow)
+          ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          if ! grep -q "$VPS_HOST\|[" ~/.ssh/known_hosts; then
+            echo "ERROR: ssh-keyscan no produjo entries para $VPS_HOST"
+            exit 1
+          fi
+          echo "known_hosts populated:"
+          wc -l ~/.ssh/known_hosts
 
       # Paso 3: SSH al VPS 3 -> git pull -> docker compose up -d
       # La comilla simple en <<'ENDSSH' previene expansion local de $svc;
       # el remote bash lo expande correctamente en VPS 3.
+      # Usamos VPS_HOST/VPS_USER (no HOST/USER) porque estos ultimos
+      # colisionan con env vars estandar del runner Linux.
       - name: Deploy to VPS 3
         env:
-          HOST: ${{ secrets.VPS3_HOST }}
-          USER: ${{ secrets.VPS3_USER }}
+          VPS_HOST: ${{ secrets.VPS3_HOST }}
+          VPS_USER: ${{ secrets.VPS3_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$USER@$HOST" 'bash -s' <<'ENDSSH'
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${VPS_USER}@${VPS_HOST}" 'bash -s' <<'ENDSSH'
           set -e
           echo "=== Git pull ==="
           cd /srv/livskin-revops
