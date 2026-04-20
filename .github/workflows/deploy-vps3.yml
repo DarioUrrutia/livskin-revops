@@ -1,0 +1,86 @@
+name: Deploy to VPS 3 (livskin-vps-erp)
+
+# Se dispara cuando cambian archivos de infra o el propio workflow.
+# Tambien puede dispararse manualmente (workflow_dispatch) desde la UI
+# de GitHub Actions para re-deploy sin cambios.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/docker/**'
+      - '.github/workflows/deploy-vps3.yml'
+  workflow_dispatch:
+
+# Evita 2 deploys simultaneos del mismo branch
+concurrency:
+  group: deploy-vps3-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Pull + compose up en VPS 3
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Paso 1: descargar el repo en el runner de GitHub (necesario
+      # para que Actions sepa que commit se esta deploying)
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Paso 2: preparar SSH key desde secret + anadir host a known_hosts
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS3_SSH_KEY }}
+          HOST: ${{ secrets.VPS3_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # Verificar que la key carga
+          ssh-keygen -l -f ~/.ssh/deploy_key
+
+      # Paso 3: SSH al VPS 3 -> git pull -> docker compose up -d
+      # La comilla simple en <<'ENDSSH' previene expansion local de $svc;
+      # el remote bash lo expande correctamente en VPS 3.
+      - name: Deploy to VPS 3
+        env:
+          HOST: ${{ secrets.VPS3_HOST }}
+          USER: ${{ secrets.VPS3_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$USER@$HOST" 'bash -s' <<'ENDSSH'
+          set -e
+          echo "=== Git pull ==="
+          cd /srv/livskin-revops
+          git pull origin main
+          echo
+          echo "=== Compose up por servicio ==="
+          for svc in postgres-data embeddings-service nginx-vps3; do
+            compose_file="infra/docker/$svc/docker-compose.yml"
+            if [ -f "$compose_file" ]; then
+              echo "--- $svc ---"
+              docker compose -f "$compose_file" up -d --quiet-pull 2>&1 | tail -5
+            else
+              echo "SKIP $svc: compose file no encontrado"
+            fi
+          done
+          echo
+          echo "=== Estado containers ==="
+          docker ps --format "table {{.Names}}\t{{.Status}}"
+          ENDSSH
+
+      # Paso 4: verificar URLs publicas
+      - name: Verify public endpoints
+        run: |
+          sleep 10
+          for url in https://erp.livskin.site https://erp-staging.livskin.site; do
+            if curl -sfI --max-time 10 "$url" > /dev/null; then
+              echo "OK: $url"
+            else
+              echo "FAIL: $url"
+              exit 1
+            fi
+          done
+          echo
+          echo "Deploy completo y verificado."

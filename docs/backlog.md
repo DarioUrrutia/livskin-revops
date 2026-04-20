@@ -42,6 +42,15 @@ La IP pública actual (`78.208.67.189`) es solo de la laptop personal en Milán.
 
 ---
 
+### 🟡 Limpiar `/srv/livskin/` en VPS 3 (carpeta vieja pre-migración)
+El 2026-04-20 se migraron los containers de `/srv/livskin/<svc>/` a `/srv/livskin-revops/infra/docker/<svc>/` como parte del setup de CI/CD. La carpeta vieja `/srv/livskin/` (postgres-data, embeddings-service, nginx) quedó como backup temporal.
+
+**Cuándo borrarla:** después de 24-48h de operación estable desde la nueva ubicación (probable: 2026-04-22).  
+**Cómo:** SSH a VPS 3 → `sudo rm -rf /srv/livskin/postgres-data /srv/livskin/embeddings-service /srv/livskin/nginx` (preservando `/srv/livskin/` mismo por si se necesita para algo futuro, o borrar todo si ya no tiene uso).  
+**Agregado por:** Claude Code · 2026-04-20
+
+---
+
 ### 🔴 Borrar snapshot VPS 3 cuando Fase 1 esté estable
 Snapshot `livskin-vps-erp-baseline-post-hardening-2026-04-19` cuesta ~$3/mes si se mantiene permanente. Debe borrarse cuando la Fase 1 esté operativamente estable (típicamente 1-2 semanas post-deploy sin incidentes). Mientras tanto es cobertura por si algo falla y necesitamos rollback al estado pre-Postgres.
 
