@@ -30,7 +30,7 @@ jobs:
 
       # Paso 2: preparar SSH key desde secret + anadir host a known_hosts
       # Nota: usamos VPS_HOST (no HOST) para evitar conflictos con env
-      # estandar del runner. ssh-keyscan se verifica con grep.
+      # estandar del runner.
       - name: Setup SSH
         env:
           SSH_KEY: ${{ secrets.VPS3_SSH_KEY }}
@@ -40,14 +40,14 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keygen -l -f ~/.ssh/deploy_key
-          # Populate known_hosts (si falla, falla el workflow)
+          # Populate known_hosts con la huella ssh del VPS 3
           ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts 2>/dev/null
-          if ! grep -q "$VPS_HOST\|[" ~/.ssh/known_hosts; then
-            echo "ERROR: ssh-keyscan no produjo entries para $VPS_HOST"
+          # Verificar que el archivo no este vacio
+          if [ ! -s ~/.ssh/known_hosts ]; then
+            echo "ERROR: ssh-keyscan no produjo entradas - VPS inaccesible?"
             exit 1
           fi
-          echo "known_hosts populated:"
-          wc -l ~/.ssh/known_hosts
+          echo "known_hosts entries: $(wc -l < ~/.ssh/known_hosts)"
 
       # Paso 3: SSH al VPS 3 -> git pull -> docker compose up -d
       # La comilla simple en <<'ENDSSH' previene expansion local de $svc;
