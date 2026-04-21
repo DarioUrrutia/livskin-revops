@@ -47,8 +47,8 @@ Subdominios Cloudflare:
 | Cloud | DigitalOcean Frankfurt — 3 VPS conectados por **DO VPC** privada |
 | Edge | Cloudflare — DNS + SSL + WAF + proxy |
 | Containerización | Docker + Docker Compose + GitHub Actions CI/CD |
-| CRM | Vtiger 8.2 (master de identidad cliente) |
-| ERP | Flask refactorizado (master de transacciones, 2 cuentas: tú + doctora) |
+| CRM | Vtiger 8.2 (master del **lead digital** — marketing automation solamente) |
+| ERP | Flask refactorizado (master de **cliente + transacciones**, 2 cuentas: tú + doctora) |
 | Orquestación | n8n 2.14 (primary) + Agent SDK (cuando aplique) |
 | Data OLTP | MariaDB (WP, Vtiger) + Postgres (ERP) |
 | Data OLAP | Postgres 16 + pgvector (analytics + segundo cerebro) |

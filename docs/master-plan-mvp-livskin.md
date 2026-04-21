@@ -174,11 +174,11 @@ Rigen cada decisión técnica y estratégica. No son aspiracionales — son vinc
 | SureForms | 2.7.0 | Formularios captura leads con webhook | VPS 1 (WP plugin) |
 | Complianz GDPR | — | Cookie consent | VPS 1 (WP plugin) |
 | UpdraftPlus | — | Backups WP | VPS 1 (WP plugin) |
-| Vtiger CRM | 8.2.0 | CRM maestro — identidad cliente | VPS 2 container |
+| Vtiger CRM | 8.2.0 | Master del **lead digital** — marketing automation (NO master de cliente, ver ADR-0015) | VPS 2 container |
 | n8n | 2.14.2 | Orquestador flujos | VPS 2 container |
 | Metabase | latest | Dashboards BI | VPS 2 container |
 | Langfuse | — | Observabilidad agentes IA | VPS 2 container (**Fase 3**) |
-| **ERP Livskin (refactorizado)** | Flask + SQLAlchemy + Pydantic | Transacciones: ventas, pagos, gastos | VPS 3 container (**Fase 2**) |
+| **ERP Livskin (refactorizado)** | Flask + SQLAlchemy + Pydantic | Master de **cliente + transacciones** (ventas, pagos, gastos) — ver ADR-0015 | VPS 3 container (**Fase 2**) |
 | Embeddings service | `multilingual-e5-small` (self-hosted) | Vectores para segundo cerebro | VPS 3 container (**Fase 1**) |
 
 ### 5.3 Bases de datos
@@ -590,11 +590,11 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 
 ### 11.4 Fase 2 — Gobierno datos + ERP refactor + segundo cerebro L1-L3 (Semanas 3-4)
 
-**Objetivo:** ERP refactorizado en producción nueva con modelo profesional + segundo cerebro poblado con conocimiento base.
+**Objetivo:** ERP refactorizado instalado en VPS 3 en **dormant standby** + segundo cerebro poblado con conocimiento base. **Render sigue siendo producción real; el cutover NO ocurre en esta fase** (se difiere a Fase 6 post-validación — ver memoria `project_cutover_strategy`).
 
 **Entregables:**
-- **Dossiers aprobados:** 0011 (modelo Lead/Cliente/Venta), 0012 (stages Vtiger), 0013 (dedup), 0014 (naming), 0018 (schema cerebro)
-- ERP refactorizado:
+- **Dossiers aprobados:** 0011 (modelo Lead/Cliente/Venta), 0012 (stages Vtiger), 0013 (dedup), 0014 (naming), 0018 (schema cerebro), 0023 (refactor), 0024 (strangler → clone+standby), 0025 (backfill re-runable), 0026 (auth), 0027 (audit log)
+- ERP refactorizado (instalado en VPS 3, sin tráfico real):
   - SQLAlchemy + psycopg2 (reemplazo de gspread)
   - Pydantic schemas para cada entidad
   - Service layer (VentaService, ClienteService, PagoService)
@@ -605,20 +605,20 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
   - **Auth bcrypt + 2 cuentas fijas (tú + doctora)**
   - **Audit log tabla inmutable**
   - CSRF tokens + rate limiting
-- Vtiger configurado (pipeline 7 stages, campos custom: fuente, utm_*, fbclid, gclid, tratamiento_interés, consent_marketing)
+- Vtiger configurado (pipeline 5 stages — ADR-0012, campos custom: fuente, utm_*, fbclid, gclid, tratamiento_interés, consent_marketing)
 - **Layer 1 del cerebro poblado:** catálogo completo (21 tratamientos + 12 productos + áreas) con embeddings
 - **Layer 2 del cerebro:** indexación del repo (todos los .md con embeddings, cron semanal)
 - **Layer 3 del cerebro:** vistas SQL consolidadas
 - **MCP server del cerebro desplegado** (yo puedo consultar desde Claude Code)
-- Backfill: migración de 74 ventas + 135 clientes del Excel → `livskin_erp` con dedup contra Vtiger
-- Sync inicial Vtiger ↔ ERP (n8n flows básicos)
-- **Backups daily activados** (cuando entre data real)
-- Parallel run Render vs VPS 3 por 1 semana; comparación manual
+- **Backfill SINTÉTICO** — script re-runable que puede poblar `livskin_erp` con data generada (shape similar al Excel) para testing. El mismo script tendrá modo "real" que se usa al cutover contra Google Sheets live.
+- Sync inicial Vtiger ↔ ERP (n8n flows básicos) — testeado con data sintética
+- **Backups daily activados** sobre el Postgres de VPS 3 (aunque aún sin data real)
 
 **Exit criteria:**
-- El equipo comercial usa el ERP nuevo sin notar diferencia visual
-- Revenue del día clasificable por fuente en Metabase
-- Cutover: Render queda cold standby, VPS 3 autoritativo
+- ERP nuevo corre end-to-end en `erp.livskin.site` contra data sintética (dormant standby — nadie lo usa productivamente aún)
+- Revenue sintético clasificable por fuente en Metabase (valida el modelo de atribución)
+- Render sigue operando como producción real SIN cambios — no hay cutover en esta fase
+- Backfill script probado en modo dry-run contra export estático de Google Sheets
 - Yo (Claude Code) puedo preguntar al MCP server "¿cuáles son las contraindicaciones de botox?" y obtener respuesta precisa
 
 ### 11.5 Fase 3 — Tracking + observabilidad (Semana 5)
@@ -749,7 +749,7 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 - Reporte semanal ejecutivo por WhatsApp los lunes
 - Reactivación 45 días v1 funcionando
 
-**Entregables Semana 10 (estabilización):**
+**Entregables Semana 10 (estabilización + cutover ERP):**
 - **Dossiers aprobados:** 0039 (evals LLM-as-judge)
 - Evals LLM-as-judge (Haiku) cada 100 conversaciones
 - Golden set expandido a 50 conversaciones etiquetadas
@@ -758,13 +758,25 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 - Documentación final arquitectura (diagrama canónico)
 - Retrospectiva del primer mes en producción
 - **Migración a WhatsApp número producción** (si Meta aprobó)
+- **CUTOVER ERP — Render → VPS 3 (hito explícito)**:
+  - Trigger: Dario confirma que el sistema completo end-to-end funciona a su satisfacción
+  - Pasos operativos:
+    1. Aviso a comerciales (doctora + Dario) 48h antes con ventana de corte
+    2. Ejecutar backfill script (ADR-0025) en modo **real**: pull live de Google Sheets → poblar `livskin_erp` en VPS 3
+    3. Validación manual de totales (revenue agregado, nº clientes, nº ventas) entre ambos sistemas
+    4. DNS switch: `erp.livskin.site` apunta a VPS 3 (ya está así, pero confirmar)
+    5. Comunicar a comerciales que pueden usar nuevo sistema
+    6. Render queda en cold standby por ~30 días (por seguridad) — NO se apaga inmediatamente
+    7. Post-cutover: monitoreo intensivo primeras 72h
+  - Exit del cutover: 1 semana de operación sobre VPS 3 sin regresiones funcionales reportadas
 
-**Exit criteria:**
+**Exit criteria Fase 6:**
 - Recibes lunes 09:00 reporte ejecutivo de la semana por WhatsApp
 - Lynis score > 70 en los 3 VPS
 - OWASP ZAP sin vulnerabilidades críticas/altas
 - Todos los runbooks ejercitados al menos 1 vez (aunque sea en staging)
 - Dashboard "Sistema completo" muestra salud end-to-end
+- **Cutover ERP ejecutado** — comerciales trabajan sobre `erp.livskin.site` (VPS 3), Render en cold standby
 
 ---
 
@@ -1107,6 +1119,19 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 - **Fase 1 completada al 100%** — plumbing máquina (VPS 3, Postgres+pgvector, embeddings, CI/CD, Alembic, brain-tools) + capa humana (Obsidian).
 - **§ 18 agregado** — Operación post-MVP y mantenimiento. Target <5h/mes post-cutover. 3 rutas evaluadas (A: Dario+Claude Code, B: fractional DevOps, C: managed services).
 - **§ 11.5b agregado** — Interludio estratégico entre Fase 3 y Fase 4. Define el slot correcto para la sesión estratégica (segmentación + arquetipos + plan de negocio) sin violar plumbing-first ni desplazar fases. Respuesta a observación de Dario de que sesiones estratégicas son slots programados, no alternativas ad-hoc al trabajo táctico.
+
+### v1.2 — 2026-04-21
+- **ADRs 0011-0014 aprobados** (MVP): modelo de datos, stages Vtiger, dedup, naming. Basados en análisis del Flask real en Render + Excel.
+- **§ 11.4 Fase 2 re-encuadrada**: el cutover ERP **NO ocurre** al final de Fase 2. VPS 3 queda en dormant standby durante Fases 2-5 con data sintética; Render sigue siendo producción sin cambios.
+- **§ 11.8 Fase 6 actualizada**: el cutover ERP (Render → VPS 3) se incorpora como hito explícito con plan operativo. Trigger: Dario confirma que el sistema completo end-to-end funciona.
+- **Razón del cambio**: preserva producción real durante todo el MVP, minimiza riesgo a comerciales, permite iterar schema sin afectar operaciones. Decisión de Dario 2026-04-21, memoria `project_cutover_strategy`.
+
+### v1.3 — 2026-04-21
+- **ADR-0013 v2 (reescrita)**: dedup con phone como anchor universal, 2 canales (form + WA), tabla `lead_touchpoints` para multi-touch tracking, cross-system dedup Vtiger↔ERP explícito. Elimina modelo polimórfico over-engineered.
+- **ADR-0011 v1.1**: corrige SoT (Cliente=ERP no Vtiger), agrega `lead_touchpoints` + `form_submissions`, columnas de scoring/intent/handoff/nurture en `leads`, campos renombrados a convención ADR-0013 v2.
+- **ADR-0015 escrita** (era orphan): SoT por dominio oficializado. Tabla canónica de 13 dominios con sistema autoritativo + reglas de sync.
+- **§ 5.2 corregido**: Vtiger ya no es "CRM maestro identidad cliente" → ahora "master del lead digital solamente". ERP es master de cliente + transacciones.
+- **Razón del cambio**: clarificación de Dario sobre scope narrow de Vtiger (marketing automation para adquisición digital). Los 135 clientes históricos word-of-mouth nunca entran a Vtiger. Memorias `project_vtiger_erp_sot`, `project_acquisition_flow`, `project_whatsapp_architecture`.
 
 ---
 

@@ -40,10 +40,10 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| 0011 | Modelo de datos Lead / Cliente / Venta | ⏳ | 2 |
-| 0012 | Pipeline stages en Vtiger | ⏳ | 2 |
-| 0013 | Reglas de deduplicación (email + teléfono) | ⏳ | 2 |
-| 0014 | Naming conventions (campañas, fuentes, medios) | ⏳ | 2 |
+| 0011 | Modelo de datos Lead / Cliente / Venta / Pago / Gasto | ✅ | 2 |
+| 0012 | Pipeline stages en Vtiger | ✅ | 2 |
+| 0013 | Reglas de deduplicación (teléfono > email > nombre+fecha_nac) | ✅ | 2 |
+| 0014 | Naming conventions (códigos, fuentes, UTMs) | ✅ | 2 |
 | 0015 | Source of truth por dominio | ✅ | 2 |
 | 0016 | Time zones — UTC DB, local UI | ✅ | 0 |
 | 0017 | Consent mode Complianz (reject-or-accept MVP) | ⏳ | 3 |
