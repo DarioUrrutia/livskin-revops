@@ -3,6 +3,7 @@ from flask import Flask
 
 from config import settings
 from routes.api_client_lookup import bp as client_lookup_bp
+from routes.api_cliente import bp as cliente_bp
 
 
 def create_app() -> Flask:
@@ -10,6 +11,7 @@ def create_app() -> Flask:
     flask_app.config["SECRET_KEY"] = settings.flask_secret_key
 
     flask_app.register_blueprint(client_lookup_bp)
+    flask_app.register_blueprint(cliente_bp)
 
     @flask_app.route("/ping")
     def ping() -> str:
