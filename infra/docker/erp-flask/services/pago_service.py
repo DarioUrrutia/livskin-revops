@@ -110,15 +110,19 @@ def list_by_item(db: Session, cod_item: str) -> list[Pago]:
 
 
 def total_pagado_for_item(db: Session, cod_item: str) -> Decimal:
-    """Suma de pagos no-credito_aplicado para un cod_item específico.
+    """Suma de TODOS los pagos linkeados a un cod_item específico.
 
-    credito_aplicado se excluye porque es transferencia interna del crédito
-    del cliente, no es nuevo dinero entrando.
+    Incluye credito_aplicado: cuando un cliente aplica crédito previo a un
+    item, eso reduce el DEBE de ese item (es "pago" desde la perspectiva
+    del item, aunque a nivel agregado no sea dinero nuevo).
+
+    Para el cálculo de cobrado_total agregado del cliente, usar otra función
+    que excluya credito_aplicado (ese sí es transferencia interna sin
+    dinero nuevo).
     """
     result = db.execute(
         select(func.coalesce(func.sum(Pago.monto), 0)).where(
             Pago.cod_item == cod_item,
-            Pago.tipo_pago != "credito_aplicado",
         )
     ).scalar()
     return Decimal(result or 0)

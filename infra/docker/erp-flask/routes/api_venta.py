@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from db import session_scope
 from schemas.venta import PagoOut, VentaCreate, VentaItemOut, VentaSaveResponse, VentaSimpleOut
-from services import pago_service, venta_service
+from services import cliente_service, pago_service, venta_service
 
 bp = Blueprint("api_venta", __name__)
 
@@ -46,11 +46,25 @@ def create_venta():  # type: ignore[no-untyped-def]
         "giro": body.metodos_pago.giro,
     }
 
+    if not body.cod_cliente and not body.cliente_data:
+        return jsonify({"error": "Debe pasar cod_cliente o cliente_data"}), 400
+
+    cliente_data_input = None
+    if body.cliente_data:
+        cliente_data_input = venta_service.ClienteAutoCreateInput(
+            nombre=body.cliente_data.nombre,
+            telefono=body.cliente_data.telefono,
+            email=body.cliente_data.email,
+            fecha_nacimiento=body.cliente_data.fecha_nacimiento,
+        )
+
     try:
         with session_scope() as db:
             result = venta_service.save_venta(
                 db,
                 cod_cliente=body.cod_cliente,
+                cliente_data=cliente_data_input,
+                actualizar_cliente=body.actualizar_cliente,
                 fecha=body.fecha,
                 items=items_input,
                 metodos_pago=metodos_pago,
@@ -60,8 +74,12 @@ def create_venta():  # type: ignore[no-untyped-def]
                 tc=body.tc,
             )
 
+            response_cod_cliente = body.cod_cliente or (
+                result.ventas[0].cod_cliente if result.ventas else ""
+            )
+
             response_json = VentaSaveResponse(
-                cod_cliente=body.cod_cliente,
+                cod_cliente=response_cod_cliente,
                 fecha=body.fecha,
                 ventas=[VentaItemOut.model_validate(v) for v in result.ventas],
                 pagos=[PagoOut.model_validate(p) for p in result.pagos],
@@ -74,6 +92,8 @@ def create_venta():  # type: ignore[no-untyped-def]
     except venta_service.ClienteNoExiste as e:
         return jsonify({"error": str(e)}), 404
     except venta_service.CreditoInsuficiente as e:
+        return jsonify({"error": str(e)}), 409
+    except cliente_service.ClienteDuplicadoError as e:
         return jsonify({"error": str(e)}), 409
     except pago_service.AbonoCodItemInvalido as e:
         return jsonify({"error": str(e)}), 400

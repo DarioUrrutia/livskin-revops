@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from models.cliente import Cliente
 from models.pago import Pago
 from models.venta import Venta
-from services import pago_service
+from services import cliente_service, pago_service
 from services.codgen_service import next_codigos_batch
 
 
@@ -69,6 +69,15 @@ class AbonoDeudaInput:
 
 
 @dataclass
+class ClienteAutoCreateInput:
+    """Datos para auto-crear o resolver cliente desde POST /venta (per Flask original)."""
+    nombre: str
+    telefono: Optional[str] = None
+    email: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
+
+
+@dataclass
 class SaveVentaResult:
     ventas: list[Venta] = field(default_factory=list)
     pagos: list[Pago] = field(default_factory=list)
@@ -81,10 +90,12 @@ class SaveVentaResult:
 
 def save_venta(
     db: Session,
-    cod_cliente: str,
     fecha: date,
     items: list[ItemVentaInput],
     metodos_pago: dict[str, Decimal],
+    cod_cliente: Optional[str] = None,
+    cliente_data: Optional[ClienteAutoCreateInput] = None,
+    actualizar_cliente: bool = False,
     credito_aplicado: Decimal = Decimal("0"),
     abonos_deudas: Optional[list[AbonoDeudaInput]] = None,
     moneda: str = "PEN",
@@ -93,16 +104,36 @@ def save_venta(
 ) -> SaveVentaResult:
     """Procesa las 6 fases en una sola transacción.
 
+    Cliente puede pasarse vía:
+    - cod_cliente: lookup directo (rechaza si no existe)
+    - cliente_data: nombre + datos opcionales — replica `get_or_create_cliente`
+      del Flask original. Si actualizar_cliente=True, sobrescribe campos
+      no vacíos del cliente existente con datos nuevos.
+
     Si cualquier fase falla → rollback completo (atomicidad).
     """
     if not items:
         raise ValueError("items no puede estar vacío")
 
-    cliente = db.execute(
-        select(Cliente).where(Cliente.cod_cliente == cod_cliente)
-    ).scalar_one_or_none()
-    if cliente is None:
-        raise ClienteNoExiste(f"Cliente {cod_cliente} no existe")
+    if cod_cliente:
+        cliente = db.execute(
+            select(Cliente).where(Cliente.cod_cliente == cod_cliente)
+        ).scalar_one_or_none()
+        if cliente is None:
+            raise ClienteNoExiste(f"Cliente {cod_cliente} no existe")
+    elif cliente_data:
+        cliente = cliente_service.get_or_create(
+            db,
+            nombre=cliente_data.nombre,
+            phone_raw=cliente_data.telefono,
+            email_raw=cliente_data.email,
+            fecha_nacimiento=cliente_data.fecha_nacimiento,
+            actualizar=actualizar_cliente,
+            created_by=created_by,
+        )
+        cod_cliente = cliente.cod_cliente
+    else:
+        raise ValueError("Debe pasar cod_cliente o cliente_data")
 
     for item in items:
         if item.tipo not in PREFIX_BY_TIPO:
@@ -232,7 +263,9 @@ def save_venta(
         result.excedente_credito_generado = excedente
 
     # ============================================================
-    # FASE 5: crédito aplicado
+    # FASE 5: crédito aplicado — distribuido proporcional por item
+    # (igual que el Flask original — permite trackear cuál item recibió
+    # el crédito + reduce el DEBE de cada item via trigger en pagos)
     # ============================================================
     if credito_aplicado > 0:
         balance = pago_service.credito_balance(db, cod_cliente)
@@ -241,17 +274,37 @@ def save_venta(
                 f"Cliente {cod_cliente} tiene crédito S/.{balance} disponible, "
                 f"solicitado S/.{credito_aplicado}"
             )
-        pago_aplicado = pago_service.create_pago(
-            db,
-            cod_cliente=cod_cliente,
-            fecha=fecha,
-            monto=credito_aplicado,
-            tipo_pago="credito_aplicado",
-            cliente_nombre=cliente.nombre,
-            notas=f"Crédito aplicado del {fecha}",
-            created_by=created_by,
-        )
-        result.pagos.append(pago_aplicado)
+
+        items_con_total = [it for it in items if it.total > 0]
+        suma_totales = sum((it.total for it in items_con_total), Decimal("0"))
+
+        if suma_totales > 0:
+            credito_restante = credito_aplicado
+            for idx, item in enumerate(items_con_total):
+                if idx == len(items_con_total) - 1:
+                    credito_item = credito_restante
+                else:
+                    proporcion = item.total / suma_totales
+                    credito_item = (credito_aplicado * proporcion).quantize(Decimal("0.01"))
+                    credito_item = min(credito_item, credito_restante)
+
+                if credito_item <= 0:
+                    continue
+
+                credito_restante -= credito_item
+                pago_aplicado = pago_service.create_pago(
+                    db,
+                    cod_cliente=cod_cliente,
+                    fecha=fecha,
+                    monto=credito_item,
+                    tipo_pago="credito_aplicado",
+                    cod_item=item.cod_item,
+                    categoria=item.categoria,
+                    cliente_nombre=cliente.nombre,
+                    notas=f"Crédito aplicado del {fecha}",
+                    created_by=created_by,
+                )
+                result.pagos.append(pago_aplicado)
         result.credito_aplicado = credito_aplicado
 
     # ============================================================

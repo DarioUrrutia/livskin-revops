@@ -115,6 +115,85 @@ def create(
     return cliente
 
 
+def get_or_create(
+    db: Session,
+    nombre: str,
+    phone_raw: Optional[str] = None,
+    email_raw: Optional[str] = None,
+    fecha_nacimiento: Optional[Any] = None,
+    fuente: str = "organico",
+    canal_adquisicion: str = "legacy",
+    actualizar: bool = False,
+    created_by: Optional[int] = None,
+) -> Cliente:
+    """Busca cliente por nombre case-insensitive. Si existe, opcionalmente
+    actualiza campos vacíos (siempre) o todos los distintos (si actualizar=True).
+    Si no existe, lo crea. Replica `get_or_create_cliente` del Flask original.
+    """
+    nombre_clean = (nombre or "").strip()
+    if not nombre_clean:
+        raise ValueError("nombre no puede estar vacío")
+    nombre_lower = nombre_clean.lower()
+
+    cliente = db.execute(
+        select(Cliente).where(
+            func.lower(Cliente.nombre) == nombre_lower, Cliente.activo.is_(True)
+        )
+    ).scalar_one_or_none()
+
+    if cliente is None:
+        return create(
+            db,
+            nombre=nombre_clean,
+            phone_raw=phone_raw,
+            email_raw=email_raw,
+            fecha_nacimiento=fecha_nacimiento,
+            fuente=fuente,
+            canal_adquisicion=canal_adquisicion,
+            created_by=created_by,
+        )
+
+    # Existe — actualizar selectivamente
+    new_phone = normalize_phone(phone_raw) if phone_raw else None
+    if new_phone:
+        if not cliente.phone_e164:
+            cliente.phone_e164 = new_phone
+        elif actualizar and new_phone != cliente.phone_e164:
+            other = db.execute(
+                select(Cliente).where(
+                    Cliente.phone_e164 == new_phone,
+                    Cliente.activo.is_(True),
+                    Cliente.cod_cliente != cliente.cod_cliente,
+                )
+            ).scalar_one_or_none()
+            if other is not None:
+                raise ClienteDuplicadoError(
+                    f"Phone {new_phone} ya existe en cliente {other.cod_cliente}"
+                )
+            cliente.phone_e164 = new_phone
+
+    new_email = normalize_email(email_raw) if email_raw else None
+    if new_email:
+        if not cliente.email_lower:
+            cliente.email_lower = new_email
+            cliente.email_hash_sha256 = hash_email(new_email)
+        elif actualizar and new_email != cliente.email_lower:
+            cliente.email_lower = new_email
+            cliente.email_hash_sha256 = hash_email(new_email)
+
+    if fecha_nacimiento:
+        if not cliente.fecha_nacimiento:
+            cliente.fecha_nacimiento = fecha_nacimiento
+        elif actualizar:
+            cliente.fecha_nacimiento = fecha_nacimiento
+
+    if created_by is not None:
+        cliente.updated_by = created_by
+
+    db.flush()
+    return cliente
+
+
 def get_full_history(db: Session, nombre: str) -> dict[str, Any]:
     """Retorna historial completo del cliente — formato compatible con formulario.html.
 
@@ -151,13 +230,10 @@ def get_full_history(db: Session, nombre: str) -> dict[str, Any]:
         .all()
     )
 
-    pagos_no_credito = list(
+    todos_pagos = list(
         db.execute(
             select(Pago)
-            .where(
-                Pago.cod_cliente == cliente.cod_cliente,
-                Pago.tipo_pago != "credito_aplicado",
-            )
+            .where(Pago.cod_cliente == cliente.cod_cliente)
             .order_by(Pago.fecha.desc(), Pago.id.desc())
         )
         .scalars()
@@ -165,7 +241,7 @@ def get_full_history(db: Session, nombre: str) -> dict[str, Any]:
     )
 
     pagos_por_item: dict[str, Decimal] = {}
-    for p in pagos_no_credito:
+    for p in todos_pagos:
         if p.cod_item:
             pagos_por_item[p.cod_item] = pagos_por_item.get(p.cod_item, Decimal("0")) + p.monto
 
@@ -177,7 +253,8 @@ def get_full_history(db: Session, nombre: str) -> dict[str, Any]:
         ventas_out.append(_venta_to_dict(v, debe_real, cobrado_item))
         facturado_total += v.total
 
-    cobrado_total = sum((p.monto for p in pagos_no_credito), Decimal("0"))
+    pagos_for_display = [p for p in todos_pagos if p.tipo_pago != "credito_aplicado"]
+    cobrado_total = sum((p.monto for p in pagos_for_display), Decimal("0"))
     saldo = max(Decimal("0"), facturado_total - cobrado_total)
 
     credito_dep = (
@@ -207,7 +284,7 @@ def get_full_history(db: Session, nombre: str) -> dict[str, Any]:
         "email": cliente.email_lower or "",
         "cumpleanos": cliente.fecha_nacimiento.isoformat() if cliente.fecha_nacimiento else "",
         "ventas": ventas_out,
-        "pagos": [_pago_to_dict(p) for p in pagos_no_credito],
+        "pagos": [_pago_to_dict(p) for p in pagos_for_display],
         "facturado_total": float(facturado_total),
         "cobrado_total": float(cobrado_total),
         "saldo": float(saldo),

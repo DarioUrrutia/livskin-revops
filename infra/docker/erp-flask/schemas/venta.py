@@ -30,8 +30,17 @@ class AbonoDeudaIn(BaseModel):
     notas: Optional[str] = None
 
 
+class ClienteAutoCreateIn(BaseModel):
+    nombre: str = Field(..., min_length=1, max_length=200)
+    telefono: Optional[str] = Field(default=None, max_length=30)
+    email: Optional[str] = Field(default=None, max_length=200)
+    fecha_nacimiento: Optional[date] = None
+
+
 class VentaCreate(BaseModel):
-    cod_cliente: str
+    cod_cliente: Optional[str] = None
+    cliente_data: Optional[ClienteAutoCreateIn] = None
+    actualizar_cliente: bool = False
     fecha: date
     items: list[ItemVentaIn] = Field(..., min_length=1)
     metodos_pago: MetodosPagoIn = Field(default_factory=MetodosPagoIn)
