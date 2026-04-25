@@ -10,23 +10,23 @@ class ItemVentaIn(BaseModel):
     tipo: str = Field(..., description="Tratamiento | Producto | Certificado | Promocion")
     categoria: Optional[str] = None
     zona_cantidad_envase: Optional[str] = None
-    precio_lista: Optional[Decimal] = None
-    descuento: Decimal = Decimal("0")
-    pago_item: Decimal = Decimal("0")
+    precio_lista: Optional[Decimal] = Field(default=None, ge=0)
+    descuento: Decimal = Field(default=Decimal("0"), ge=0)
+    pago_item: Decimal = Field(default=Decimal("0"), ge=0)
     proxima_cita: Optional[date] = None
     notas: Optional[str] = None
 
 
 class MetodosPagoIn(BaseModel):
-    efectivo: Decimal = Decimal("0")
-    yape: Decimal = Decimal("0")
-    plin: Decimal = Decimal("0")
-    giro: Decimal = Decimal("0")
+    efectivo: Decimal = Field(default=Decimal("0"), ge=0)
+    yape: Decimal = Field(default=Decimal("0"), ge=0)
+    plin: Decimal = Field(default=Decimal("0"), ge=0)
+    giro: Decimal = Field(default=Decimal("0"), ge=0)
 
 
 class AbonoDeudaIn(BaseModel):
     cod_item: str
-    monto: Decimal
+    monto: Decimal = Field(..., ge=0)
     notas: Optional[str] = None
 
 
@@ -35,10 +35,10 @@ class VentaCreate(BaseModel):
     fecha: date
     items: list[ItemVentaIn] = Field(..., min_length=1)
     metodos_pago: MetodosPagoIn = Field(default_factory=MetodosPagoIn)
-    credito_aplicado: Decimal = Decimal("0")
+    credito_aplicado: Decimal = Field(default=Decimal("0"), ge=0)
     abonos_deudas: list[AbonoDeudaIn] = Field(default_factory=list)
     moneda: str = "PEN"
-    tc: Optional[Decimal] = None
+    tc: Optional[Decimal] = Field(default=None, ge=0)
 
 
 class VentaItemOut(BaseModel):
