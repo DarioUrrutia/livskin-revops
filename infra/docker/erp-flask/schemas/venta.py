@@ -46,6 +46,7 @@ class VentaCreate(BaseModel):
     metodos_pago: MetodosPagoIn = Field(default_factory=MetodosPagoIn)
     credito_aplicado: Decimal = Field(default=Decimal("0"), ge=0)
     abonos_deudas: list[AbonoDeudaIn] = Field(default_factory=list)
+    auto_aplicar_a_deudas: bool = True
     moneda: str = "PEN"
     tc: Optional[Decimal] = Field(default=None, ge=0)
 

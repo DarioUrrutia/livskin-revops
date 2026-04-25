@@ -98,6 +98,7 @@ def save_venta(
     actualizar_cliente: bool = False,
     credito_aplicado: Decimal = Decimal("0"),
     abonos_deudas: Optional[list[AbonoDeudaInput]] = None,
+    auto_aplicar_a_deudas: bool = True,
     moneda: str = "PEN",
     tc: Optional[Decimal] = None,
     created_by: Optional[int] = None,
@@ -245,25 +246,7 @@ def save_venta(
             result.pagos.append(pago)
 
     # ============================================================
-    # FASE 4: crédito generado por excedente
-    # ============================================================
-    excedente = total_pagado_hoy - total_venta_dia
-    if excedente > 0:
-        pago_excedente = pago_service.create_pago(
-            db,
-            cod_cliente=cod_cliente,
-            fecha=fecha,
-            monto=excedente,
-            tipo_pago="credito_generado",
-            cliente_nombre=cliente.nombre,
-            notas=f"Crédito generado por excedente del {fecha}",
-            created_by=created_by,
-        )
-        result.pagos.append(pago_excedente)
-        result.excedente_credito_generado = excedente
-
-    # ============================================================
-    # FASE 5: crédito aplicado — distribuido proporcional por item
+    # FASE 4: crédito aplicado — distribuido proporcional por item
     # (igual que el Flask original — permite trackear cuál item recibió
     # el crédito + reduce el DEBE de cada item via trigger en pagos)
     # ============================================================
@@ -308,9 +291,10 @@ def save_venta(
         result.credito_aplicado = credito_aplicado
 
     # ============================================================
-    # FASE 6: abonos a deudas anteriores
+    # FASE 5: abonos EXPLÍCITOS a deudas anteriores (input del operador)
     # ============================================================
-    total_abonos = Decimal("0")
+    total_abonos_explicitos = Decimal("0")
+    cod_items_abonados_explicitos: set[str] = set()
     for abono in abonos_deudas:
         if abono.monto <= 0:
             continue
@@ -326,8 +310,79 @@ def save_venta(
             created_by=created_by,
         )
         result.pagos.append(pago_abono)
-        total_abonos += abono.monto
-    result.abonos_deudas = total_abonos
+        total_abonos_explicitos += abono.monto
+        cod_items_abonados_explicitos.add(abono.cod_item)
+
+    # ============================================================
+    # FASE 6 (NUEVA): auto-aplicar leftover_cash a deudas anteriores (FIFO)
+    # Solo si auto_aplicar_a_deudas=True (default). Si operador envía
+    # auto_aplicar_a_deudas=False, el sobrante va directo a crédito (Fase 7).
+    # ============================================================
+    total_pago_items = sum((it.pago_item for it in items), Decimal("0"))
+    leftover_cash = total_pagado_hoy - total_pago_items - total_abonos_explicitos
+
+    auto_abonos_total = Decimal("0")
+    if auto_aplicar_a_deudas and leftover_cash > Decimal("0.01"):
+        cod_items_to_skip = cod_items_abonados_explicitos | {
+            it.cod_item for it in items if it.cod_item is not None
+        }
+
+        deudas_query = select(Venta).where(
+            Venta.cod_cliente == cod_cliente,
+            Venta.debe > 0,
+        )
+        if cod_items_to_skip:
+            deudas_query = deudas_query.where(~Venta.cod_item.in_(cod_items_to_skip))
+        deudas_query = deudas_query.order_by(Venta.fecha, Venta.id)
+
+        deudas_abiertas = list(db.execute(deudas_query).scalars().all())
+
+        for deuda in deudas_abiertas:
+            if leftover_cash <= Decimal("0.01"):
+                break
+            debe_actual = deuda.debe or Decimal("0")
+            if debe_actual <= 0:
+                continue
+            monto_abono = min(debe_actual, leftover_cash).quantize(Decimal("0.01"))
+            if monto_abono <= 0:
+                continue
+
+            pago_auto = pago_service.create_pago(
+                db,
+                cod_cliente=cod_cliente,
+                fecha=fecha,
+                monto=monto_abono,
+                tipo_pago="abono_deuda",
+                cod_item=deuda.cod_item,
+                categoria=deuda.categoria,
+                cliente_nombre=cliente.nombre,
+                notas=f"Auto-abono a {deuda.cod_item} (deuda anterior FIFO)",
+                created_by=created_by,
+            )
+            result.pagos.append(pago_auto)
+            leftover_cash -= monto_abono
+            auto_abonos_total += monto_abono
+
+    result.abonos_deudas = total_abonos_explicitos + auto_abonos_total
+
+    # ============================================================
+    # FASE 7: crédito_generado por sobrante remanente
+    # (cualquier cash que aún sobra después de items + abonos explícitos +
+    # auto-abonos a deudas) → se convierte en crédito a favor del cliente.
+    # ============================================================
+    if leftover_cash > Decimal("0.01"):
+        pago_excedente = pago_service.create_pago(
+            db,
+            cod_cliente=cod_cliente,
+            fecha=fecha,
+            monto=leftover_cash,
+            tipo_pago="credito_generado",
+            cliente_nombre=cliente.nombre,
+            notas=f"Crédito generado por excedente del {fecha}",
+            created_by=created_by,
+        )
+        result.pagos.append(pago_excedente)
+        result.excedente_credito_generado = leftover_cash
 
     db.flush()
     return result

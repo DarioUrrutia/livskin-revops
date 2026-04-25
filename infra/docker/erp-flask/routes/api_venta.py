@@ -70,6 +70,7 @@ def create_venta():  # type: ignore[no-untyped-def]
                 metodos_pago=metodos_pago,
                 credito_aplicado=body.credito_aplicado or Decimal("0"),
                 abonos_deudas=abonos_input,
+                auto_aplicar_a_deudas=body.auto_aplicar_a_deudas,
                 moneda=body.moneda,
                 tc=body.tc,
             )
