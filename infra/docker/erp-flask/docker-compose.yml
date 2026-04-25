@@ -1,0 +1,33 @@
+# ERP Flask refactorizado — corre como container en VPS 3
+# Estado: dormant standby durante Fases 2-5 (no recibe tráfico de comerciales)
+# Cutover a producción: Fase 6 per ADR-0024.
+
+services:
+  erp-flask:
+    build:
+      context: .
+    image: livskin/erp-flask:latest
+    container_name: erp-flask
+    restart: unless-stopped
+    env_file:
+      - ../postgres-data/.env
+      - .env
+    environment:
+      ERP_DB_HOST: postgres-data
+      ERP_DB_NAME: livskin_erp
+      ERP_DB_USER: erp_user
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      - data_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ping')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  data_net:
+    external: true
+    name: data_net

@@ -30,11 +30,11 @@ if not db_name:
 database_url = f"postgresql+psycopg2://postgres:{password}@{db_host}:5432/{db_name}"
 config.set_main_option("sqlalchemy.url", database_url)
 
-# target_metadata: cuando Fase 2 agregue modelos SQLAlchemy del ERP,
-# importarlos aqui:
-#   from livskin_erp_models import Base
-#   target_metadata = Base.metadata
-target_metadata = None
+# Modelos del ERP refactorizado (Fase 2). Montados via volume read-only
+# desde erp-flask/models/ (ver docker-compose.yml).
+from models import Base  # noqa: E402
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:

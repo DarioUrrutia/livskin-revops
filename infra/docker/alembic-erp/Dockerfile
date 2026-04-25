@@ -11,5 +11,8 @@ RUN pip install --no-cache-dir \
     psycopg2-binary==2.9.10 \
     sqlalchemy==2.0.35
 
+# Path para que env.py importe models desde /app/models
+ENV PYTHONPATH=/app
+
 ENTRYPOINT ["alembic"]
 CMD ["--help"]

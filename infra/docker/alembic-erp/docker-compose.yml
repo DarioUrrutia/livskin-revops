@@ -23,6 +23,8 @@ services:
     volumes:
       - ./alembic.ini:/app/alembic.ini:ro
       - ./migrations:/app/migrations
+      # Models del ERP refactorizado (Fase 2): alembic los lee para autogenerate
+      - ../erp-flask/models:/app/models:ro
     networks:
       - data_net
     profiles: [oneshot]
