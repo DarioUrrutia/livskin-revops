@@ -102,6 +102,24 @@ class CatalogoDuplicadoError(Exception):
     pass
 
 
+def get_config_dict(db: Session) -> dict[str, list[str]]:
+    """Retorna {lista: [valores activos]} — shape esperado por formulario.html.
+
+    Usado por GET /api/config para poblar selects del formulario (tipo,
+    cat_Tratamiento, cat_Producto, cat_Certificado, area).
+    """
+    rows = db.execute(
+        select(Catalogo)
+        .where(Catalogo.activo.is_(True))
+        .order_by(Catalogo.lista, Catalogo.orden.nullslast(), Catalogo.valor)
+    ).scalars().all()
+
+    result: dict[str, list[str]] = {}
+    for c in rows:
+        result.setdefault(c.lista, []).append(c.valor)
+    return result
+
+
 def get_by_lista(db: Session, lista: str, only_active: bool = True) -> list[Catalogo]:
     stmt = select(Catalogo).where(Catalogo.lista == lista)
     if only_active:

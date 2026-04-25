@@ -1,11 +1,14 @@
 """ClienteService — CRUD + lookups (ADR-0011 v1.1, ADR-0013 v2)."""
 from datetime import datetime
-from typing import Optional
+from decimal import Decimal
+from typing import Any, Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from models.cliente import Cliente
+from models.pago import Pago
+from models.venta import Venta
 from services.codgen_service import next_codigo
 from services.normalize_service import (
     hash_email,
@@ -110,6 +113,169 @@ def create(
     db.add(cliente)
     db.flush()
     return cliente
+
+
+def get_full_history(db: Session, nombre: str) -> dict[str, Any]:
+    """Retorna historial completo del cliente — formato compatible con formulario.html.
+
+    Lógica preservada del Flask original (`/cliente` endpoint):
+    - Búsqueda case-insensitive por nombre
+    - Excluye pagos tipo 'credito_aplicado' del listado (es transferencia interna)
+    - Recalcula DEBE dinámicamente: max(0, total - sum(pagos_no_credito_aplicado por cod_item))
+    - cobrado_total = sum(pagos.monto) excluyendo credito_aplicado
+    - facturado_total = sum(ventas.total)
+    - saldo = facturado - cobrado
+
+    Si no existe cliente, retorna estructura vacía (no error) — el form
+    legacy lo trata como "cliente nuevo".
+    """
+    nombre_lower = (nombre or "").strip().lower()
+    if not nombre_lower:
+        return _empty_history()
+
+    cliente = db.execute(
+        select(Cliente)
+        .where(func.lower(Cliente.nombre) == nombre_lower, Cliente.activo.is_(True))
+    ).scalar_one_or_none()
+
+    if cliente is None:
+        return _empty_history()
+
+    ventas = list(
+        db.execute(
+            select(Venta)
+            .where(Venta.cod_cliente == cliente.cod_cliente)
+            .order_by(Venta.fecha.desc(), Venta.id.desc())
+        )
+        .scalars()
+        .all()
+    )
+
+    pagos_no_credito = list(
+        db.execute(
+            select(Pago)
+            .where(
+                Pago.cod_cliente == cliente.cod_cliente,
+                Pago.tipo_pago != "credito_aplicado",
+            )
+            .order_by(Pago.fecha.desc(), Pago.id.desc())
+        )
+        .scalars()
+        .all()
+    )
+
+    pagos_por_item: dict[str, Decimal] = {}
+    for p in pagos_no_credito:
+        if p.cod_item:
+            pagos_por_item[p.cod_item] = pagos_por_item.get(p.cod_item, Decimal("0")) + p.monto
+
+    facturado_total = Decimal("0")
+    ventas_out: list[dict[str, Any]] = []
+    for v in ventas:
+        cobrado_item = min(pagos_por_item.get(v.cod_item, Decimal("0")), v.total)
+        debe_real = max(Decimal("0"), v.total - cobrado_item)
+        ventas_out.append(_venta_to_dict(v, debe_real, cobrado_item))
+        facturado_total += v.total
+
+    cobrado_total = sum((p.monto for p in pagos_no_credito), Decimal("0"))
+    saldo = max(Decimal("0"), facturado_total - cobrado_total)
+
+    credito_dep = (
+        db.execute(
+            select(func.coalesce(func.sum(Pago.monto), 0)).where(
+                Pago.cod_cliente == cliente.cod_cliente,
+                Pago.tipo_pago == "credito_generado",
+            )
+        ).scalar()
+        or 0
+    )
+    credito_usado = (
+        db.execute(
+            select(func.coalesce(func.sum(Pago.monto), 0)).where(
+                Pago.cod_cliente == cliente.cod_cliente,
+                Pago.tipo_pago == "credito_aplicado",
+            )
+        ).scalar()
+        or 0
+    )
+    credito_disponible = max(Decimal("0"), Decimal(credito_dep) - Decimal(credito_usado))
+
+    return {
+        "codigo": cliente.cod_cliente,
+        "nombre": cliente.nombre,
+        "telefono": cliente.phone_e164 or "",
+        "email": cliente.email_lower or "",
+        "cumpleanos": cliente.fecha_nacimiento.isoformat() if cliente.fecha_nacimiento else "",
+        "ventas": ventas_out,
+        "pagos": [_pago_to_dict(p) for p in pagos_no_credito],
+        "facturado_total": float(facturado_total),
+        "cobrado_total": float(cobrado_total),
+        "saldo": float(saldo),
+        "credito_disponible": float(credito_disponible),
+    }
+
+
+def _empty_history() -> dict[str, Any]:
+    return {
+        "codigo": "",
+        "nombre": "",
+        "telefono": "",
+        "email": "",
+        "cumpleanos": "",
+        "ventas": [],
+        "pagos": [],
+        "facturado_total": 0.0,
+        "cobrado_total": 0.0,
+        "saldo": 0.0,
+        "credito_disponible": 0.0,
+    }
+
+
+def _venta_to_dict(v: Venta, debe_real: Decimal, pagado_real: Decimal) -> dict[str, Any]:
+    """Mapea Venta a dict con keys del Sheets original (preserva contrato HTTP)."""
+    return {
+        "#": v.num_secuencial or "",
+        "FECHA": v.fecha.isoformat(),
+        "COD_CLIENTE": v.cod_cliente,
+        "CLIENTE": v.cliente_nombre or "",
+        "TELEFONO": v.cliente_telefono or "",
+        "TIPO": v.tipo,
+        "COD_ITEM": v.cod_item,
+        "CATEGORIA": v.categoria or "",
+        "ZONA/CANTIDAD/ENVASE": v.zona_cantidad_envase or "",
+        "PROXIMA CITA": v.proxima_cita.isoformat() if v.proxima_cita else "",
+        "FECHA_NAC": v.fecha_nac_cliente.isoformat() if v.fecha_nac_cliente else "",
+        "MONEDA": v.moneda,
+        "TOTAL S/ (PEN)": float(v.total),
+        "EFECTIVO": float(v.efectivo) if v.efectivo else "",
+        "YAPE": float(v.yape) if v.yape else "",
+        "PLIN": float(v.plin) if v.plin else "",
+        "GIRO": float(v.giro) if v.giro else "",
+        "DEBE": float(debe_real),
+        "PAGADO": float(pagado_real),
+        "TC": str(v.tc) if v.tc else "",
+        "PRECIO LISTA S/": float(v.precio_lista) if v.precio_lista else "",
+        "DESCUENTO S/": float(v.descuento or 0),
+    }
+
+
+def _pago_to_dict(p: Pago) -> dict[str, Any]:
+    """Mapea Pago a dict con keys del Sheets original (preserva contrato HTTP)."""
+    return {
+        "#": p.num_secuencial or "",
+        "FECHA": p.fecha.isoformat(),
+        "COD_CLIENTE": p.cod_cliente,
+        "CLIENTE": p.cliente_nombre or "",
+        "MONTO": float(p.monto),
+        "EFECTIVO": float(p.efectivo) if p.efectivo else "",
+        "YAPE": float(p.yape) if p.yape else "",
+        "PLIN": float(p.plin) if p.plin else "",
+        "GIRO": float(p.giro) if p.giro else "",
+        "NOTAS": p.notas or "",
+        "COD_ITEM": p.cod_item or "",
+        "CATEGORIA": p.categoria or "",
+        "COD_PAGO": p.cod_pago,
+    }
 
 
 def update(

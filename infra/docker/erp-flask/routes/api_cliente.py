@@ -15,6 +15,24 @@ from services import cliente_service
 bp = Blueprint("api_cliente", __name__)
 
 
+@bp.get("/cliente")
+def get_cliente_history():  # type: ignore[no-untyped-def]
+    """Historial completo del cliente — preserva contrato del Flask original.
+
+    GET /cliente?nombre=Carmen+Lopez
+    Retorna: { codigo, nombre, telefono, email, cumpleanos, ventas, pagos,
+               facturado_total, cobrado_total, saldo, credito_disponible }
+
+    DEBE de cada venta se RECALCULA dinámicamente desde pagos_por_cod_item
+    (excluyendo credito_aplicado). Si no existe el cliente, retorna estructura
+    vacía (no error) — el form legacy lo trata como "cliente nuevo".
+    """
+    nombre = request.args.get("nombre", "").strip()
+    with session_scope() as db:
+        result = cliente_service.get_full_history(db, nombre)
+    return jsonify(result), 200
+
+
 @bp.get("/api/clientes")
 def list_clientes():  # type: ignore[no-untyped-def]
     try:
