@@ -72,7 +72,8 @@ jobs:
           cd /srv/livskin-revops
           git pull origin main
           echo
-          echo "=== Compose up por servicio ==="
+
+          echo "=== Long-running services (postgres + embeddings + nginx) ==="
           for svc in postgres-data embeddings-service nginx-vps3; do
             compose_file="infra/docker/$svc/docker-compose.yml"
             if [ -f "$compose_file" ]; then
@@ -83,19 +84,58 @@ jobs:
             fi
           done
           echo
+
+          echo "=== ERP Flask (rebuild + restart) ==="
+          erp_compose="infra/docker/erp-flask/docker-compose.yml"
+          if [ -f "$erp_compose" ]; then
+            docker compose -f "$erp_compose" up -d --build 2>&1 | tail -10
+          else
+            echo "SKIP erp-flask: compose file no encontrado"
+          fi
+          echo
+
+          echo "=== One-shot images rebuild (alembic-erp + brain-tools) ==="
+          for svc in alembic-erp brain-tools; do
+            compose_file="infra/docker/$svc/docker-compose.yml"
+            if [ -f "$compose_file" ]; then
+              echo "--- $svc (build only) ---"
+              docker compose -f "$compose_file" build 2>&1 | tail -3
+            else
+              echo "SKIP $svc"
+            fi
+          done
+          echo
+
+          echo "=== nginx reload (config + sites) ==="
+          if docker ps --format '{{.Names}}' | grep -q '^nginx-vps3$'; then
+            docker exec nginx-vps3 nginx -t 2>&1 | tail -3
+            docker exec nginx-vps3 nginx -s reload 2>&1 | tail -3 || true
+          fi
+          echo
+
           echo "=== Estado containers ==="
           docker ps --format "table {{.Names}}\t{{.Status}}"
           ENDSSH
 
       # Paso 4: verificar URLs publicas
+      # Sleep generoso (20s) porque el rebuild de erp-flask puede tomar
+      # tiempo. Retry hasta 3 veces antes de marcar fallo.
       - name: Verify public endpoints
         run: |
-          sleep 10
+          sleep 20
           for url in https://erp.livskin.site https://erp-staging.livskin.site; do
-            if curl -sfI --max-time 10 "$url" > /dev/null; then
-              echo "OK: $url"
-            else
-              echo "FAIL: $url"
+            success=false
+            for attempt in 1 2 3; do
+              if curl -sfI --max-time 10 "$url" > /dev/null; then
+                echo "OK: $url (intento $attempt)"
+                success=true
+                break
+              fi
+              echo "Intento $attempt falló, reintentando en 5s..."
+              sleep 5
+            done
+            if [ "$success" = "false" ]; then
+              echo "FAIL: $url tras 3 intentos"
               exit 1
             fi
           done
