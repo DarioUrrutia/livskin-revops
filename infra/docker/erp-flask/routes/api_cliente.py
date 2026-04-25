@@ -1,7 +1,4 @@
-"""Rutas /api/clientes — CRUD del Cliente (ADR-0011 v1.1).
-
-Sin auth en MVP — agregar @authenticated cuando se implemente middleware ADR-0026.
-"""
+"""Rutas /api/clientes — CRUD del Cliente (ADR-0011 v1.1)."""
 from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
 
@@ -29,25 +26,23 @@ def list_clientes():  # type: ignore[no-untyped-def]
     with session_scope() as db:
         clientes = cliente_service.list_active(db, limit=limit, offset=offset)
         items = [ClienteListItem.model_validate(c) for c in clientes]
+        response_json = ClienteListResponse(
+            items=items, limit=limit, offset=offset, count=len(items)
+        ).model_dump(mode="json")
 
-    return jsonify(
-        ClienteListResponse(items=items, limit=limit, offset=offset, count=len(items)).model_dump(
-            mode="json"
-        )
-    ), 200
+    return jsonify(response_json), 200
 
 
 @bp.get("/api/clientes/<cod_cliente>")
 def get_cliente(cod_cliente: str):  # type: ignore[no-untyped-def]
-    with session_scope() as db:
-        try:
+    try:
+        with session_scope() as db:
             cliente = cliente_service.get_by_cod(db, cod_cliente)
-        except cliente_service.ClienteNotFoundError as e:
-            return jsonify({"error": str(e)}), 404
+            response_json = ClienteFull.model_validate(cliente).model_dump(mode="json")
+    except cliente_service.ClienteNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
 
-        result = ClienteFull.model_validate(cliente)
-
-    return jsonify(result.model_dump(mode="json")), 200
+    return jsonify(response_json), 200
 
 
 @bp.post("/api/clientes")
@@ -57,8 +52,8 @@ def create_cliente():  # type: ignore[no-untyped-def]
     except ValidationError as e:
         return jsonify({"error": "validacion fallida", "detalle": e.errors()}), 400
 
-    with session_scope() as db:
-        try:
+    try:
+        with session_scope() as db:
             cliente = cliente_service.create(
                 db,
                 nombre=body.nombre,
@@ -71,12 +66,11 @@ def create_cliente():  # type: ignore[no-untyped-def]
                 consent_marketing=body.consent_marketing,
                 notas=body.notas,
             )
-        except cliente_service.ClienteDuplicadoError as e:
-            return jsonify({"error": str(e)}), 409
+            response_json = ClienteFull.model_validate(cliente).model_dump(mode="json")
+    except cliente_service.ClienteDuplicadoError as e:
+        return jsonify({"error": str(e)}), 409
 
-        result = ClienteFull.model_validate(cliente)
-
-    return jsonify(result.model_dump(mode="json")), 201
+    return jsonify(response_json), 201
 
 
 @bp.put("/api/clientes/<cod_cliente>")
@@ -86,8 +80,8 @@ def update_cliente(cod_cliente: str):  # type: ignore[no-untyped-def]
     except ValidationError as e:
         return jsonify({"error": "validacion fallida", "detalle": e.errors()}), 400
 
-    with session_scope() as db:
-        try:
+    try:
+        with session_scope() as db:
             cliente = cliente_service.update(
                 db,
                 cod_cliente=cod_cliente,
@@ -99,11 +93,10 @@ def update_cliente(cod_cliente: str):  # type: ignore[no-untyped-def]
                 consent_marketing=body.consent_marketing,
                 notas=body.notas,
             )
-        except cliente_service.ClienteNotFoundError as e:
-            return jsonify({"error": str(e)}), 404
-        except cliente_service.ClienteDuplicadoError as e:
-            return jsonify({"error": str(e)}), 409
+            response_json = ClienteFull.model_validate(cliente).model_dump(mode="json")
+    except cliente_service.ClienteNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except cliente_service.ClienteDuplicadoError as e:
+        return jsonify({"error": str(e)}), 409
 
-        result = ClienteFull.model_validate(cliente)
-
-    return jsonify(result.model_dump(mode="json")), 200
+    return jsonify(response_json), 200

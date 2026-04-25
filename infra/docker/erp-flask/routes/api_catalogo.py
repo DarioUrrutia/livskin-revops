@@ -18,7 +18,8 @@ bp = Blueprint("api_catalogo", __name__)
 def list_listas():  # type: ignore[no-untyped-def]
     with session_scope() as db:
         listas = catalogo_service.all_listas(db)
-    return jsonify({"listas": listas, "count": len(listas)}), 200
+        response_json = {"listas": listas, "count": len(listas)}
+    return jsonify(response_json), 200
 
 
 @bp.get("/api/catalogos/<lista>")
@@ -27,11 +28,10 @@ def get_catalogo(lista: str):  # type: ignore[no-untyped-def]
     with session_scope() as db:
         items = catalogo_service.get_by_lista(db, lista, only_active=only_active)
         items_out = [CatalogoItem.model_validate(c) for c in items]
-    return jsonify(
-        CatalogoListResponse(lista=lista, items=items_out, count=len(items_out)).model_dump(
-            mode="json"
-        )
-    ), 200
+        response_json = CatalogoListResponse(
+            lista=lista, items=items_out, count=len(items_out)
+        ).model_dump(mode="json")
+    return jsonify(response_json), 200
 
 
 @bp.post("/api/catalogos")
@@ -41,38 +41,38 @@ def add_valor():  # type: ignore[no-untyped-def]
     except ValidationError as e:
         return jsonify({"error": "validacion fallida", "detalle": e.errors()}), 400
 
-    with session_scope() as db:
-        try:
+    try:
+        with session_scope() as db:
             cat = catalogo_service.add_valor(db, body.lista, body.valor, body.orden)
-        except catalogo_service.CatalogoDuplicadoError as e:
-            return jsonify({"error": str(e)}), 409
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+            response_json = CatalogoItem.model_validate(cat).model_dump(mode="json")
+    except catalogo_service.CatalogoDuplicadoError as e:
+        return jsonify({"error": str(e)}), 409
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
-        result = CatalogoItem.model_validate(cat)
-    return jsonify(result.model_dump(mode="json")), 201
+    return jsonify(response_json), 201
 
 
 @bp.post("/api/catalogos/<int:cat_id>/deactivate")
 def deactivate(cat_id: int):  # type: ignore[no-untyped-def]
-    with session_scope() as db:
-        try:
+    try:
+        with session_scope() as db:
             cat = catalogo_service.deactivate(db, cat_id)
-        except catalogo_service.CatalogoNotFoundError as e:
-            return jsonify({"error": str(e)}), 404
-        result = CatalogoItem.model_validate(cat)
-    return jsonify(result.model_dump(mode="json")), 200
+            response_json = CatalogoItem.model_validate(cat).model_dump(mode="json")
+    except catalogo_service.CatalogoNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    return jsonify(response_json), 200
 
 
 @bp.post("/api/catalogos/<int:cat_id>/reactivate")
 def reactivate(cat_id: int):  # type: ignore[no-untyped-def]
-    with session_scope() as db:
-        try:
+    try:
+        with session_scope() as db:
             cat = catalogo_service.reactivate(db, cat_id)
-        except catalogo_service.CatalogoNotFoundError as e:
-            return jsonify({"error": str(e)}), 404
-        result = CatalogoItem.model_validate(cat)
-    return jsonify(result.model_dump(mode="json")), 200
+            response_json = CatalogoItem.model_validate(cat).model_dump(mode="json")
+    except catalogo_service.CatalogoNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    return jsonify(response_json), 200
 
 
 @bp.post("/admin/catalogos/seed")
@@ -83,7 +83,8 @@ def seed_initial():  # type: ignore[no-untyped-def]
     with session_scope() as db:
         inserted = catalogo_service.seed_initial(db)
         total = sum(inserted.values())
+        response_json = CatalogoSeedResponse(
+            inserted=inserted, total_inserted=total
+        ).model_dump(mode="json")
 
-    return jsonify(
-        CatalogoSeedResponse(inserted=inserted, total_inserted=total).model_dump(mode="json")
-    ), 200
+    return jsonify(response_json), 200
