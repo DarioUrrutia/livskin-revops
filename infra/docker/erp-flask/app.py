@@ -2,8 +2,10 @@
 from flask import Flask
 
 from config import settings
+from routes.api_catalogo import bp as catalogo_bp
 from routes.api_client_lookup import bp as client_lookup_bp
 from routes.api_cliente import bp as cliente_bp
+from routes.api_venta import bp as venta_bp
 
 
 def create_app() -> Flask:
@@ -12,6 +14,8 @@ def create_app() -> Flask:
 
     flask_app.register_blueprint(client_lookup_bp)
     flask_app.register_blueprint(cliente_bp)
+    flask_app.register_blueprint(catalogo_bp)
+    flask_app.register_blueprint(venta_bp)
 
     @flask_app.route("/ping")
     def ping() -> str:
