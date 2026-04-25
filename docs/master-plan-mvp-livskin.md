@@ -484,7 +484,9 @@ consent flag
 
 ## 10. Agentes IA
 
-### 10.1 Los 4 agentes
+### 10.1 Los 4 agentes (MVP) + 5to (post-MVP, en evaluación)
+
+**MVP (Fases 4-6)**:
 
 | Agente | Propósito | Frecuencia | Intervención humana/semana |
 |---|---|---|---|
@@ -492,6 +494,16 @@ consent flag
 | **Content** | Generar 12 briefs semanales para ads + testimoniales | Semanal (domingos) | 15 min domingo (aprobación) |
 | **Acquisition** | Convertir briefs a ads Meta + optimización autónoma | Semanal (lunes) + diario (tracking) | 10 min lunes |
 | **Growth** | Análisis continuo + reporte ejecutivo semanal | Diario (análisis) + semanal (reporte) | 1 hora lunes |
+
+**Cierre de Fase 6 / extensión inmediata** (decisión Dario 2026-04-25):
+
+| Agente | Propósito | Frecuencia | Intervención humana/semana |
+|---|---|---|---|
+| **Infra + Security** | Mantenimiento autónomo de servidores + monitoreo de seguridad; ejecuta acciones safe automáticamente, propone acciones riesgosas a Dario | Continuo (alertas) + scheduled (audits, backups, updates) | ~30 min/semana (autorizaciones de acciones risk) |
+
+**Timing**: se construye en Fase 6 / extensión, **aprovechando que ya se setupean** Watchtower + UptimeRobot + n8n alertas + monthly audit + backups + runbooks (sensors/tools que el agente usa). Construir todo junto evita doble configuración.
+
+Detalle del 5to agente y plan operativo: memoria `project_infra_security_agent`.
 
 ### 10.2 Orquestación híbrida
 
@@ -766,9 +778,10 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
     3. Validación manual de totales (revenue agregado, nº clientes, nº ventas) entre ambos sistemas
     4. DNS switch: `erp.livskin.site` apunta a VPS 3 (ya está así, pero confirmar)
     5. Comunicar a comerciales que pueden usar nuevo sistema
-    6. Render queda en cold standby por ~30 días (por seguridad) — NO se apaga inmediatamente
+    6. Render queda en cold standby por **60 días** (ADR-0024) — NO se apaga inmediatamente
     7. Post-cutover: monitoreo intensivo primeras 72h
   - Exit del cutover: 1 semana de operación sobre VPS 3 sin regresiones funcionales reportadas
+  - Detalle completo del procedimiento + plan de rollback: ver ADR-0024
 
 **Exit criteria Fase 6:**
 - Recibes lunes 09:00 reporte ejecutivo de la semana por WhatsApp

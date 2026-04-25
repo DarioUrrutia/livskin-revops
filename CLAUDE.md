@@ -238,15 +238,23 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 ## 🚨 Lo que NUNCA debo hacer
 
 1. **Editar código del ERP (`erp/`) sin autorización explícita** en esta sesión. Doble barrera: `.gitignore` + `.claude/settings.json` deny.
-2. **Commitear secretos** (archivos `.env*` salvo `.env.example`, `keys/*.pem`, `keys/*.key`, `keys/.env.integrations`).
-3. **Push force a `main`.** Usar branches + PR.
-4. **Proponer servicios pagos** sin preguntar. Principio 8.
-5. **Correr implementación antes de tener dossier aprobado** para la decisión subyacente. Principio 9.
-6. **Asumir que la usuaria conoce un término técnico.** Explicar siempre al aterrizar.
-7. **Saltar fases del roadmap.** Cada fase tiene dependencies razonadas.
-8. **Saltar el trámite WhatsApp Business API.** 5-10 días hábiles de Meta, bloqueo real.
-9. **Tocar VPS en producción sin snapshot previo y sin staging validado.**
-10. **Borrar/modificar historial git** sin autorización explícita.
+2. **TOCAR EL SISTEMA ACTUAL EN PRODUCCIÓN** — específicamente:
+   - NO push commits al repo `DarioUrrutia/formulario-livskin`
+   - NO modificar deploys del Render (`formulario-livskin.onrender.com`)
+   - NO modificar variables de entorno del Render
+   - NO escribir/borrar/modificar filas del Google Sheets DB (Sheet ID `1o4Vh4RN_Qfpaz8g08MReqgE3mFX0EGVSI5A69OsHB5g`)
+   - NO redeploy del Render por accidente
+   - **Solo lectura permitida** hasta cutover (Fase 6) cuando Dario explícitamente apruebe el corte. Ver memoria `feedback_production_preservation`.
+3. **Commitear secretos** (archivos `.env*` salvo `.env.example`, `keys/*.pem`, `keys/*.key`, `keys/.env.integrations`).
+4. **Commitear data con PII** — exports del Sheets `docs/Datos_Livskin_*.xlsx` están gitignored. Solo el viejo `docs/Datos Livskin.xlsx` (sin guion bajo) sigue tracked como referencia anonimizada.
+5. **Push force a `main`.** Usar branches + PR.
+6. **Proponer servicios pagos** sin preguntar. Principio 8.
+7. **Correr implementación antes de tener dossier aprobado** para la decisión subyacente. Principio 9.
+8. **Asumir que la usuaria conoce un término técnico.** Explicar siempre al aterrizar. Ver memoria `feedback_explain_to_beginner` — Dario es principiante en implementación.
+9. **Saltar fases del roadmap.** Cada fase tiene dependencies razonadas. Ver memoria `feedback_roadmap_order`.
+10. **Saltar el trámite WhatsApp Business API.** 5-10 días hábiles de Meta, bloqueo real.
+11. **Tocar VPS en producción sin snapshot previo y sin staging validado.**
+12. **Borrar/modificar historial git** sin autorización explícita.
 
 ---
 

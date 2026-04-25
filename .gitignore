@@ -44,6 +44,12 @@ backups/
 docs/datos_livskin_extract/
 docs/pensamientos.txt
 
+# --- Data REAL con PII (nombres, teléfonos, ventas, etc.) ---
+# Exports frescos del Sheets — viven LOCAL + VPS 3, NUNCA en GitHub
+docs/Datos_Livskin_*.xlsx
+# El "Datos Livskin.xlsx" viejo (sin guion bajo, sin fecha) ya está commiteado;
+# se mantiene como referencia histórica anonimizada por el paso del tiempo
+
 # --- OS ---
 .DS_Store
 Thumbs.db

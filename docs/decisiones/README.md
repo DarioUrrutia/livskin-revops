@@ -62,11 +62,11 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| 0023 | ERP — refactor Flask (no rewrite) | ✅ | 2 |
-| 0024 | Migración strangler fig (Render → VPS 3) | ✅ | 2 |
-| 0025 | Backfill histórico (74 ventas + 135 clientes) | ⏳ | 2 |
-| 0026 | Auth ERP — 2 cuentas fijas sin concurrencia | ✅ | 2 |
-| 0027 | Audit log ERP (tabla inmutable) | ✅ | 2 |
+| 0023 | ERP — refactor Flask: estrategia de modernización | ✅ | 2 |
+| 0024 | Strangler fig (clone + parallel standby + cutover on-demand, 60d cold standby) | ✅ | 2 |
+| 0025 | Backfill script re-ejecutable (Excel/Sheets → Postgres, 3 modos, idempotente) | ✅ | 2 |
+| 0026 | Auth bcrypt + 2 cuentas con roles (admin / operadora, sesión 48h) | ✅ | 2 |
+| 0027 | Audit log inmutable (tabla append-only, ~30 eventos canónicos, retención forever) | ✅ | 2 |
 | 0028 | Flujo de citas WhatsApp → Vtiger (sin LatePoint) | ✅ | 4 |
 
 ### Agentes IA
