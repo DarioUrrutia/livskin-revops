@@ -1,0 +1,3546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Livskin</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 480px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .header {
+            background: white;
+            text-align: center;
+            padding: 20px;
+            border-bottom: 3px solid #C0392B;
+        }
+        .header img { max-width: 200px; height: auto; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            background: #fafafa;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            border: none;
+            background: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tab-btn.active { color: #C0392B; border-bottom-color: #C0392B; }
+        .tab-btn:hover:not(.active) { color: #666; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Form */
+        .form-body { padding: 24px; }
+        .seccion {
+            font-size: 11px;
+            font-weight: bold;
+            color: #C0392B;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 0 10px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 4px;
+        }
+        .seccion:first-child { margin-top: 0; }
+        .field { margin-bottom: 14px; }
+        .aviso-cli-campo { margin-top:4px; padding:6px 10px; border-radius:6px; font-size:11px; background:#fff8e1; border:1px solid #ffe082; color:#e65100; }
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.2s;
+            background: white;
+            font-family: Arial, sans-serif;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #C0392B;
+        }
+        input:disabled { background: #f5f5f5; color: #aaa; }
+        .fila-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: #C0392B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+        button[type="submit"]:hover { background: #a93226; }
+
+        /* Flash */
+        .mensaje {
+            margin: 10px 24px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .mensaje.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
+        /* Badge promo */
+        .badge-info {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        /* Cliente tab */
+        .search-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .search-row input { flex: 1; }
+        .btn-buscar {
+            padding: 10px 16px;
+            background: #C0392B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .btn-buscar:hover { background: #a93226; }
+        .saldo-card {
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .saldo-card.deuda { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .saldo-card.ok    { background: #d4edda; border: 1px solid #c3e6cb; }
+        .saldo-numero { font-size: 22px; font-weight: bold; margin: 4px 0; }
+        .saldo-label  { font-size: 12px; color: #666; text-transform: uppercase; }
+        .tabla-cliente {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .tabla-cliente th {
+            background: #f5f5f5;
+            padding: 8px;
+            text-align: left;
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            border-bottom: 1px solid #eee;
+        }
+        .tabla-cliente td {
+            padding: 8px;
+            border-bottom: 1px solid #f5f5f5;
+            vertical-align: top;
+        }
+        .tabla-cliente tr:last-child td { border-bottom: none; }
+        .subtitulo-tabla {
+            font-size: 12px;
+            font-weight: bold;
+            color: #C0392B;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 16px 0 8px;
+        }
+        .sin-datos { color: #aaa; font-size: 13px; text-align: center; padding: 20px 0; }
+        #resultado-cliente { display: none; }
+
+        /* Pago: tarjetas de ítems pendientes */
+        .pago-item-card {
+            border: 1.5px solid #eee; border-radius: 8px; padding: 12px 14px;
+            margin-bottom: 8px; cursor: pointer; transition: all 0.15s;
+        }
+        .pago-item-card:hover { border-color: #C0392B; background: #fdf8f8; }
+        .pago-item-card.selected { border-color: #C0392B; background: #fdf4f4; box-shadow: 0 0 0 2px rgba(192,57,43,0.15); }
+        .pago-item-card .ci-nombre { font-size: 13px; font-weight: bold; color: #333; }
+        .pago-item-card .ci-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+        .pago-item-card .ci-debe { font-size: 16px; font-weight: bold; color: #C0392B; white-space: nowrap; }
+        .pago-item-card .ci-total { font-size: 10px; color: #aaa; }
+
+        /* Historial por día */
+        .dia-block { border: 1px solid #eee; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+        .dia-header { background: #f5f5f5; padding: 8px 12px; font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #eee; }
+        .dia-seccion-lbl { padding: 7px 12px 2px; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #C0392B; }
+        .dia-seccion-lbl.pago-lbl { color: #27ae60; }
+        .dia-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 12px 6px; border-bottom: 1px solid #fafafa; font-size: 13px; }
+        .dia-concepto { flex: 1; color: #333; line-height: 1.4; }
+        .dia-cod { font-size: 10px; color: #bbb; margin-left: 4px; }
+        .dia-monto { font-weight: bold; color: #333; white-space: nowrap; margin-left: 8px; }
+        .dia-monto.pago { color: #27ae60; }
+        .dia-footer { background: #fafafa; padding: 7px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border-top: 1px solid #eee; flex-wrap: wrap; gap: 4px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="header">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Livskin Logo">
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensaje {% if 'Error' in message %}error{% endif %}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="tabs">
+        <button class="tab-btn" data-tab="venta"     onclick="cambiarTab('venta')">Venta</button>
+        <button class="tab-btn" data-tab="gasto"     onclick="cambiarTab('gasto')">Gasto</button>
+        <button class="tab-btn" data-tab="pagos"     onclick="cambiarTab('pagos')">Pagos</button>
+        <button class="tab-btn" data-tab="cliente"   onclick="cambiarTab('cliente')">Cliente</button>
+        <button class="tab-btn" data-tab="dashboard" onclick="cambiarTab('dashboard')">Dashboard</button>
+        <button class="tab-btn" data-tab="libro"     onclick="cambiarTab('libro'); cargarLibro();">Libro</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ TAB: VENTA -->
+    <div id="tab-venta" class="tab-content form-body">
+        <form method="POST" action="/venta" id="form-venta" onsubmit="return validarPreciosFormulario(true)">
+
+            <div class="seccion">Cliente</div>
+            <div class="field">
+                <label>Fecha *</label>
+                <input type="date" name="fecha" id="fecha-venta" required onchange="actualizarTCPorFecha()">
+            </div>
+            <div class="field">
+                <label>Nombre *</label>
+                <div style="position:relative;">
+                    <input type="text" name="cliente" id="input-cliente-venta"
+                           placeholder="Nombre del paciente" required
+                           list="lista-clientes" oninput="actualizarCodigoCliente(); actualizarResumen();">
+                    <datalist id="lista-clientes">
+                        {% for c in clientes %}<option value="{{ c }}">{% endfor %}
+                    </datalist>
+                </div>
+                <div id="cod-cliente-badge" style="display:none; margin-top:4px; font-size:11px; color:#aaa; letter-spacing:0.3px; padding-left:2px;">
+                    <span id="cod-cliente-texto"></span>
+                </div>
+                <!-- Alerta de deuda pendiente -->
+                <div id="alerta-deuda-venta" style="display:none; margin-top:8px; background:#fdf4f4; border:1.5px solid #e8b4b8; border-radius:8px; padding:10px 12px;">
+                    <div style="font-size:12px; font-weight:bold; color:#C0392B; margin-bottom:4px;">⚠ Cliente con saldo pendiente</div>
+                    <div style="font-size:13px; color:#333;">Debe: <strong id="alerta-deuda-monto">S/ 0</strong></div>
+                    <div id="alerta-deuda-detalle" style="margin-top:5px; font-size:11px; color:#888;"></div>
+                </div>
+            </div>
+            <div class="fila-dos">
+                <div class="field">
+                    <label>Teléfono</label>
+                    <input type="tel" name="telefono" id="input-telefono-venta" placeholder="Número" oninput="verificarCampoCli('telefono')">
+                    <div id="aviso-cli-telefono" class="aviso-cli-campo" style="display:none;"></div>
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" id="input-email-venta" placeholder="correo@ejemplo.com" oninput="verificarCampoCli('email')">
+                    <div id="aviso-cli-email" class="aviso-cli-campo" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="field">
+                <label>Fecha de Nacimiento</label>
+                <input type="date" name="cumpleanos" id="input-cumpleanos-venta" onchange="verificarCampoCli('cumpleanos')">
+                <div id="aviso-cli-cumpleanos" class="aviso-cli-campo" style="display:none;"></div>
+            </div>
+            <input type="hidden" name="actualizar_cliente" id="actualizar-cliente-flag" value="0">
+
+            <div class="seccion">Servicios / Productos</div>
+
+            <datalist id="areas-datalist"></datalist>
+            <div id="items-container"></div>
+
+            <input type="hidden" name="num_items" id="num_items" value="0">
+
+            <button type="button" onclick="agregarItem()" style="
+                width:100%; padding:10px; margin-bottom:16px;
+                background:white; color:#C0392B;
+                border: 2px dashed #C0392B; border-radius:8px;
+                font-size:14px; font-weight:bold; cursor:pointer;">
+                + Agregar servicio / producto
+            </button>
+
+            <!-- ── Aviso de campos faltantes ── -->
+            <div id="aviso-faltan-campos" style="display:none; margin-bottom:14px; padding:12px 16px; background:#fff8e1; border:1px solid #ffe082; border-radius:8px; font-size:13px; color:#e65100;">
+            </div>
+
+            <!-- ── Resumen + Pago (aparece dinámicamente) ── -->
+            <div id="seccion-resumen-pago" style="display:none;">
+
+                <div class="seccion">Resumen de lo vendido</div>
+                <div id="tabla-resumen-items" style="margin-bottom:10px;"></div>
+                <div style="background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <span style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Total a cobrar</span>
+                    <span style="font-size:20px;font-weight:bold;color:#333;">S/ <span id="total-cobrar-val">0</span></span>
+                </div>
+
+                <!-- Crédito disponible -->
+                <div id="credito-venta-wrap" style="display:none; margin-bottom:16px;">
+                    <div style="background:#fffdf0;border:1px solid #f0d060;border-radius:8px;padding:12px 16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <div style="font-size:13px;font-weight:bold;color:#856404;">Crédito disponible del cliente</div>
+                                <div id="credito-nota-venta" style="font-size:11px;color:#aaa;margin-top:2px;"></div>
+                            </div>
+                            <div style="font-size:18px;font-weight:bold;color:#856404;" id="credito-monto-venta">S/ 0</div>
+                        </div>
+                        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:13px;color:#555;">
+                            <input type="checkbox" id="chk-aplicar-credito" onchange="aplicarCredito()" style="width:16px;height:16px;accent-color:#856404;">
+                            Aplicar crédito a esta venta
+                        </label>
+                        <div id="credito-resultado" style="display:none;margin-top:8px;font-size:12px;color:#555;background:#fff8e1;border-radius:6px;padding:8px 10px;"></div>
+                    </div>
+                </div>
+                <input type="hidden" name="credito_aplicado" id="credito-aplicado-input" value="0">
+
+                <div id="seccion-como-paga">
+                <div class="seccion">¿Cómo paga hoy?</div>
+                <div style="font-size:11px;color:#888;margin-bottom:10px;">Ingresa los montos según el método de pago. Todo en Soles.</div>
+                <div class="fila-dos">
+                    <div class="field">
+                        <label>Efectivo</label>
+                        <input type="number" name="efectivo" id="ef-efectivo" placeholder="0" step="1" min="0" oninput="autoRellenarPorPago()">
+                    </div>
+                    <div class="field">
+                        <label>Yape</label>
+                        <input type="number" name="yape" id="ef-yape" placeholder="0" step="1" min="0" oninput="autoRellenarPorPago()">
+                    </div>
+                </div>
+                <div class="fila-dos">
+                    <div class="field">
+                        <label>Plin</label>
+                        <input type="number" name="plin" id="ef-plin" placeholder="0" step="1" min="0" oninput="autoRellenarPorPago()">
+                    </div>
+                    <div class="field">
+                        <label>Giro</label>
+                        <input type="number" name="giro" id="ef-giro" placeholder="0" step="1" min="0" oninput="autoRellenarPorPago()">
+                    </div>
+                </div>
+
+                <!-- Contador pagado / por asignar -->
+                <div style="background:#f0faf4;border:1.5px solid #b2dfdb;border-radius:8px;padding:12px 16px;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span style="font-size:12px;color:#555;">Total pagado hoy:</span>
+                        <strong id="cnt-pagado" style="font-size:15px;color:#27ae60;">S/ 0</strong>
+                    </div>
+                    <div style="background:#e0f2f1;border-radius:4px;height:6px;overflow:hidden;margin-bottom:8px;">
+                        <div id="barra-pago" style="height:100%;background:#27ae60;width:0%;transition:width 0.3s;border-radius:4px;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;">
+                        <span>Por asignar: <strong id="cnt-por-asignar" style="color:#e67e22;">S/ 0</strong></span>
+                        <span id="lbl-saldo-pend" style="display:none;color:#C0392B;">Saldo pendiente: <strong id="cnt-saldo-pend">S/ 0</strong></span>
+                    </div>
+                </div>
+
+                <input type="hidden" name="credito_exceso" id="credito-exceso-input" value="0">
+
+                </div><!-- /seccion-como-paga -->
+
+                <!-- Aviso deuda total — aparece cuando pagadoHoy = 0 y hay ítems con precio -->
+                <div id="aviso-todo-deuda" style="display:none;margin:8px 0 12px;padding:10px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;font-size:13px;color:#856404;">
+                    ⚠ No hay monto de pago ingresado — esta venta quedará <strong>completamente como deuda</strong> pendiente de cobro.
+                </div>
+
+                <div class="seccion">Distribución por ítem</div>
+                <div style="font-size:11px;color:#888;margin-bottom:10px;">Asigna de lo que paga hoy, cuánto va para cada ítem. El sistema te muestra en tiempo real cuánto te queda por asignar.</div>
+                <div id="tabla-dist-items"></div>
+
+                <!-- Hidden fields para el servidor -->
+                <input type="hidden" name="total" id="total-venta" value="0">
+                <input type="hidden" name="debe" id="debe-venta" value="0">
+                <input type="hidden" name="moneda" value="SOLES">
+
+            </div>
+
+            <!-- Hidden fields para abonos a deuda anterior -->
+            <input type="hidden" name="num_deudas" id="num_deudas_venta" value="0">
+            <div id="deuda-hidden-fields"></div>
+
+            <button type="submit" id="btn-guardar-venta">GUARDAR VENTA</button>
+        </form>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ TAB: GASTO -->
+    <div id="tab-gasto" class="tab-content form-body">
+        <form method="POST" action="/gasto">
+
+            <div class="seccion">Gasto</div>
+            <div class="fila-dos">
+                <div class="field">
+                    <label>Fecha *</label>
+                    <input type="date" name="fecha_gasto" id="fecha-gasto" required>
+                </div>
+                <div class="field">
+                    <label>Tipo *</label>
+                    <select name="tipo_gasto" required>
+                        <option value="">— Seleccionar —</option>
+                        <option value="RR.HH">RR.HH (empleado)</option>
+                        <option value="Proveedor">Proveedor</option>
+                        <option value="Servicios">Servicios (alquiler, luz, etc.)</option>
+                        <option value="Insumos">Insumos / Materiales</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label>Destinatario</label>
+                <input type="text" name="destinatario" placeholder="Nombre del empleado o proveedor">
+            </div>
+            <div class="field">
+                <label>Descripción</label>
+                <input type="text" name="descripcion" placeholder="Concepto del gasto">
+            </div>
+            <div class="fila-dos">
+                <div class="field">
+                    <label>Monto *</label>
+                    <input type="number" name="monto_gasto" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="field">
+                    <label>Método de pago</label>
+                    <select name="metodo_pago_gasto">
+                        <option value="">— Seleccionar —</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Yape">Yape</option>
+                        <option value="Plin">Plin</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit">GUARDAR GASTO</button>
+        </form>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ TAB: PAGOS -->
+    <div id="tab-pagos" class="tab-content form-body">
+        <form method="POST" action="/pagos" id="form-pago" onsubmit="return prepararEnvioPago()">
+
+            <div class="seccion">Cliente</div>
+            <div class="field">
+                <label>Cliente *</label>
+                <input type="text" name="cliente_pago" id="input-cliente-pago" placeholder="Nombre del paciente" required
+                       list="lista-clientes-pago" oninput="cargarDeudaCliente()">
+                <datalist id="lista-clientes-pago">
+                    {% for c in clientes %}<option value="{{ c }}">{% endfor %}
+                </datalist>
+            </div>
+
+            <!-- Crédito existente del cliente -->
+            <div id="pago-credito-disponible" style="display:none; background:#fffdf0; border:1px solid #ffd966; border-radius:8px; padding:10px 14px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-size:13px; font-weight:bold; color:#856404;">Crédito a favor del cliente</span>
+                        <div id="pago-credito-disponible-nota" style="font-size:11px; color:#aaa; margin-top:2px;"></div>
+                    </div>
+                    <span id="pago-credito-disponible-monto" style="font-size:20px; font-weight:bold; color:#856404;">S/ 0</span>
+                </div>
+            </div>
+
+            <!-- Ítems pendientes con multi-selección -->
+            <div id="pago-deuda-wrap" style="display:none;">
+                <div class="seccion">Ítems a cobrar</div>
+                <p style="font-size:12px;color:#888;margin-bottom:10px;">
+                    Marca los ítems que vas a cobrar. Edita el monto si es un pago parcial.
+                </p>
+                <div id="pago-items-list"></div>
+
+                <!-- Resumen del total seleccionado -->
+                <div id="pago-total-wrap" style="display:none; background:#f0f9f4; border:1px solid #27ae60; border-radius:8px; padding:10px 14px; margin-top:10px; margin-bottom:4px; display:none; justify-content:space-between; align-items:center;">
+                    <span style="font-size:13px;color:#27ae60;font-weight:bold;">Total a cobrar:</span>
+                    <span id="pago-total-valor" style="font-size:20px;font-weight:bold;color:#27ae60;">S/ 0</span>
+                </div>
+            </div>
+
+            <!-- Inputs ocultos generados dinámicamente al enviar -->
+            <div id="pago-hidden-inputs"></div>
+
+            <div class="seccion">Pago</div>
+            <div class="field" style="max-width:200px;">
+                <label>Fecha *</label>
+                <input type="date" name="fecha_pago" id="fecha-pago" required>
+            </div>
+            <div class="seccion">Forma de pago</div>
+            <div class="fila-dos">
+                <div class="field">
+                    <label>Efectivo</label>
+                    <input type="number" name="efectivo_pago" id="pago-ef-efectivo" placeholder="0" step="1" min="0" oninput="autoRellenarPagoTab()">
+                </div>
+                <div class="field">
+                    <label>Yape</label>
+                    <input type="number" name="yape_pago" id="pago-ef-yape" placeholder="0" step="1" min="0" oninput="autoRellenarPagoTab()">
+                </div>
+            </div>
+            <div class="fila-dos">
+                <div class="field">
+                    <label>Plin</label>
+                    <input type="number" name="plin_pago" id="pago-ef-plin" placeholder="0" step="1" min="0" oninput="autoRellenarPagoTab()">
+                </div>
+                <div class="field">
+                    <label>Giro</label>
+                    <input type="number" name="giro_pago" id="pago-ef-giro" placeholder="0" step="1" min="0" oninput="autoRellenarPagoTab()">
+                </div>
+            </div>
+            <div class="field">
+                <label>Notas (opcional)</label>
+                <input type="text" name="notas_pago" placeholder="Observaciones adicionales">
+            </div>
+
+            <!-- Resumen de pago: ingresado vs. asignado vs. saldo total -->
+            <div id="pago-resumen-wrap" style="display:none; background:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; padding:10px 14px; margin-top:12px; font-size:13px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:#666;">Total ingresado hoy:</span>
+                    <span id="pago-resumen-ingresado" style="font-weight:bold;">S/ 0</span>
+                </div>
+                <div id="pago-resumen-asignado-row" style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:#666;">Asignado a ítems:</span>
+                    <span id="pago-resumen-asignado" style="font-weight:bold;">S/ 0</span>
+                </div>
+                <div id="pago-resumen-previo-row" style="display:none; justify-content:space-between; margin-bottom:4px;">
+                    <span style="color:#856404;">Crédito previo:</span>
+                    <span id="pago-resumen-previo" style="color:#856404; font-weight:bold;">S/ 0</span>
+                </div>
+                <div id="pago-falta-row" style="display:none; justify-content:space-between; align-items:center; margin-top:6px; padding:6px 8px; border-radius:5px; background:#fff5f5; border:1px solid #f5c6cb;">
+                    <span style="color:#c0392b; font-weight:bold;">Falta por pagar:</span>
+                    <span id="pago-falta-monto" style="color:#c0392b; font-weight:bold;">S/ 0</span>
+                </div>
+                <div id="pago-credito-row" style="display:none; justify-content:space-between; align-items:center; margin-top:6px; padding:6px 8px; border-radius:5px; background:#fffdf0; border:1px solid #ffd966;">
+                    <span style="color:#856404; font-weight:bold;">Saldo a favor al registrar:</span>
+                    <span id="pago-credito-monto" style="color:#856404; font-weight:bold;">S/ 0</span>
+                </div>
+                <div style="font-size:11px; color:#aaa; margin-top:4px; display:none;" id="pago-credito-nota">El exceso se registrará automáticamente como crédito del cliente.</div>
+            </div>
+
+            <button type="submit">REGISTRAR PAGO</button>
+        </form>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ TAB: CLIENTE -->
+    <div id="tab-cliente" class="tab-content form-body">
+
+        <div class="seccion">Buscar cliente</div>
+        <div class="search-row">
+            <input type="text" id="input-buscar" placeholder="Nombre del paciente"
+                   list="lista-clientes-buscar" onkeydown="if(event.key==='Enter') buscarCliente()">
+            <datalist id="lista-clientes-buscar">
+                {% for c in clientes %}<option value="{{ c }}">{% endfor %}
+            </datalist>
+            <button class="btn-buscar" onclick="buscarCliente()">Buscar</button>
+        </div>
+
+        <div id="resultado-cliente">
+            <div id="saldo-card" class="saldo-card">
+                <div class="saldo-label">Saldo pendiente</div>
+                <div class="saldo-numero" id="saldo-valor">S/ 0.00</div>
+                <div style="font-size:12px;color:#666;margin-top:4px;">
+                    Facturado: <span id="saldo-debe">0</span> &nbsp;|&nbsp;
+                    Cobrado: <span id="saldo-cobrado">0</span>
+                </div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;margin-top:16px;">
+                <div class="subtitulo-tabla" style="margin:0;">Historial</div>
+                <div style="display:flex;gap:0;border:1px solid #ddd;border-radius:6px;overflow:hidden;">
+                    <button id="btn-vista-item" onclick="cambiarVistaCliente('item')"
+                        style="padding:5px 12px;font-size:12px;border:none;cursor:pointer;background:#C0392B;color:#fff;">Por ítem</button>
+                    <button id="btn-vista-crono" onclick="cambiarVistaCliente('crono')"
+                        style="padding:5px 12px;font-size:12px;border:none;cursor:pointer;background:#f5f5f5;color:#666;">Cronológico</button>
+                </div>
+            </div>
+            <div id="historial-cliente"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ TAB: DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content form-body" style="padding:16px;">
+
+        <!-- Filtros de período -->
+        <div class="dash-periodos">
+            <button class="periodo-btn active" onclick="setPeriodo('mes', this)">Este mes</button>
+            <button class="periodo-btn" onclick="setPeriodo('3m', this)">3 meses</button>
+            <button class="periodo-btn" onclick="setPeriodo('6m', this)">6 meses</button>
+            <button class="periodo-btn" onclick="setPeriodo('anio', this)">Este año</button>
+            <button class="periodo-btn" onclick="setPeriodo('todo', this)">Todo</button>
+        </div>
+        <div class="dash-fechas">
+            <input type="date" id="dash-desde" onchange="cargarDashboard()">
+            <span style="color:#aaa;font-size:13px;">→</span>
+            <input type="date" id="dash-hasta" onchange="cargarDashboard()">
+        </div>
+
+        <div id="dash-loading" style="text-align:center;padding:30px;color:#aaa;display:none;">
+            Cargando datos...
+        </div>
+
+        <div id="dash-contenido" style="display:none;">
+
+            <!-- Sub-tabs -->
+            <div class="dash-subtabs">
+                <button class="dash-subtab-btn active" onclick="cambiarSubtabDash('general', this)">General</button>
+                <button class="dash-subtab-btn" onclick="cambiarSubtabDash('clientes', this)">Clientes</button>
+                <button class="dash-subtab-btn" onclick="cambiarSubtabDash('pagos', this)">Pagos</button>
+            </div>
+
+            <!-- ─── PANEL: GENERAL ─────────────────────────────────── -->
+            <div id="dash-panel-general" class="dash-panel">
+
+                <div class="kpi-seccion">Período seleccionado</div>
+                <div class="kpi-grid kpi-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Facturado</div>
+                        <div class="kpi-valor" id="kpi-total">—</div>
+                    </div>
+                    <div class="kpi-card kpi-verde">
+                        <div class="kpi-label">Total Cobrado</div>
+                        <div class="kpi-valor" id="kpi-cobrado">—</div>
+                    </div>
+                    <div class="kpi-card kpi-rojo">
+                        <div class="kpi-label">Por Cobrar</div>
+                        <div class="kpi-valor" id="kpi-pendiente">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Ticket Promedio</div>
+                        <div class="kpi-valor" id="kpi-ticket">—</div>
+                    </div>
+                    <div class="kpi-card kpi-verde">
+                        <div class="kpi-label">Tasa de Cobro</div>
+                        <div class="kpi-valor" id="kpi-tasa">—</div>
+                    </div>
+                    <div class="kpi-card" id="kpi-balance-card">
+                        <div class="kpi-label">Balance Neto</div>
+                        <div class="kpi-valor" id="kpi-balance">—</div>
+                        <div class="kpi-sub" id="kpi-gastos-sub">—</div>
+                    </div>
+                </div>
+
+                <div class="kpi-seccion">Comparativas (siempre al día de hoy)</div>
+                <div class="kpi-grid kpi-2">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Mes actual</div>
+                        <div class="kpi-valor" id="comp-mes-act">—</div>
+                        <div class="kpi-sub" id="comp-mes-ant-lbl">—</div>
+                        <div style="margin-top:4px;" id="comp-mes-delta"></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Año actual</div>
+                        <div class="kpi-valor" id="comp-año-act">—</div>
+                        <div class="kpi-sub" id="comp-año-ant-lbl">—</div>
+                        <div style="margin-top:4px;" id="comp-año-delta"></div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Ventas por mes — cobrado vs pendiente</div>
+                    <canvas id="chart-meses" height="200"></canvas>
+                </div>
+
+                <div class="kpi-seccion">Por tipo — mes actual vs anterior</div>
+                <div id="tabla-tipo-mes"></div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Top categorías este mes</div>
+                    <canvas id="chart-cats-mes" height="220"></canvas>
+                </div>
+
+                <div class="kpi-seccion">Operaciones</div>
+                <div class="kpi-grid kpi-3">
+                    <div class="kpi-card">
+                        <div class="kpi-label">N° Atenciones</div>
+                        <div class="kpi-valor" id="kpi-atenciones">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Clientes Únicos</div>
+                        <div class="kpi-valor" id="kpi-clientes">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Promociones</div>
+                        <div class="kpi-valor" id="kpi-promos">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Tratamientos</div>
+                        <div class="kpi-valor" id="kpi-trat">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Productos</div>
+                        <div class="kpi-valor" id="kpi-prod">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Gastos</div>
+                        <div class="kpi-valor kpi-rojo-txt" id="kpi-gastos">—</div>
+                    </div>
+                    <div class="kpi-card kpi-rojo" id="kpi-descuentos-wrap" style="display:none;">
+                        <div class="kpi-label">💸 Descuentos Otorgados</div>
+                        <div class="kpi-valor kpi-rojo-txt" id="kpi-descuentos">—</div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Mix de ventas — período seleccionado</div>
+                    <canvas id="chart-mix" height="180"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Atenciones recientes</div>
+                    <div id="tabla-recientes"></div>
+                </div>
+
+            </div><!-- /panel-general -->
+
+            <!-- ─── PANEL: CLIENTES ───────────────────────────────── -->
+            <div id="dash-panel-clientes" class="dash-panel" style="display:none;">
+
+                <div class="kpi-seccion">Top 20% clientes del período</div>
+                <div style="font-size:11px;color:#aaa;margin-bottom:8px;">
+                    Evolución: comparativa mes actual vs mes anterior
+                </div>
+                <div class="chart-card">
+                    <div id="tabla-top20"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Top clientes por facturación</div>
+                    <canvas id="chart-clientes" height="260"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Top categorías — período seleccionado</div>
+                    <canvas id="chart-cats" height="260"></canvas>
+                </div>
+
+                <div class="kpi-seccion">Deudores por antigüedad</div>
+                <div style="font-size:11px;color:#aaa;margin-bottom:8px;">
+                    Ítems con saldo pendiente — calculado al día de hoy
+                </div>
+                <div id="tabla-deudores-aging"></div>
+
+            </div><!-- /panel-clientes -->
+
+            <!-- ─── PANEL: PAGOS ──────────────────────────────────── -->
+            <div id="dash-panel-pagos" class="dash-panel" style="display:none;">
+
+                <div class="kpi-seccion">Resumen de pagos</div>
+                <div class="kpi-grid kpi-2">
+                    <div class="kpi-card kpi-verde">
+                        <div class="kpi-label">Total Cobrado</div>
+                        <div class="kpi-valor" id="kpi-pagos-total">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">N° Pagos</div>
+                        <div class="kpi-valor" id="kpi-pagos-count">—</div>
+                    </div>
+                </div>
+
+                <div class="kpi-seccion">Métodos de pago recibidos</div>
+                <div class="kpi-grid kpi-2">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Efectivo</div>
+                        <div class="kpi-valor" id="kpi-pago-ef">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Yape</div>
+                        <div class="kpi-valor" id="kpi-pago-yp">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Plin</div>
+                        <div class="kpi-valor" id="kpi-pago-pl">—</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Giro</div>
+                        <div class="kpi-valor" id="kpi-pago-gi">—</div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Distribución por método de pago</div>
+                    <canvas id="chart-metodos" height="200"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-titulo">Pagos recientes</div>
+                    <div id="tabla-pagos-recientes"></div>
+                </div>
+
+                <div class="kpi-seccion">Pendientes de pago por antigüedad</div>
+                <div style="font-size:11px;color:#aaa;margin-bottom:8px;">
+                    Servicios vendidos con saldo sin cobrar — calculado al día de hoy
+                </div>
+                <div id="tabla-pendientes-pago"></div>
+
+            </div><!-- /panel-pagos -->
+
+        </div><!-- /dash-contenido -->
+    </div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ TAB: LIBRO DE MOVIMIENTOS ══════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="tab-libro" class="tab-content form-body" style="padding:16px;">
+
+    <div class="seccion">Libro de movimientos</div>
+    <div style="font-size:12px;color:#888;margin-bottom:12px;">
+        Todos los movimientos del negocio (ventas, pagos, gastos) con trazabilidad completa.
+        Nada se modifica — esta vista es 100% de lectura.
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:end;">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <label style="font-size:11px;color:#888;">Desde</label>
+            <input type="date" id="libro-desde" style="padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <label style="font-size:11px;color:#888;">Hasta</label>
+            <input type="date" id="libro-hasta" style="padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <label style="font-size:11px;color:#888;">Tipo</label>
+            <select id="libro-tipo" style="padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">Todos</option>
+                <option value="venta">Ventas</option>
+                <option value="pago">Pagos</option>
+                <option value="gasto">Gastos</option>
+            </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <label style="font-size:11px;color:#888;">Cliente</label>
+            <input type="text" id="libro-cliente" list="lista-clientes-buscar" placeholder="Todos"
+                   style="padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:140px;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <label style="font-size:11px;color:#888;">Categoría</label>
+            <input type="text" id="libro-categoria" placeholder="Todas"
+                   style="padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;width:120px;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <label style="font-size:11px;color:#888;">Método pago</label>
+            <select id="libro-metodo" style="padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">Todos</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="yape">Yape</option>
+                <option value="plin">Plin</option>
+                <option value="giro">Giro</option>
+            </select>
+        </div>
+        <button onclick="filtrarLibro()" style="padding:6px 14px;background:#C0392B;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Filtrar</button>
+        <button onclick="limpiarFiltrosLibro()" style="padding:6px 14px;background:#f0f0f0;color:#333;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer;">Limpiar</button>
+        <button onclick="exportarLibroCSV()" style="padding:6px 14px;background:#27ae60;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Exportar CSV</button>
+    </div>
+
+    <!-- Contador de resultados -->
+    <div id="libro-contador" style="font-size:12px;color:#888;margin-bottom:8px;"></div>
+
+    <!-- Totales del filtro -->
+    <div id="libro-totales" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+
+    <!-- Tabla de movimientos -->
+    <div id="libro-tabla" style="overflow-y:auto;overflow-x:scroll;max-height:80vh;border:1px solid #e0e0e0;border-radius:8px;"></div>
+
+    <!-- Modal de detalle -->
+    <div id="libro-detalle-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;overflow-y:auto;" onclick="if(event.target===this)cerrarDetalleLibro()">
+        <div style="max-width:600px;margin:40px auto;background:white;border-radius:12px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.2);position:relative;">
+            <button onclick="cerrarDetalleLibro()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;">&times;</button>
+            <div id="libro-detalle-contenido"></div>
+        </div>
+    </div>
+
+</div><!-- /tab-libro -->
+
+</div><!-- /card -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+    .dash-periodos {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+    .periodo-btn {
+        padding: 6px 12px;
+        border: 1.5px solid #ddd;
+        border-radius: 20px;
+        background: white;
+        font-size: 12px;
+        font-weight: bold;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .periodo-btn.active, .periodo-btn:hover {
+        background: #C0392B;
+        color: white;
+        border-color: #C0392B;
+    }
+    .dash-fechas {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .dash-fechas input {
+        flex: 1;
+        padding: 7px 10px;
+        border: 1.5px solid #ddd;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+    .kpi-seccion {
+        font-size: 10px; font-weight: bold; color: #999;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin: 14px 0 6px;
+    }
+    .dash-subtabs {
+        display: flex; gap: 4px; margin-bottom: 14px;
+        border-bottom: 2px solid #eee; padding-bottom: 0;
+    }
+    .dash-subtab-btn {
+        padding: 8px 16px; border: none; background: none;
+        font-size: 12px; font-weight: bold; color: #999;
+        cursor: pointer; border-bottom: 3px solid transparent;
+        margin-bottom: -2px; transition: all 0.2s; text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .dash-subtab-btn.active { color: #C0392B; border-bottom-color: #C0392B; }
+    .dash-subtab-btn:hover:not(.active) { color: #666; }
+    .dash-panel { }
+    .kpi-grid { display: grid; gap: 8px; margin-bottom: 4px; }
+    .kpi-3    { grid-template-columns: 1fr 1fr 1fr; }
+    .kpi-2    { grid-template-columns: 1fr 1fr; }
+    .kpi-card {
+        background: #f9f9f9; border: 1px solid #eee;
+        border-radius: 10px; padding: 10px 6px; text-align: center;
+    }
+    .kpi-card.kpi-verde { background: #f0faf4; border-color: #c3e6cb; }
+    .kpi-card.kpi-rojo  { background: #fdf4f4; border-color: #f5c6cb; }
+    .kpi-label { font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 3px; }
+    .kpi-valor { font-size: 14px; font-weight: bold; color: #333; }
+    .kpi-sub   { font-size: 9px; color: #aaa; margin-top: 2px; }
+    .kpi-verde .kpi-valor { color: #27ae60; }
+    .kpi-rojo  .kpi-valor { color: #C0392B; }
+    .kpi-rojo-txt { color: #C0392B; }
+    .chart-card {
+        background: white; border: 1px solid #eee;
+        border-radius: 10px; padding: 14px; margin-bottom: 10px;
+    }
+    .chart-titulo {
+        font-size: 11px; font-weight: bold; color: #C0392B;
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+    }
+    .tabla-rec { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .tabla-rec th { background:#f5f5f5; padding:6px 8px; text-align:left; font-size:10px; color:#888; text-transform:uppercase; border-bottom:1px solid #eee; }
+    .tabla-rec td { padding:6px 8px; border-bottom:1px solid #f5f5f5; vertical-align:top; }
+    .tabla-rec tr:last-child td { border-bottom:none; }
+    .debe-badge { color:#C0392B; font-weight:bold; font-size:11px; }
+
+    /* ── Libro de movimientos: responsive ── */
+    @media (max-width: 600px) {
+        #libro-table { font-size: 12px; }
+        #libro-table th, #libro-table td { padding: 5px 4px; }
+    }
+</style>
+<script>
+// ── Evitar que el scroll del mouse cambie inputs numéricos ───────────────────
+document.addEventListener('wheel', function() {
+    if (document.activeElement && document.activeElement.type === 'number') {
+        document.activeElement.blur();
+    }
+}, { passive: true });
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+function cambiarTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+}
+
+// ── Items dinámicos ───────────────────────────────────────────────────────────
+let itemCount = 0;
+
+const CLIENTES_CODIGOS = {{ clientes_codigos | tojson }};
+const CLIENTES_DATA    = {{ clientes_data    | tojson }};
+const NEXT_CLIENT_NUM  = {{ next_client_num }};
+
+// Configuración dinámica cargada desde Google Sheets (hoja "Listas")
+let APP_CONFIG = { tipos: [], categorias: {}, areas: [] };
+
+function actualizarCategorias(tipoSelect, idx) {
+    const tipo = tipoSelect.value;
+    const catSelect = document.querySelector(`[name="categoria_${idx}"]`);
+    const cats = APP_CONFIG.categorias[tipo] || [];
+
+    let html = '<option value="">— Seleccionar —</option>';
+    cats.forEach(c => { html += `<option value="${c}">${c}</option>`; });
+    if (tipo && tipo !== 'Certificado') {
+        html += '<option value="__otro__">Otro (escribir)</option>';
+    }
+    catSelect.innerHTML = html;
+
+    if (cats.length === 1) catSelect.value = cats[0];
+
+    const otroWrap = document.getElementById(`otro-wrap-${idx}`);
+    if (otroWrap) otroWrap.style.display = 'none';
+    actualizarResumen();
+    validarPreciosFormulario();
+}
+
+function buildTipoOptions() {
+    let html = '<option value="">— Seleccionar —</option>';
+    APP_CONFIG.tipos.forEach(t => { html += `<option value="${t}">${t}</option>`; });
+    return html;
+}
+
+function cargarConfig() {
+    return fetch('/api/config').then(r => r.json()).then(data => {
+        APP_CONFIG.tipos = data['tipo'] || [];
+        APP_CONFIG.areas = data['area'] || [];
+        APP_CONFIG.categorias = {};
+        Object.keys(data).forEach(k => {
+            if (k.startsWith('cat_')) {
+                const tipo = k.replace('cat_', '');
+                APP_CONFIG.categorias[tipo] = data[k];
+            }
+        });
+        // Actualizar datalist de áreas
+        const dl = document.getElementById('areas-datalist');
+        if (dl) {
+            dl.innerHTML = APP_CONFIG.areas.map(a => `<option value="${a}">`).join('');
+        }
+        // Actualizar selects de tipo ya renderizados
+        document.querySelectorAll('[name^="tipo_"]').forEach(sel => {
+            const valActual = sel.value;
+            sel.innerHTML = buildTipoOptions();
+            if (valActual) sel.value = valActual;
+        });
+    }).catch(() => {
+        // Fallback silencioso: el formulario seguirá funcionando sin opciones
+    });
+}
+
+function parseToInputDate(val) {
+    if (!val) return '';
+    // DD/MM/YYYY → YYYY-MM-DD
+    const p = val.split('/');
+    if (p.length === 3 && p[2].length === 4) {
+        return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+    }
+    return val; // ya está en YYYY-MM-DD u otro formato
+}
+
+let anticiposTimer = null;
+let creditoDisponible = 0;
+let creditoNotas = [];
+let deudasPendientesCliente = [];  // ítems anteriores con DEBE > 0
+let deudasPagos = {};              // { idx: monto asignado }
+
+function actualizarCodigoCliente() {
+    const nombre = document.getElementById('input-cliente-venta').value.trim();
+    const badge  = document.getElementById('cod-cliente-badge');
+    const texto  = document.getElementById('cod-cliente-texto');
+    if (!nombre) {
+        badge.style.display = 'none';
+        creditoDisponible = 0;
+        deudasPendientesCliente = [];
+        deudasPagos = {};
+        document.getElementById('credito-venta-wrap').style.display = 'none';
+        document.getElementById('chk-aplicar-credito').checked = false;
+        document.getElementById('credito-aplicado-input').value = 0;
+        document.getElementById('alerta-deuda-venta').style.display = 'none';
+        _limpiarAvisosCli();
+        return;
+    }
+
+    const data = CLIENTES_DATA[nombre.toLowerCase()];
+    badge.style.display = 'block';
+    if (data) {
+        texto.textContent = data.codigo;
+        texto.style.color = '#999';
+        const tel = document.getElementById('input-telefono-venta');
+        const em  = document.getElementById('input-email-venta');
+        const cum = document.getElementById('input-cumpleanos-venta');
+        if (tel && data.telefono)   tel.value = data.telefono;
+        if (em  && data.email)      em.value  = data.email;
+        if (cum && data.cumpleanos) cum.value = parseToInputDate(data.cumpleanos);
+    } else {
+        const numStr = String(NEXT_CLIENT_NUM).padStart(4, '0');
+        texto.textContent = `Nuevo cliente — se asignará LIVCLIENT${numStr}`;
+        texto.style.color = '#bbb';
+    }
+
+    // Verificar crédito disponible
+    clearTimeout(anticiposTimer);
+    anticiposTimer = setTimeout(() => {
+        fetch('/cliente?nombre=' + encodeURIComponent(nombre))
+            .then(r => r.json())
+            .then(d => {
+                const pagosCredito = d.pagos.filter(c =>
+                    (c.CATEGORIA || '').startsWith('CRÉDITO') ||
+                    (c.CATEGORIA || '').startsWith('ANTICIPO')
+                );
+                const _creditoDepVenta = pagosCredito.reduce((s, c) => s + parseFloat(c.MONTO || 0), 0);
+                const _creditoAplicVenta = d.pagos
+                    .filter(c => (c.NOTAS || '') === 'Crédito aplicado')
+                    .reduce((s, c) => s + parseFloat(c.MONTO || 0), 0);
+                creditoDisponible = Math.max(0, _creditoDepVenta - _creditoAplicVenta);
+                creditoNotas = pagosCredito.map(c => {
+                    const nota = (c.CATEGORIA || '').replace(/^CRÉDITO:?\s*/i, '').replace(/^ANTICIPO:?\s*/i, '').trim();
+                    return nota || null;
+                }).filter(Boolean);
+
+                const wrap = document.getElementById('credito-venta-wrap');
+                if (creditoDisponible > 0.5) {
+                    wrap.style.display = 'block';
+                    document.getElementById('credito-monto-venta').textContent = 'S/ ' + Math.round(creditoDisponible);
+                    const notaEl = document.getElementById('credito-nota-venta');
+                    notaEl.textContent = creditoNotas.length > 0 ? 'Notas: ' + creditoNotas.join(', ') : 'Crédito libre sin asignación específica';
+                } else {
+                    wrap.style.display = 'none';
+                }
+                // Reset checkbox si cambia el cliente
+                document.getElementById('chk-aplicar-credito').checked = false;
+                document.getElementById('credito-aplicado-input').value = 0;
+                document.getElementById('credito-resultado').style.display = 'none';
+                document.getElementById('seccion-como-paga').style.display = 'block';
+
+                // ── Detectar deudas pendientes ──
+                deudasPendientesCliente = d.ventas
+                    .filter(v => parseFloat(v.DEBE || 0) > 0)
+                    .map(v => ({
+                        cod_item:  v.COD_ITEM  || '',
+                        categoria: v.CATEGORIA || v.TIPO || '—',
+                        fecha:     v.FECHA     || '',
+                        debe:      parseFloat(v.DEBE || 0),
+                        total:     parseFloat(v['TOTAL S/ (PEN)'] || v.TOTAL || 0),
+                    }));
+                // Empezar en 0 — se llenarán cuando el usuario ingrese el pago
+                deudasPagos = {};
+
+                const alertaEl = document.getElementById('alerta-deuda-venta');
+                if (deudasPendientesCliente.length > 0) {
+                    const totalDeuda = deudasPendientesCliente.reduce((s, x) => s + x.debe, 0);
+                    alertaEl.style.display = 'block';
+                    document.getElementById('alerta-deuda-monto').textContent = 'S/ ' + Math.round(totalDeuda);
+                    const detalle = deudasPendientesCliente
+                        .map(x => `${x.categoria} (${x.fecha}): S/ ${Math.round(x.debe)}`)
+                        .join(' · ');
+                    document.getElementById('alerta-deuda-detalle').textContent = detalle;
+                } else {
+                    alertaEl.style.display = 'none';
+                }
+                actualizarResumen();
+            })
+            .catch(() => {});
+    }, 300);
+}
+
+function verificarCampoCli(campo) {
+    const nombre = (document.getElementById('input-cliente-venta').value || '').trim().toLowerCase();
+    const data = CLIENTES_DATA[nombre];
+    const aviso = document.getElementById('aviso-cli-' + campo);
+    if (!aviso) return;
+
+    // Cliente nuevo — no hay conflicto
+    if (!data) { aviso.style.display = 'none'; _actualizarFlagCli(); return; }
+
+    let valorActual, valorDB;
+    if (campo === 'telefono') {
+        valorActual = (document.getElementById('input-telefono-venta').value || '').trim();
+        valorDB = data.telefono || '';
+    } else if (campo === 'email') {
+        valorActual = (document.getElementById('input-email-venta').value || '').trim();
+        valorDB = data.email || '';
+    } else if (campo === 'cumpleanos') {
+        valorActual = (document.getElementById('input-cumpleanos-venta').value || '').trim();
+        valorDB = data.cumpleanos ? parseToInputDate(data.cumpleanos) : '';
+    }
+
+    const label = campo === 'telefono' ? 'Teléfono' : campo === 'email' ? 'Email' : 'Fecha Nac.';
+
+    // No cambió — sin aviso
+    if (valorActual === valorDB) {
+        aviso.style.display = 'none';
+        aviso.dataset.aceptado = '';
+        _actualizarFlagCli();
+        return;
+    }
+
+    // Dato nuevo donde antes no había — informar que se guardará
+    if (!valorDB && valorActual) {
+        aviso.innerHTML = `<span style="color:#2e7d32;"><strong>${label}:</strong> se guardará <strong>${valorActual}</strong> en la ficha del cliente</span>`;
+        aviso.style.display = 'block';
+        aviso.dataset.aceptado = '';
+        _actualizarFlagCli();
+        return;
+    }
+
+    // Sobreescritura o borrado — pedir confirmación
+    const display = valorActual || '(vacío)';
+    const color = !valorActual ? '#C0392B' : '#e65100';
+    aviso.innerHTML = `<span style="color:${color};"><strong>${label}:</strong> ${valorDB} → <strong>${display}</strong></span>
+        <span style="margin-left:8px;">
+            <a href="#" onclick="aceptarCampoCli('${campo}');return false" style="color:#2e7d32;font-weight:bold;text-decoration:underline;">Actualizar</a>
+            &nbsp;|&nbsp;
+            <a href="#" onclick="rechazarCampoCli('${campo}');return false" style="color:#888;text-decoration:underline;">Restaurar</a>
+        </span>`;
+    aviso.style.display = 'block';
+    _actualizarFlagCli();
+}
+
+function aceptarCampoCli(campo) {
+    const aviso = document.getElementById('aviso-cli-' + campo);
+    aviso.innerHTML = '<span style="color:#2e7d32;font-weight:bold;">Se actualizará al guardar</span>';
+    aviso.dataset.aceptado = '1';
+    _actualizarFlagCli();
+}
+
+function rechazarCampoCli(campo) {
+    const nombre = (document.getElementById('input-cliente-venta').value || '').trim().toLowerCase();
+    const data = CLIENTES_DATA[nombre];
+    if (!data) return;
+    if (campo === 'telefono' && data.telefono)
+        document.getElementById('input-telefono-venta').value = data.telefono;
+    if (campo === 'email' && data.email)
+        document.getElementById('input-email-venta').value = data.email;
+    if (campo === 'cumpleanos' && data.cumpleanos)
+        document.getElementById('input-cumpleanos-venta').value = parseToInputDate(data.cumpleanos);
+    const aviso = document.getElementById('aviso-cli-' + campo);
+    aviso.style.display = 'none';
+    aviso.dataset.aceptado = '';
+    _actualizarFlagCli();
+}
+
+function _actualizarFlagCli() {
+    // Si algún campo fue aceptado para actualizar, poner flag=1
+    const campos = ['telefono', 'email', 'cumpleanos'];
+    const hayAceptado = campos.some(c => {
+        const av = document.getElementById('aviso-cli-' + c);
+        return av && av.dataset.aceptado === '1';
+    });
+    document.getElementById('actualizar-cliente-flag').value = hayAceptado ? '1' : '0';
+}
+
+function _limpiarAvisosCli() {
+    ['telefono', 'email', 'cumpleanos'].forEach(c => {
+        const av = document.getElementById('aviso-cli-' + c);
+        if (av) { av.style.display = 'none'; av.dataset.aceptado = ''; }
+    });
+    document.getElementById('actualizar-cliente-flag').value = '0';
+}
+
+function aplicarCredito() {
+    const chk = document.getElementById('chk-aplicar-credito');
+    const totalSoles = parseFloat(document.getElementById('total-cobrar-val').textContent) || 0;
+    const resultado = document.getElementById('credito-resultado');
+    const secPago = document.getElementById('seccion-como-paga');
+    const inputCredito = document.getElementById('credito-aplicado-input');
+
+    if (!chk.checked) {
+        inputCredito.value = 0;
+        resultado.style.display = 'none';
+        secPago.style.display = 'block';
+        // Limpiar campos de pago
+        ['ef-efectivo','ef-yape','ef-plin','ef-giro'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        actualizarDistribucion();
+        return;
+    }
+
+    const aplicado = Math.min(creditoDisponible, totalSoles);
+    const resta    = totalSoles - aplicado;
+    inputCredito.value = Math.round(aplicado);
+
+    resultado.style.display = 'block';
+    if (resta < 0.5) {
+        resultado.innerHTML = `Crédito cubre <strong>S/ ${Math.round(aplicado)}</strong> — venta completamente pagada con crédito.`;
+        secPago.style.display = 'none';
+        // Auto-llenar distribución con crédito
+        const items = getItemsData();
+        items.forEach(it => {
+            const campo = document.getElementById('pago_item_' + it.idx);
+            if (campo) campo.value = it.precioSoles;
+        });
+    } else {
+        resultado.innerHTML = `Crédito cubre <strong>S/ ${Math.round(aplicado)}</strong> — aún debe pagar <strong>S/ ${Math.round(resta)}</strong> hoy.`;
+        secPago.style.display = 'block';
+    }
+    autoRellenarPorPago();
+}
+
+function agregarItem() {
+    const i = itemCount++;
+    const container = document.getElementById('items-container');
+    const div = document.createElement('div');
+    div.id = 'item-' + i;
+    div.style.cssText = 'background:#fafafa;border:1.5px solid #eee;border-radius:10px;padding:14px;margin-bottom:12px;position:relative;';
+    div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:11px;font-weight:bold;color:#C0392B;text-transform:uppercase;letter-spacing:1px;">
+                Ítem ${i + 1}
+            </span>
+            ${i > 0 ? `<button type="button" onclick="eliminarItem(${i})"
+                style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:0 4px;"
+                title="Eliminar">✕</button>` : ''}
+        </div>
+        <div class="field">
+            <label>Tipo *</label>
+            <select name="tipo_${i}" onchange="actualizarCategorias(this, ${i})" required>
+                ${buildTipoOptions()}
+            </select>
+        </div>
+        <div class="field">
+            <label>Categoría</label>
+            <select name="categoria_${i}" onchange="toggleOtroItem(this, ${i}); actualizarResumen(); validarPreciosFormulario();">
+                <option value="">— Seleccionar tipo primero —</option>
+            </select>
+        </div>
+        <div class="field" id="otro-wrap-${i}" style="display:none;">
+            <label>Especificar</label>
+            <input type="text" name="categoria_otro_${i}" placeholder="Escribir categoría">
+        </div>
+        <div class="field">
+            <label>Zona / Cantidad / Envase</label>
+            <input type="text" name="zona_${i}" placeholder="Ej: 3 Superior, 2 und..." list="areas-datalist">
+        </div>
+        <div class="field">
+            <label>Precio de Venta</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <select id="moneda_item_${i}" name="moneda_item_${i}"
+                        onchange="cambiarMonedaItem(${i})"
+                        style="width:110px;flex-shrink:0;padding:10px 6px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;background:white;">
+                    <option value="Soles">S/ (PEN)</option>
+                    <option value="USD">$ (USD)</option>
+                    <option value="EUR">€ (EUR)</option>
+                </select>
+                <input type="number" name="precio_orig_${i}" id="precio_orig_${i}"
+                       placeholder="0" step="1" min="0"
+                       oninput="onPrecioOrigInput(${i})"
+                       style="flex:1;">
+            </div>
+            <!-- Campo T.C. (solo para USD/EUR) -->
+            <div id="tc-wrap-${i}" style="display:none; margin-top:8px; background:#fff8e1; border-radius:6px; padding:8px 10px;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <span id="tc-label-${i}" style="font-size:11px;color:#888;white-space:nowrap;">T.C. (S/ por 1 USD):</span>
+                    <input type="number" name="tc_item_${i}" id="tc_item_${i}"
+                           placeholder="0.00" step="0.01" min="0"
+                           oninput="actualizarPrecioItem(${i})"
+                           style="width:80px;padding:6px 8px;border:1.5px solid #ffe082;border-radius:6px;font-size:13px;">
+                    <span id="equiv-${i}" style="font-size:12px;color:#795548;font-weight:bold;"></span>
+                </div>
+                <div style="font-size:10px;color:#aaa;margin-top:4px;" id="tc-fuente-${i}"></div>
+            </div>
+            <!-- Hidden: precio en Soles enviado al servidor -->
+            <input type="hidden" name="total_item_${i}" id="total_item_${i}" value="0">
+        </div>
+        <!-- Sección de promoción / descuento -->
+        <input type="hidden" name="precio_lista_${i}" id="precio_lista_${i}" value="">
+        <input type="hidden" name="descuento_${i}"    id="descuento_${i}"    value="">
+        <input type="hidden" name="es_gratis_${i}"    id="es_gratis_flag_${i}" value="0">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px;padding:8px 10px;background:#fff8f8;border:1px dashed #e8a0a0;border-radius:8px;">
+            <!-- Gratis -->
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0;">
+                <input type="checkbox" id="es_gratis_${i}" onchange="marcarGratis(${i})"
+                       style="width:16px;height:16px;accent-color:#C0392B;flex-shrink:0;">
+                <span style="font-size:13px;color:#C0392B;font-weight:bold;">Gratis</span>
+            </label>
+            <!-- Separador -->
+            <span style="color:#ddd;font-size:16px;">|</span>
+            <!-- Descuento -->
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0;">
+                <input type="checkbox" id="tiene_desc_${i}" onchange="toggleDescuento(${i})"
+                       style="width:16px;height:16px;accent-color:#C0392B;flex-shrink:0;">
+                <span style="font-size:13px;color:#C0392B;font-weight:bold;">Descuento S/</span>
+            </label>
+            <input type="number" id="descuento_input_${i}"
+                   placeholder="0" step="1" min="0"
+                   oninput="calcularDescuento(${i})"
+                   style="width:90px;padding:7px 8px;border:1.5px solid #ddd;border-radius:7px;font-size:13px;display:none;">
+            <span id="promo-resumen-${i}" style="font-size:12px;color:#C0392B;font-weight:bold;"></span>
+        </div>
+        <div id="notif-promo-${i}" style="display:none;margin-top:6px;"></div>
+    `;
+    container.appendChild(div);
+    document.getElementById('num_items').value = itemCount;
+    actualizarResumen();
+    validarPreciosFormulario();
+}
+
+function eliminarItem(i) {
+    const el = document.getElementById('item-' + i);
+    if (el) el.remove();
+    delete pagosPorItem[i];
+    actualizarResumen();
+    validarPreciosFormulario();
+}
+
+// ── Reset y validación de precio obligatorio ──────────────────────────────────
+
+function resetPromoItem(i) {
+    const gratisChk = document.getElementById(`es_gratis_${i}`);
+    const flagEl    = document.getElementById(`es_gratis_flag_${i}`);
+    const descChk   = document.getElementById(`tiene_desc_${i}`);
+    const dcInput   = document.getElementById(`descuento_input_${i}`);
+    const dc        = document.getElementById(`descuento_${i}`);
+    const pl        = document.getElementById(`precio_lista_${i}`);
+    const res       = document.getElementById(`promo-resumen-${i}`);
+    if (gratisChk) gratisChk.checked = false;
+    if (flagEl)    flagEl.value = '0';
+    if (descChk)   descChk.checked = false;
+    if (dcInput)   { dcInput.style.display = 'none'; dcInput.value = ''; }
+    if (dc)        dc.value = '';
+    if (pl)        pl.value = '';
+    if (res)       res.innerHTML = '';
+    const notif = document.getElementById(`notif-promo-${i}`);
+    if (notif)     { notif.innerHTML = ''; notif.style.display = 'none'; }
+}
+
+function resetPagosYDistribucion() {
+    ['ef-efectivo', 'ef-yape', 'ef-plin', 'ef-giro'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    for (let i = 0; i < itemCount; i++) {
+        const el = document.getElementById(`pago_item_${i}`);
+        if (el) el.value = '';
+        pagosPorItem[i] = 0;
+    }
+    deudasPendientesCliente.forEach((d, idx) => {
+        const el = document.getElementById(`deuda-monto-${idx}`);
+        if (el) el.value = '';
+        deudasPagos[idx] = 0;
+    });
+}
+
+function onPrecioOrigInput(idx) {
+    const tieneGratis = document.getElementById(`es_gratis_${idx}`)?.checked;
+    const tieneDesc   = document.getElementById(`tiene_desc_${idx}`)?.checked;
+
+    if (tieneGratis || tieneDesc) {
+        // Hay promo activa: recalcular total_item con el nuevo precio pero sin tocar la promo
+        const precioOrig = parseFloat(document.getElementById(`precio_orig_${idx}`)?.value || 0);
+        const moneda     = document.getElementById(`moneda_item_${idx}`)?.value || 'Soles';
+        const tc         = parseFloat(document.getElementById(`tc_item_${idx}`)?.value || 0);
+        const precioSoles = moneda === 'Soles' ? precioOrig : (tc > 0 ? Math.round(precioOrig * tc) : 0);
+        const hidden     = document.getElementById(`total_item_${idx}`);
+
+        if (tieneGratis) {
+            if (hidden) hidden.value = '0';
+            const res = document.getElementById(`promo-resumen-${idx}`);
+            if (res) res.innerHTML = `<span style="color:#27ae60;font-weight:bold;">✓ GRATIS — precio de lista S/ ${precioOrig}</span>`;
+        } else {
+            const desc    = parseFloat(document.getElementById(`descuento_${idx}`)?.value || 0);
+            const cobrado = Math.max(0, precioSoles - desc);
+            if (hidden) hidden.value = cobrado;
+            const pct = precioSoles > 0 ? Math.round((desc / precioSoles) * 100) : 0;
+            const res = document.getElementById(`promo-resumen-${idx}`);
+            if (res) res.innerHTML = desc > 0
+                ? `→ paga <strong>S/ ${cobrado}</strong> <span style="color:#888;">(−${pct}%)</span>`
+                : '';
+        }
+        mostrarNotificacionPromo(idx, tieneGratis, precioSoles);
+    } else {
+        resetPagosYDistribucion();
+        actualizarPrecioItem(idx);
+    }
+    validarPreciosFormulario();
+    actualizarResumen();
+    autoRellenarPorPago();
+}
+
+function mostrarNotificacionPromo(idx, esGratis, precioSoles) {
+    const notif = document.getElementById(`notif-promo-${idx}`);
+    if (!notif) return;
+    let texto = '';
+    if (esGratis) {
+        texto = `Precio cambiado. ¿Mantener este ítem como <strong>Gratis</strong>?`;
+    } else {
+        const desc    = parseFloat(document.getElementById(`descuento_${idx}`)?.value || 0);
+        const cobrado = Math.max(0, precioSoles - desc);
+        texto = `Precio cambiado. ¿Mantener el descuento de <strong>S/ ${desc}</strong>? → cobrarías S/ ${cobrado}`;
+    }
+    const btnCambiar = !esGratis ? `
+                <button type="button" onclick="cambiarDescuento(${idx})"
+                    style="padding:4px 10px;background:#e67e22;color:white;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-weight:bold;">
+                    ✎ Cambiar descuento
+                </button>` : '';
+    notif.innerHTML = `
+        <div style="padding:8px 10px;background:#fff8e1;border:1px solid #ffc107;border-radius:7px;font-size:12px;color:#5d4037;display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+            <span>⚠ ${texto}</span>
+            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
+                <button type="button" onclick="confirmarMantenerPromo(${idx})"
+                    style="padding:4px 10px;background:#27ae60;color:white;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-weight:bold;">
+                    ✓ Mantener
+                </button>
+                ${btnCambiar}
+                <button type="button" onclick="quitarPromo(${idx})"
+                    style="padding:4px 10px;background:#e74c3c;color:white;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-weight:bold;">
+                    ✗ Quitar
+                </button>
+            </div>
+        </div>`;
+    notif.style.display = 'block';
+}
+
+function confirmarMantenerPromo(idx) {
+    // Actualizar precio_lista con el nuevo precio para que futuros cálculos de descuento usen la base correcta
+    capturarPrecioLista(idx);
+    const notif = document.getElementById(`notif-promo-${idx}`);
+    if (notif) { notif.innerHTML = ''; notif.style.display = 'none'; }
+}
+
+function cambiarDescuento(idx) {
+    confirmarMantenerPromo(idx);  // actualiza precio_lista y cierra la notif
+    const dcInput = document.getElementById(`descuento_input_${idx}`);
+    if (dcInput) {
+        dcInput.style.display = 'inline-block';
+        dcInput.focus();
+        dcInput.select();
+    }
+}
+
+function quitarPromo(idx) {
+    resetPromoItem(idx);
+    resetPagosYDistribucion();
+    actualizarPrecioItem(idx);
+    actualizarResumen();
+    validarPreciosFormulario();
+}
+
+function validarPreciosFormulario(esSubmit) {
+    let hayError = false;
+
+    // Solo validar todos los campos al hacer submit
+    if (esSubmit) {
+        const fecha = document.getElementById('fecha-venta');
+        if (!fecha || !fecha.value) {
+            hayError = true;
+            if (fecha) fecha.style.border = '1.5px solid #e74c3c';
+        } else if (fecha) { fecha.style.border = ''; }
+
+        const cliente = document.getElementById('input-cliente-venta');
+        if (!cliente || !cliente.value.trim()) {
+            hayError = true;
+            if (cliente) cliente.style.border = '1.5px solid #e74c3c';
+        } else if (cliente) { cliente.style.border = ''; }
+    }
+
+    let hayItems = false;
+    for (let i = 0; i < itemCount; i++) {
+        if (!document.getElementById(`item-${i}`)) continue;
+        const tipo = document.querySelector(`[name="tipo_${i}"]`)?.value || '';
+        if (tipo) hayItems = true;
+
+        // Categoría (solo al submit)
+        if (esSubmit && tipo) {
+            const catSel = document.querySelector(`[name="categoria_${i}"]`);
+            const cat = catSel?.value || '';
+            if (!cat) {
+                hayError = true;
+                if (catSel) catSel.style.border = '1.5px solid #e74c3c';
+            } else if (catSel) { catSel.style.border = ''; }
+        }
+
+        // Precio (siempre — para feedback visual en tiempo real)
+        if (tipo) {
+            const precioInput = document.getElementById(`precio_orig_${i}`);
+            const precio = parseFloat(precioInput?.value || 0);
+            if (!precio || precio <= 0) {
+                hayError = true;
+                if (precioInput) precioInput.style.border = '1.5px solid #e74c3c';
+            } else if (precioInput) { precioInput.style.border = ''; }
+        }
+    }
+
+    if (esSubmit && !hayItems) hayError = true;
+
+    const btn = document.getElementById('btn-guardar-venta');
+
+    if (!esSubmit) {
+        // Llamada desde oninput: solo actualizar visual del botón, nunca bloquear
+        if (btn) {
+            btn.disabled = hayError;
+            btn.style.opacity = hayError ? '0.5' : '';
+            btn.style.cursor  = hayError ? 'not-allowed' : '';
+        }
+        return !hayError;
+    }
+
+    // Llamada desde submit
+    if (hayError) {
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
+        return false;
+    }
+
+    // OK — bloquear para evitar doble envío
+    if (btn) {
+        btn.dataset.originalText = btn.dataset.originalText || btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+        btn.style.opacity = '0.65';
+        btn.style.cursor = 'not-allowed';
+    }
+    return true;
+}
+
+// Captura el precio de lista cuando el usuario interactúa con los checkboxes de promo
+function capturarPrecioLista(i) {
+    const pl       = document.getElementById(`precio_lista_${i}`);
+    const precioOrig = parseFloat(document.getElementById(`precio_orig_${i}`)?.value || 0);
+    const moneda   = document.getElementById(`moneda_item_${i}`)?.value || 'Soles';
+    const tc       = parseFloat(document.getElementById(`tc_item_${i}`)?.value || 0);
+    if (pl) {
+        const listaSoles = moneda === 'Soles' ? precioOrig : (tc > 0 ? Math.round(precioOrig * tc) : 0);
+        pl.value = listaSoles;
+    }
+}
+
+function marcarGratis(i) {
+    capturarPrecioLista(i);
+    const checked = document.getElementById(`es_gratis_${i}`).checked;
+    const pl      = document.getElementById(`precio_lista_${i}`);
+    const lista   = parseFloat(pl?.value || 0);
+    const dc      = document.getElementById(`descuento_${i}`);
+    const res     = document.getElementById(`promo-resumen-${i}`);
+    const precioOrig = document.getElementById(`precio_orig_${i}`);
+    const tieneDesc  = document.getElementById(`tiene_desc_${i}`);
+    const dcInput    = document.getElementById(`descuento_input_${i}`);
+
+    const flagEl  = document.getElementById(`es_gratis_flag_${i}`);
+    const hidden  = document.getElementById(`total_item_${i}`);
+    if (checked) {
+        // Desmarcar "Descuento" y ocultar su input
+        if (tieneDesc) tieneDesc.checked = false;
+        if (dcInput)   { dcInput.style.display = 'none'; dcInput.value = ''; }
+        if (dc)     dc.value = lista;
+        if (flagEl) flagEl.value = '1';
+        // Zerizar total_item internamente SIN tocar el campo visible precio_orig
+        if (hidden) hidden.value = '0';
+        if (res) res.innerHTML = `<span style="color:#27ae60;font-weight:bold;">✓ GRATIS — precio de lista S/ ${lista}</span>`;
+        actualizarResumen();
+        autoRellenarPorPago();
+    } else {
+        if (flagEl) flagEl.value = '0';
+        if (dc)  dc.value = '';
+        if (res) res.innerHTML = '';
+        // Restaurar total_item al precio real
+        actualizarPrecioItem(i);
+    }
+}
+
+function toggleDescuento(i) {
+    capturarPrecioLista(i);
+    const checked = document.getElementById(`tiene_desc_${i}`).checked;
+    const dcInput = document.getElementById(`descuento_input_${i}`);
+    const gratis  = document.getElementById(`es_gratis_${i}`);
+    const dc      = document.getElementById(`descuento_${i}`);
+    const res     = document.getElementById(`promo-resumen-${i}`);
+    const pl      = document.getElementById(`precio_lista_${i}`);
+    const precioOrig = document.getElementById(`precio_orig_${i}`);
+
+    if (checked) {
+        // Desmarcar "Gratis" y resetear su flag
+        if (gratis) gratis.checked = false;
+        const flagEl = document.getElementById(`es_gratis_flag_${i}`);
+        if (flagEl) flagEl.value = '0';
+        if (dcInput) { dcInput.style.display = 'inline-block'; dcInput.focus(); }
+    } else {
+        if (dcInput) { dcInput.style.display = 'none'; dcInput.value = ''; }
+        if (dc)  dc.value = '';
+        if (res) res.innerHTML = '';
+        // Recalcular total_item desde precio_orig intacto — sin tocar lo que el usuario escribió
+        actualizarPrecioItem(i);
+    }
+}
+
+function calcularDescuento(i) {
+    const pl    = document.getElementById(`precio_lista_${i}`);
+    const lista = parseFloat(pl?.value || 0);
+    const dcInput = document.getElementById(`descuento_input_${i}`);
+    const desc  = parseFloat(dcInput?.value || 0);
+    const dc    = document.getElementById(`descuento_${i}`);
+    const res   = document.getElementById(`promo-resumen-${i}`);
+
+    // Validar que el descuento no supere el precio de venta
+    if (lista > 0 && desc >= lista) {
+        if (dcInput) dcInput.style.border = '1.5px solid #e74c3c';
+        if (res) res.innerHTML = `<span style="color:#e74c3c;font-weight:bold;">⚠ El descuento no puede ser mayor o igual al precio de venta (S/ ${lista})</span>`;
+        if (dc) dc.value = '';
+        return;  // no actualizar total_item ni distribución
+    }
+
+    if (dcInput) dcInput.style.border = '1.5px solid #ddd';
+    const cobrado = lista - desc;
+    const pct = lista > 0 ? Math.round((desc / lista) * 100) : 0;
+
+    if (dc) dc.value = desc;
+    const hidden = document.getElementById(`total_item_${i}`);
+    if (hidden) hidden.value = cobrado;
+    if (res) {
+        res.innerHTML = desc > 0
+            ? `→ paga <strong>S/ ${cobrado}</strong> <span style="color:#888;">(−${pct}%)</span>`
+            : '';
+    }
+    // Si la notificación de precio cambiado estaba visible, ocultarla: el usuario ya tomó acción
+    const notif = document.getElementById(`notif-promo-${i}`);
+    if (notif && notif.style.display !== 'none') {
+        capturarPrecioLista(i);
+        notif.innerHTML = '';
+        notif.style.display = 'none';
+    }
+    actualizarResumen();
+    autoRellenarPorPago();
+}
+
+function toggleOtroItem(sel, i) {
+    const wrap = document.getElementById('otro-wrap-' + i);
+    if (wrap) wrap.style.display = sel.value === '__otro__' ? 'block' : 'none';
+}
+
+// ── Tipo de cambio ────────────────────────────────────────────────────────────
+let tasasCache = {};   // { "2026-04-08": { USD: 3.72, EUR: 4.10 }, ... }
+let tcPromesa  = null; // promesa de la última carga en curso
+
+async function fetchTasasPorFecha(fecha) {
+    const hoy = new Date().toISOString().split('T')[0];
+    const clave = fecha || hoy;
+    if (tasasCache[clave]) return; // ya tenemos esta fecha
+    const tag = (!fecha || fecha === hoy) ? 'latest' : fecha;
+    try {
+        // currency-api: libre, sin clave, incluye PEN (sol peruano)
+        const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${tag}/v1/currencies/usd.json`;
+        const r    = await fetch(url);
+        const data = await r.json();
+        tasasCache[clave] = {
+            USD: Math.round(data.usd.pen  * 100) / 100,
+            EUR: Math.round((data.usd.pen / data.usd.eur) * 100) / 100,
+        };
+    } catch(e) { /* sin conexión — ingresar manualmente */ }
+}
+
+function getFechaVenta() {
+    return document.getElementById('fecha-venta')?.value || '';
+}
+
+// Cargar tasas con la fecha actual al iniciar
+tcPromesa = fetchTasasPorFecha(new Date().toISOString().split('T')[0]);
+
+async function actualizarTCPorFecha() {
+    const fecha = getFechaVenta();
+    if (!fecha) return;
+    await fetchTasasPorFecha(fecha);
+    // Actualizar todos los ítems que ya tengan moneda seleccionada
+    for (let i = 0; i < itemCount; i++) {
+        const monedaEl = document.getElementById(`moneda_item_${i}`);
+        if (!monedaEl || monedaEl.value === 'Soles') continue;
+        const tcInput = document.getElementById(`tc_item_${i}`);
+        const fuente  = document.getElementById(`tc-fuente-${i}`);
+        const tasas   = tasasCache[fecha];
+        if (tasas && tcInput) {
+            tcInput.value = (monedaEl.value === 'USD' ? tasas.USD : tasas.EUR).toFixed(2);
+            if (fuente) fuente.textContent = `T.C. para ${fecha} — editable`;
+            actualizarPrecioItem(i);
+        }
+    }
+}
+
+async function cambiarMonedaItem(idx) {
+    const moneda  = document.getElementById(`moneda_item_${idx}`).value;
+    const tcWrap  = document.getElementById(`tc-wrap-${idx}`);
+    const tcLabel = document.getElementById(`tc-label-${idx}`);
+    const tcInput = document.getElementById(`tc_item_${idx}`);
+    const fuente  = document.getElementById(`tc-fuente-${idx}`);
+
+    if (moneda !== 'Soles') {
+        tcWrap.style.display = 'block';
+        const sym = moneda === 'USD' ? 'US$' : '€';
+        tcLabel.textContent = `T.C. (S/ por 1 ${sym}):`;
+
+        const fecha = getFechaVenta();
+        if (!tasasCache[fecha]) {
+            fuente.textContent = 'Cargando tipo de cambio...';
+            await fetchTasasPorFecha(fecha);
+        }
+
+        const tasas = tasasCache[fecha];
+        if (tasas) {
+            tcInput.value = (moneda === 'USD' ? tasas.USD : tasas.EUR).toFixed(2);
+            fuente.textContent = `T.C. para ${fecha || 'hoy'} — editable`;
+        } else {
+            fuente.textContent = 'No se pudo obtener — ingresa manualmente';
+        }
+    } else {
+        tcWrap.style.display = 'none';
+        tcInput.value = '';
+    }
+    actualizarPrecioItem(idx);
+}
+
+function actualizarPrecioItem(idx) {
+    const moneda    = document.getElementById(`moneda_item_${idx}`)?.value || 'Soles';
+    const precioOrig = parseFloat(document.getElementById(`precio_orig_${idx}`)?.value || 0);
+    const tc         = parseFloat(document.getElementById(`tc_item_${idx}`)?.value || 0);
+    const equivEl    = document.getElementById(`equiv-${idx}`);
+    const hidden     = document.getElementById(`total_item_${idx}`);
+    const esGratis   = document.getElementById(`es_gratis_flag_${idx}`)?.value === '1';
+
+    // Si está marcado como gratis, total_item siempre es 0 sin importar el precio visible
+    if (esGratis) {
+        if (hidden) hidden.value = '0';
+        actualizarResumen();
+        autoRellenarPorPago();
+        return;
+    }
+
+    let precioSoles;
+    if (moneda === 'Soles') {
+        precioSoles = precioOrig;
+    } else {
+        precioSoles = tc > 0 ? Math.round(precioOrig * tc) : 0;
+        if (equivEl) equivEl.textContent = precioSoles > 0 ? `= S/ ${precioSoles}` : '';
+    }
+    if (hidden) hidden.value = precioSoles;
+    actualizarResumen();
+    autoRellenarPorPago();
+}
+
+// ── Resumen y distribución ────────────────────────────────────────────────────
+let pagosPorItem = {};
+
+function getItemsData() {
+    const items = [];
+    for (let i = 0; i < itemCount; i++) {
+        if (!document.getElementById(`item-${i}`)) continue;
+        const tipo      = document.querySelector(`[name="tipo_${i}"]`)?.value || '';
+        if (!tipo) continue;
+        const cat       = document.querySelector(`[name="categoria_${i}"]`)?.value || '';
+        const moneda    = document.getElementById(`moneda_item_${i}`)?.value || 'Soles';
+        const precioOrig  = parseFloat(document.getElementById(`precio_orig_${i}`)?.value || 0);
+        const tc          = parseFloat(document.getElementById(`tc_item_${i}`)?.value || 0);
+        const precioSoles = parseFloat(document.getElementById(`total_item_${i}`)?.value || 0);
+        const esGratis   = document.getElementById(`es_gratis_flag_${i}`)?.value === '1';
+        const sym        = moneda === 'USD' ? 'US$' : (moneda === 'EUR' ? '€' : 'S/');
+        const label      = cat || tipo;
+        const precioDisplay = moneda === 'Soles'
+            ? `S/ ${precioOrig}`
+            : `${sym} ${precioOrig} @ ${tc} = S/ ${precioSoles}`;
+        items.push({ idx: i, tipo, label, moneda, precioOrig, tc, precioSoles, precioDisplay, esGratis });
+    }
+    return items;
+}
+
+function actualizarResumen() {
+    const items = getItemsData();
+    const sec   = document.getElementById('seccion-resumen-pago');
+    const aviso = document.getElementById('aviso-faltan-campos');
+    if (!sec) return;
+
+    // Verificar campos obligatorios: Cliente + por cada ítem: Tipo, Categoría, Precio
+    const faltantes = [];
+    const cliente = document.getElementById('input-cliente-venta')?.value?.trim() || '';
+    if (!cliente) faltantes.push('Falta seleccionar <strong>Cliente</strong>');
+
+    let hayAlgunItem = false;
+    for (let i = 0; i < itemCount; i++) {
+        if (!document.getElementById(`item-${i}`)) continue;
+        hayAlgunItem = true;
+        const tipo   = document.querySelector(`[name="tipo_${i}"]`)?.value || '';
+        const cat    = document.querySelector(`[name="categoria_${i}"]`)?.value || '';
+        const precio = parseFloat(document.getElementById(`precio_orig_${i}`)?.value || 0);
+        const esGratis = document.getElementById(`es_gratis_flag_${i}`)?.value === '1';
+        const campos = [];
+        if (!tipo) campos.push('Tipo');
+        if (tipo && !cat) campos.push('Categoría');
+        if (!esGratis && precio <= 0) campos.push('Precio de venta');
+        if (campos.length > 0) faltantes.push(`Ítem ${i+1}: falta <strong>${campos.join('</strong>, <strong>')}</strong>`);
+    }
+
+    const todoCompleto = faltantes.length === 0 && hayAlgunItem;
+
+    // Mostrar/ocultar aviso
+    if (aviso) {
+        if (faltantes.length > 0 && hayAlgunItem) {
+            aviso.innerHTML = '⚠ Completa para continuar:<br>' + faltantes.join('<br>');
+            aviso.style.display = 'block';
+        } else {
+            aviso.style.display = 'none';
+        }
+    }
+
+    // Solo mostrar sección de pago cuando TODO está completo
+    if (!todoCompleto) { sec.style.display = 'none'; return; }
+    sec.style.display = 'block';
+    if (aviso) aviso.style.display = 'none';
+
+    // ── Tabla de resumen ──
+    const totalSoles = items.reduce((s, it) => s + it.precioSoles, 0);
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    items.forEach(it => {
+        html += `<tr style="border-bottom:1px solid #f0f0f0;">
+            <td style="padding:7px 4px;color:#555;">${it.label}</td>
+            <td style="padding:7px 4px;text-align:right;font-weight:bold;color:#333;white-space:nowrap;">${it.precioDisplay}</td>
+        </tr>`;
+    });
+    html += '</table>';
+    document.getElementById('tabla-resumen-items').innerHTML = html;
+    document.getElementById('total-cobrar-val').textContent = totalSoles;
+    document.getElementById('total-venta').value = totalSoles;
+
+    // ── Tabla de distribución ──
+    let distHtml = '';
+    const lastIdx = items.length > 0 ? items[items.length - 1].idx : -1;
+
+    // 1) Deudas anteriores PRIMERO (si hay)
+    if (deudasPendientesCliente.length > 0) {
+        distHtml += `
+        <div style="margin-bottom:6px;">
+            <div style="font-size:11px;font-weight:bold;color:#C0392B;text-transform:uppercase;letter-spacing:1px;padding:6px 0;border-bottom:1px solid #f0f0f0;margin-bottom:2px;">
+                Abonar a deudas anteriores
+            </div>`;
+        deudasPendientesCliente.forEach((d, idx) => {
+            const valActual = deudasPagos[idx] !== undefined ? Math.round(deudasPagos[idx]) : Math.round(d.debe);
+            distHtml += `
+            <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:bold;color:#C0392B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.categoria}</div>
+                        <div style="font-size:11px;color:#aaa;">Debe S/ ${Math.round(d.debe)} · ${d.fecha}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                        <span style="font-size:12px;color:#888;">S/</span>
+                        <input type="number" name="deuda_monto_${idx}" id="deuda_monto_${idx}"
+                               value="${valActual}" placeholder="0" step="1" min="0" max="${Math.round(d.debe)}"
+                               oninput="
+                                   let v=Math.min(parseFloat(this.value)||0,${Math.round(d.debe)});
+                                   this.value=v||'';
+                                   deudasPagos[${idx}]=v;
+                                   actualizarDistribucion();"
+                               style="width:80px;padding:7px 8px;border:1.5px solid #e8b4b8;border-radius:6px;font-size:13px;text-align:right;">
+                    </div>
+                </div>
+                <input type="hidden" name="deuda_cod_${idx}" value="${d.cod_item}">
+                <input type="hidden" name="deuda_cat_${idx}" value="${d.categoria}">
+            </div>`;
+        });
+        distHtml += `</div>`;
+    }
+
+    // 2) Ítems nuevos (los gratis se muestran como etiqueta fija, sin input editable)
+    items.forEach(it => {
+        if (it.esGratis) {
+            distHtml += `
+            <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:bold;color:#27ae60;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${it.label}</div>
+                        <div style="font-size:11px;color:#27ae60;">Precio lista: ${it.precioDisplay}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                        <span style="font-size:13px;font-weight:bold;color:#27ae60;">GRATIS</span>
+                        <input type="hidden" name="pago_item_${it.idx}" id="pago_item_${it.idx}" value="0">
+                    </div>
+                </div>
+            </div>`;
+            pagosPorItem[it.idx] = 0;
+            return;
+        }
+        const esUltimo = it.idx === lastIdx;
+        const valActual = pagosPorItem[it.idx] !== undefined ? pagosPorItem[it.idx] : '';
+        if (esUltimo && items.length >= 1) {
+            // Último ítem (cuando hay varios): se auto-llena con el restante, editable
+            distHtml += `
+            <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:bold;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${it.label}</div>
+                        <div style="font-size:11px;color:#aaa;">Precio: ${it.precioDisplay} · <em>se llena con el restante</em></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                        <span style="font-size:12px;color:#888;">S/</span>
+                        <input type="number" name="pago_item_${it.idx}" id="pago_item_${it.idx}"
+                               value="${valActual}" placeholder="0" step="1" min="0" max="${it.precioSoles}"
+                               oninput="
+                                   let v=Math.min(parseFloat(this.value)||0, ${it.precioSoles});
+                                   this.value = v || '';
+                                   pagosPorItem[${it.idx}] = v;
+                                   actualizarDistribucion();"
+                               style="width:80px;padding:7px 8px;border:1.5px solid #aad4f0;border-radius:6px;font-size:13px;text-align:right;background:#f4faff;">
+                    </div>
+                </div>
+                <div id="saldo-item-${it.idx}" style="font-size:11px;margin-top:4px;color:#aaa;text-align:right;"></div>
+            </div>`;
+        } else {
+            // Ítems no-último: entrada manual
+            distHtml += `
+            <div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:bold;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${it.label}</div>
+                        <div style="font-size:11px;color:#aaa;">Precio: ${it.precioDisplay}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                        <span style="font-size:12px;color:#888;">S/</span>
+                        <input type="number" name="pago_item_${it.idx}" id="pago_item_${it.idx}"
+                               value="${valActual}" placeholder="0" step="1" min="0" max="${it.precioSoles}"
+                               oninput="
+                                   let v=Math.min(parseFloat(this.value)||0, ${it.precioSoles});
+                                   this.value = v || '';
+                                   pagosPorItem[${it.idx}] = v;
+                                   actualizarDistribucion();"
+                               style="width:80px;padding:7px 8px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;text-align:right;">
+                    </div>
+                </div>
+                <div id="saldo-item-${it.idx}" style="font-size:11px;margin-top:4px;color:#aaa;text-align:right;"></div>
+            </div>`;
+        }
+    });
+
+    // 3) Fila de crédito (siempre presente, se muestra/oculta dinámicamente)
+    distHtml += `
+    <div id="credito-dist-fila" style="display:none;background:#fffdf0;border-radius:6px;padding:10px 12px;margin-top:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:bold;color:#856404;">Crédito a favor del cliente</div>
+                <input type="text" id="credito-exceso-nota" name="credito_exceso_nota"
+                    placeholder="Nota opcional (ej: para próxima sesión)"
+                    style="font-size:11px;color:#aaa;border:none;background:transparent;width:100%;margin-top:3px;outline:none;">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <span style="font-size:12px;color:#856404;">S/</span>
+                <div id="credito-exceso-display" style="width:80px;padding:7px 8px;background:#fff8e1;border:1.5px solid #f0d060;border-radius:6px;font-size:13px;font-weight:bold;color:#856404;text-align:right;">0</div>
+            </div>
+        </div>
+    </div>`;
+
+    document.getElementById('tabla-dist-items').innerHTML = distHtml;
+    document.getElementById('num_deudas_venta').value = deudasPendientesCliente.length;
+    actualizarDistribucion();
+}
+
+// Llamada cuando el usuario ingresa efectivo/yape/plin/giro.
+// Auto-llena primero las deudas, luego deja que actualizarDistribucion
+// calcule el restante para el último ítem nuevo.
+function autoRellenarPorPago() {
+    const creditoAplicado = parseFloat(document.getElementById('credito-aplicado-input')?.value) || 0;
+    const pagadoHoy =
+        (parseFloat(document.getElementById('ef-efectivo')?.value) || 0) +
+        (parseFloat(document.getElementById('ef-yape')?.value)    || 0) +
+        (parseFloat(document.getElementById('ef-plin')?.value)    || 0) +
+        (parseFloat(document.getElementById('ef-giro')?.value)    || 0) +
+        creditoAplicado;
+
+    if (pagadoHoy <= 0) {
+        actualizarDistribucion();
+        return;
+    }
+
+    // 1) Rellenar deudas en orden
+    let disponible = pagadoHoy;
+    deudasPendientesCliente.forEach((d, idx) => {
+        const inputEl = document.getElementById(`deuda_monto_${idx}`);
+        if (!inputEl) return;
+        const val = Math.round(Math.min(d.debe, Math.max(0, disponible)));
+        inputEl.value = val > 0 ? val : '';
+        deudasPagos[idx] = val;
+        disponible -= val;
+    });
+
+    // 2) Rellenar ítems en orden: cada uno hasta su precio, el último con el restante exacto
+    //    Los ítems gratis se SALTAN (ya tienen pago_item = 0 fijo)
+    const items = getItemsData();
+    const itemsCobrables = items.filter(it => !it.esGratis);
+    itemsCobrables.forEach((it, pos) => {
+        const inputEl = document.getElementById(`pago_item_${it.idx}`);
+        if (!inputEl) return;
+        const esUltimo = pos === itemsCobrables.length - 1;
+        const val = esUltimo
+            ? Math.round(Math.min(it.precioSoles, Math.max(0, disponible)))
+            : Math.round(Math.min(it.precioSoles, Math.max(0, disponible)));
+        inputEl.value = val > 0 ? val : '';
+        pagosPorItem[it.idx] = val;
+        disponible -= val;
+    });
+
+    actualizarDistribucion();
+}
+
+function actualizarDistribucion() {
+    const items = getItemsData();
+    const totalSoles = items.reduce((s, it) => s + it.precioSoles, 0);
+    const totalDeuda = deudasPendientesCliente.reduce((s, d) => s + d.debe, 0);
+
+    const creditoAplicado = parseFloat(document.getElementById('credito-aplicado-input')?.value) || 0;
+
+    const pagadoHoy =
+        (parseFloat(document.getElementById('ef-efectivo')?.value) || 0) +
+        (parseFloat(document.getElementById('ef-yape')?.value)    || 0) +
+        (parseFloat(document.getElementById('ef-plin')?.value)    || 0) +
+        (parseFloat(document.getElementById('ef-giro')?.value)    || 0) +
+        creditoAplicado;
+
+    // saldoFavor = exceso sobre ítems nuevos + deudas totales combinadas
+    const saldoFavor = Math.max(0, pagadoHoy - totalSoles - totalDeuda);
+    const disponible = Math.max(0, pagadoHoy - saldoFavor);
+
+    // ── 1) Deudas: respetar valor actual, solo reducir si excede el disponible ──
+    let deudaDistribuida = 0;
+    deudasPendientesCliente.forEach((d, idx) => {
+        const inputEl = document.getElementById(`deuda_monto_${idx}`);
+        if (!inputEl) return;
+        let v = parseFloat(inputEl.value || 0);
+        v = Math.min(v, d.debe);
+        const maxParaEste = Math.max(0, disponible - deudaDistribuida);
+        if (v > maxParaEste + 0.5) {
+            v = maxParaEste;
+            inputEl.value = v > 0 ? Math.round(v) : '';
+            deudasPagos[idx] = v;
+        }
+        deudaDistribuida += v;
+    });
+
+    // Dinero que queda para ítems nuevos
+    const disponibleItems = Math.max(0, disponible - deudaDistribuida);
+
+    // ── 2) Ítems nuevos: respetar valor actual, solo capear si excede precio o disponible ──
+    let distribuidoItems = 0;
+    items.forEach(it => {
+        const inputEl = document.getElementById(`pago_item_${it.idx}`);
+        if (!inputEl) return;
+        let v = parseFloat(inputEl.value || 0);
+        v = Math.min(v, it.precioSoles);
+        const maxParaEste = Math.max(0, disponibleItems - distribuidoItems);
+        if (v > maxParaEste + 0.5) {
+            v = maxParaEste;
+            inputEl.value = v > 0 ? Math.round(v) : '';
+            pagosPorItem[it.idx] = v;
+        }
+        distribuidoItems += v;
+    });
+
+    const distribuido  = deudaDistribuida + distribuidoItems;
+    const porAsignar   = disponible - distribuido;
+    const saldoPend    = totalSoles - distribuidoItems; // deuda de ítems nuevos únicamente
+
+    // Contador
+    document.getElementById('cnt-pagado').textContent = `S/ ${Math.round(pagadoHoy)}`;
+
+    const porAsignarEl = document.getElementById('cnt-por-asignar');
+    porAsignarEl.textContent = `S/ ${Math.abs(Math.round(porAsignar))}`;
+    if (porAsignar < -0.5) {
+        porAsignarEl.style.color = '#C0392B';
+        porAsignarEl.previousSibling.textContent = 'Excede lo pagado: ';
+    } else if (porAsignar < 0.5) {
+        porAsignarEl.style.color = '#27ae60';
+        porAsignarEl.previousSibling.textContent = 'Por asignar: ';
+    } else {
+        porAsignarEl.style.color = '#e67e22';
+        porAsignarEl.previousSibling.textContent = 'Por asignar: ';
+    }
+
+    // Saldo pendiente
+    const saldoPendEl = document.getElementById('lbl-saldo-pend');
+    if (saldoPend > 0.5 && pagadoHoy > 0) {
+        saldoPendEl.style.display = 'inline';
+        document.getElementById('cnt-saldo-pend').textContent = `S/ ${Math.round(saldoPend)}`;
+    } else {
+        saldoPendEl.style.display = 'none';
+    }
+
+    // Fila de crédito en la distribución
+    const creditoFila   = document.getElementById('credito-dist-fila');
+    const creditoDisplay = document.getElementById('credito-exceso-display');
+    const creditoInput  = document.getElementById('credito-exceso-input');
+    if (saldoFavor > 0.5) {
+        if (creditoFila)   creditoFila.style.display = 'block';
+        if (creditoDisplay) creditoDisplay.textContent = Math.round(saldoFavor);
+        if (creditoInput)  creditoInput.value = Math.round(saldoFavor);
+    } else {
+        if (creditoFila)   creditoFila.style.display = 'none';
+        if (creditoInput)  creditoInput.value = 0;
+    }
+
+    // Barra de progreso
+    const pct = totalSoles > 0 ? Math.min(100, (pagadoHoy / totalSoles) * 100) : 0;
+    document.getElementById('barra-pago').style.width = pct + '%';
+
+    // Saldo por ítem
+    items.forEach(it => {
+        const pagoItem  = parseFloat(document.getElementById(`pago_item_${it.idx}`)?.value || 0);
+        const saldoItem = it.precioSoles - pagoItem;
+        const el = document.getElementById(`saldo-item-${it.idx}`);
+        if (!el || it.precioSoles === 0) return;
+        if (saldoItem <= 0) {
+            el.textContent = pagoItem > it.precioSoles
+                ? `Pagado + S/ ${Math.round(pagoItem - it.precioSoles)} a favor`
+                : 'Pagado completamente';
+            el.style.color = '#27ae60';
+        } else if (pagoItem > 0) {
+            el.textContent = `Saldo restante: S/ ${Math.round(saldoItem)}`;
+            el.style.color = '#e67e22';
+        } else {
+            el.textContent = `Pendiente: S/ ${Math.round(saldoItem)}`;
+            el.style.color = '#aaa';
+        }
+    });
+
+    // Campos ocultos para servidor
+    document.getElementById('debe-venta').value  = Math.max(0, Math.round(saldoPend));
+    document.getElementById('total-venta').value = totalSoles;
+
+    // Aviso deuda total: si hay ítems con precio pero no se ingresó ningún pago
+    const avisoDeuda = document.getElementById('aviso-todo-deuda');
+    if (avisoDeuda) {
+        avisoDeuda.style.display = (pagadoHoy === 0 && totalSoles > 0) ? 'block' : 'none';
+    }
+}
+
+function actualizarMonedaBadges() {} // deprecated, mantenida para compatibilidad
+
+// ── Búsqueda de cliente ───────────────────────────────────────────────────────
+// ── Tab Pagos: multi-selección con monto por ítem ────────────────────────────
+let pagosDeudaTimer = null;
+let pagoItemsData = []; // guarda los datos de cada ítem cargado
+let pagosCreditoExistente = 0; // crédito previo del cliente cargado
+
+function cargarDeudaCliente() {
+    const nombre = document.getElementById('input-cliente-pago').value.trim();
+    clearTimeout(pagosDeudaTimer);
+    const wrap = document.getElementById('pago-deuda-wrap');
+    const creditoWrap = document.getElementById('pago-credito-disponible');
+    if (!nombre) {
+        wrap.style.display = 'none';
+        creditoWrap.style.display = 'none';
+        pagoItemsData = [];
+        pagosCreditoExistente = 0;
+        return;
+    }
+
+    pagosDeudaTimer = setTimeout(() => {
+        fetch('/cliente?nombre=' + encodeURIComponent(nombre))
+            .then(r => r.json())
+            .then(data => {
+                // ── Crédito disponible previo ──────────────────────────────────
+                const pagosCredito = (data.pagos || []).filter(c =>
+                    (c.CATEGORIA || '').startsWith('CRÉDITO') ||
+                    (c.CATEGORIA || '').startsWith('ANTICIPO')
+                );
+                const creditoDepositado = pagosCredito.reduce((s, c) => s + parseFloat(c.MONTO || 0), 0);
+                // Restar crédito ya aplicado a ítems (filas con NOTAS="Crédito aplicado")
+                const creditoYaAplicado = (data.pagos || [])
+                    .filter(c => (c.NOTAS || '') === 'Crédito aplicado')
+                    .reduce((s, c) => s + parseFloat(c.MONTO || 0), 0);
+                const creditoExistente = Math.max(0, creditoDepositado - creditoYaAplicado);
+                pagosCreditoExistente = creditoExistente;
+                if (creditoExistente > 0.5) {
+                    creditoWrap.style.display = 'block';
+                    document.getElementById('pago-credito-disponible-monto').textContent = 'S/ ' + Math.round(creditoExistente);
+                    const notas = pagosCredito
+                        .map(c => (c.CATEGORIA || '').replace(/^CRÉDITO:?\s*/i, '').replace(/^ANTICIPO:?\s*/i, '').trim())
+                        .filter(Boolean);
+                    document.getElementById('pago-credito-disponible-nota').textContent =
+                        notas.length > 0 ? notas.join(', ') : 'Crédito sin asignación específica';
+                } else {
+                    creditoWrap.style.display = 'none';
+                }
+                actualizarTotalPago(); // refrescar resumen con nuevo crédito previo
+
+                // ── Ítems con deuda pendiente ──────────────────────────────────
+                wrap.style.display = 'block';
+                const list = document.getElementById('pago-items-list');
+                const pendientes = data.ventas.filter(v => parseFloat(v.DEBE || 0) > 0);
+                pagoItemsData = pendientes;
+
+                if (pendientes.length === 0) {
+                    const sinDeuda = data.facturado_total > 0
+                        ? '<p style="color:#27ae60;font-size:13px;text-align:center;padding:10px 0;">Cliente al día, sin deuda pendiente.</p>'
+                        : '<p style="color:#aaa;font-size:13px;text-align:center;padding:10px 0;">Sin ventas registradas para este cliente.</p>';
+                    list.innerHTML = sinDeuda;
+                    document.getElementById('pago-total-wrap').style.display = 'none';
+                    return;
+                }
+
+                let html = '';
+                pendientes.forEach((v, idx) => {
+                    const debe     = parseFloat(v.DEBE || 0);
+                    const totalVal = v['TOTAL S/ (PEN)'] || v['TOTAL'] || '0';
+                    html += `
+                    <div class="pago-item-card" id="pago-card-${idx}" style="cursor:default;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                            <!-- Checkbox -->
+                            <input type="checkbox" id="chk-item-${idx}" onchange="toggleItemPago(${idx})"
+                                style="width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:#C0392B;">
+                            <!-- Info -->
+                            <div style="flex:1;min-width:0;" onclick="document.getElementById('chk-item-${idx}').click();" style="cursor:pointer;">
+                                <div class="ci-nombre">${v.CATEGORIA || v.TIPO || '—'}</div>
+                                <div class="ci-meta">${v.COD_ITEM || ''} · ${v.FECHA || ''}</div>
+                            </div>
+                            <!-- Monto pendiente y campo editable -->
+                            <div style="text-align:right;flex-shrink:0;">
+                                <div class="ci-total" style="margin-bottom:4px;">debe S/ ${Math.round(debe)} de S/ ${totalVal}</div>
+                                <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">
+                                    <span style="font-size:12px;color:#888;">pagar S/</span>
+                                    <input type="number" id="monto-item-${idx}" value="${Math.round(debe)}"
+                                        min="0" step="1"
+                                        style="width:70px;padding:3px 6px;border:1px solid #ddd;border-radius:5px;font-size:13px;font-weight:bold;color:#C0392B;text-align:right;display:none;"
+                                        oninput="actualizarTotalPago()">
+                                </div>
+                                <div id="quedan-item-${idx}" style="font-size:11px;margin-top:3px;text-align:right;min-height:14px;"></div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                list.innerHTML = html;
+                actualizarTotalPago();
+            })
+            .catch(() => {});
+    }, 500);
+}
+
+function toggleItemPago(idx) {
+    const chk   = document.getElementById('chk-item-' + idx);
+    const card  = document.getElementById('pago-card-' + idx);
+    const campo = document.getElementById('monto-item-' + idx);
+    if (chk.checked) {
+        card.classList.add('selected');
+        campo.style.display = 'inline-block';
+    } else {
+        card.classList.remove('selected');
+        campo.style.display = 'none';
+        const lbl = document.getElementById('quedan-item-' + idx);
+        if (lbl) lbl.textContent = '';
+    }
+    actualizarTotalPago();
+}
+
+function autoRellenarPagoTab() {
+    const ef = parseFloat(document.getElementById('pago-ef-efectivo')?.value || 0);
+    const ya = parseFloat(document.getElementById('pago-ef-yape')?.value || 0);
+    const pl = parseFloat(document.getElementById('pago-ef-plin')?.value || 0);
+    const gi = parseFloat(document.getElementById('pago-ef-giro')?.value || 0);
+    let disponible = ef + ya + pl + gi;
+
+    if (disponible <= 0) {
+        actualizarTotalPago();
+        return;
+    }
+
+    pagoItemsData.forEach((v, idx) => {
+        const chk = document.getElementById('chk-item-' + idx);
+        if (!chk || !chk.checked) return;
+        const debe = parseFloat(v.DEBE || 0);
+        const asignar = Math.min(debe, Math.max(0, disponible));
+        const campo = document.getElementById('monto-item-' + idx);
+        if (campo) campo.value = Math.round(asignar);
+        disponible -= asignar;
+    });
+
+    actualizarTotalPago();
+}
+
+function actualizarTotalPago() {
+    let total = 0;
+    pagoItemsData.forEach((v, idx) => {
+        const chk = document.getElementById('chk-item-' + idx);
+        if (!chk || !chk.checked) return;
+        const campo = document.getElementById('monto-item-' + idx);
+        const pagando = parseFloat(campo ? campo.value || 0 : 0);
+        total += pagando;
+
+        // Mostrar saldo restante si es pago parcial
+        const debe = parseFloat(v.DEBE || 0);
+        const quedan = debe - pagando;
+        const lbl = document.getElementById('quedan-item-' + idx);
+        if (lbl) {
+            if (quedan > 0.5) {
+                lbl.textContent = 'quedan S/ ' + Math.round(quedan);
+                lbl.style.color = '#e67e22';
+            } else if (pagando > debe + 0.5) {
+                lbl.textContent = 'S/ ' + Math.round(pagando - debe) + ' a favor';
+                lbl.style.color = '#27ae60';
+            } else {
+                lbl.textContent = '';
+            }
+        }
+    });
+    const wrap = document.getElementById('pago-total-wrap');
+    if (total > 0) {
+        wrap.style.display = 'flex';
+        document.getElementById('pago-total-valor').textContent = 'S/ ' + Math.round(total);
+    } else {
+        wrap.style.display = 'none';
+    }
+
+    // Resumen ingresado vs asignado vs crédito previo
+    const ef = parseFloat(document.getElementById('pago-ef-efectivo')?.value || 0);
+    const ya = parseFloat(document.getElementById('pago-ef-yape')?.value || 0);
+    const pl = parseFloat(document.getElementById('pago-ef-plin')?.value || 0);
+    const gi = parseFloat(document.getElementById('pago-ef-giro')?.value || 0);
+    const totalIngresado = ef + ya + pl + gi;
+    // exceso de hoy = dinero ingresado que sobra después de cubrir ítems
+    const excesoHoy  = Math.max(0, totalIngresado - total);
+    // falta de hoy = deuda de ítems marcados que el pago de hoy no alcanza a cubrir
+    const faltaHoy   = Math.max(0, total - totalIngresado);
+    // saldo final a favor = crédito previo + exceso de hoy
+    const saldoFinal = Math.round(pagosCreditoExistente + excesoHoy);
+
+    const resumenWrap    = document.getElementById('pago-resumen-wrap');
+    const creditoRow     = document.getElementById('pago-credito-row');
+    const creditoNota    = document.getElementById('pago-credito-nota');
+    const faltaRow       = document.getElementById('pago-falta-row');
+    const previoRow      = document.getElementById('pago-resumen-previo-row');
+    const asignadoRow    = document.getElementById('pago-resumen-asignado-row');
+
+    if (totalIngresado > 0 || total > 0) {
+        resumenWrap.style.display = 'block';
+        document.getElementById('pago-resumen-ingresado').textContent = 'S/ ' + Math.round(totalIngresado);
+
+        // Fila "Asignado a ítems" solo si hay ítems seleccionados
+        if (total > 0) {
+            asignadoRow.style.display = 'flex';
+            document.getElementById('pago-resumen-asignado').textContent = 'S/ ' + Math.round(total);
+        } else {
+            asignadoRow.style.display = 'none';
+        }
+
+        // Fila "Crédito previo" solo si el cliente tiene saldo anterior
+        if (pagosCreditoExistente > 0.5) {
+            previoRow.style.display = 'flex';
+            document.getElementById('pago-resumen-previo').textContent = 'S/ ' + Math.round(pagosCreditoExistente);
+        } else {
+            previoRow.style.display = 'none';
+        }
+
+        // Resultado final
+        if (faltaHoy > 1) {
+            faltaRow.style.display    = 'flex';
+            document.getElementById('pago-falta-monto').textContent = 'S/ ' + Math.round(faltaHoy);
+            creditoRow.style.display  = 'none';
+            creditoNota.style.display = 'none';
+        } else if (saldoFinal > 0) {
+            creditoRow.style.display  = 'flex';
+            creditoNota.style.display = excesoHoy > 0 ? 'block' : 'none';
+            document.getElementById('pago-credito-monto').textContent = 'S/ ' + saldoFinal;
+            faltaRow.style.display    = 'none';
+        } else {
+            creditoRow.style.display  = 'none';
+            creditoNota.style.display = 'none';
+            faltaRow.style.display    = 'none';
+        }
+    } else {
+        resumenWrap.style.display = 'none';
+    }
+}
+
+function prepararEnvioPago() {
+    // Generar inputs ocultos con los ítems seleccionados
+    const container = document.getElementById('pago-hidden-inputs');
+    container.innerHTML = '';
+
+    const addHidden = (name, val) => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = name; inp.value = val;
+        container.appendChild(inp);
+    };
+
+    let hayItems = false;
+    pagoItemsData.forEach((v, idx) => {
+        const chk = document.getElementById('chk-item-' + idx);
+        if (!chk || !chk.checked) return;
+        const campo = document.getElementById('monto-item-' + idx);
+        const monto = parseFloat(campo ? campo.value || 0 : 0);
+        if (monto <= 0) return;
+        hayItems = true;
+        addHidden('cod_item_pago[]',   v.COD_ITEM   || '');
+        addHidden('monto_item_pago[]', Math.round(monto));
+        addHidden('categoria_pago[]',  v.CATEGORIA  || '');
+    });
+
+    // Auto-crédito: si el total ingresado supera lo asignado a ítems
+    const ef = parseFloat(document.getElementById('pago-ef-efectivo')?.value || 0);
+    const ya = parseFloat(document.getElementById('pago-ef-yape')?.value || 0);
+    const pl = parseFloat(document.getElementById('pago-ef-plin')?.value || 0);
+    const gi = parseFloat(document.getElementById('pago-ef-giro')?.value || 0);
+    const totalIngresado = ef + ya + pl + gi;
+    const existingMontos = container.querySelectorAll('[name="monto_item_pago[]"]');
+    let totalYaAsignado = 0;
+    existingMontos.forEach(el => { totalYaAsignado += parseFloat(el.value || 0); });
+    const exceso = Math.round(totalIngresado - totalYaAsignado);
+    if (exceso > 0) {
+        hayItems = true;
+        addHidden('cod_item_pago[]',   '');
+        addHidden('monto_item_pago[]', exceso);
+        addHidden('categoria_pago[]',  'CRÉDITO');
+    }
+
+    // Validar que haya algo que registrar
+    if (!hayItems) {
+        if (totalIngresado <= 0) {
+            alert('Selecciona al menos un ítem o ingresa un método de pago.');
+            restaurarBotonPago();
+            return false;
+        }
+        // Pago sin ítems seleccionados → registrar como crédito del cliente
+        addHidden('cod_item_pago[]',   '');
+        addHidden('monto_item_pago[]', Math.round(totalIngresado));
+        addHidden('categoria_pago[]',  'CRÉDITO');
+    }
+    return true;
+}
+
+function restaurarBotonPago() {
+    const btn = document.querySelector('#form-pago button[type="submit"]');
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || 'REGISTRAR PAGO';
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+    }
+}
+
+function parseFechaStr(s) {
+    if (!s) return new Date(0);
+    const p = s.split('/');
+    if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    return new Date(s);
+}
+
+let clienteDataCache = null;
+let vistaCliente = 'item'; // 'item' o 'crono'
+
+function cambiarVistaCliente(vista) {
+    vistaCliente = vista;
+    document.getElementById('btn-vista-item').style.background  = vista === 'item'  ? '#C0392B' : '#f5f5f5';
+    document.getElementById('btn-vista-item').style.color       = vista === 'item'  ? '#fff'    : '#666';
+    document.getElementById('btn-vista-crono').style.background = vista === 'crono' ? '#C0392B' : '#f5f5f5';
+    document.getElementById('btn-vista-crono').style.color      = vista === 'crono' ? '#fff'    : '#666';
+    if (clienteDataCache) renderHistorial(clienteDataCache);
+}
+
+function metodosPago(c) {
+    const m = [];
+    if (parseFloat(c.EFECTIVO) > 0) m.push('Efectivo');
+    if (parseFloat(c.YAPE)     > 0) m.push('Yape');
+    if (parseFloat(c.PLIN)     > 0) m.push('Plin');
+    if (parseFloat(c.GIRO)     > 0) m.push('Giro');
+    return m.join(' + ') || c.NOTAS || '—';
+}
+
+function renderVistaItem(data) {
+    let html = '';
+
+    data.ventas.forEach(v => {
+        const cod        = v.COD_ITEM || '';
+        const total      = parseFloat(v['TOTAL S/ (PEN)'] || v['TOTAL'] || 0);
+        const debe       = parseFloat(v.DEBE || 0);
+        const pagosItem = cod ? data.pagos.filter(c => c.COD_ITEM === cod) : [];
+        const totalCobrado = pagosItem.reduce((s, c) => s + parseFloat(c.MONTO || 0), 0);
+        const tipo       = v.TIPO || '';
+        const zona       = v['ZONA/CANTIDAD/ENVASE'] || '';
+        const badgeColor = tipo === 'Producto' ? '#2980B9' : '#8E44AD';
+        const badgeHtml  = tipo
+            ? `<span style="font-size:10px;color:#fff;background:${badgeColor};border-radius:4px;padding:2px 7px;margin-right:6px;">${tipo}</span>`
+            : '';
+
+        // Estado en footer
+        const estadoHtml = debe < 0.5
+            ? `<span style="color:#27ae60;font-weight:bold;font-size:12px;">Pagado ✓</span>`
+            : `<span style="color:#C0392B;font-weight:bold;font-size:12px;">Debe S/ ${Math.round(debe)}</span>`;
+
+        html += `<div class="dia-block">`;
+
+        // ── Cabecera: badge + nombre + cod ────────────────────────────────
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div>${badgeHtml}<strong style="font-size:14px;color:#333;">${v.CATEGORIA || tipo || '—'}</strong></div>
+            ${cod ? `<span class="dia-cod">${cod}</span>` : ''}
+        </div>`;
+
+        // ── Sección Vendido ───────────────────────────────────────────────
+        html += `<div class="dia-seccion-lbl">Vendido</div>`;
+        html += `<div class="dia-row">
+            <div class="dia-concepto">
+                ${v.FECHA || '—'}
+                ${zona ? `<br><small style="color:#aaa;">${zona}</small>` : ''}
+            </div>
+            <div class="dia-monto" style="flex-shrink:0;margin-left:8px;">S/ ${Math.round(total)}</div>
+        </div>`;
+
+        // ── Sección Pagos ────────────────────────────────────────────────
+        html += `<div class="dia-seccion-lbl pago-lbl">Pagos recibidos</div>`;
+        if (pagosItem.length > 0) {
+            pagosItem.forEach(c => {
+                html += `<div class="dia-row">
+                    <div class="dia-concepto">
+                        ${c.FECHA || '—'}
+                        <br><small style="color:#888;">${metodosPago(c)}</small>
+                    </div>
+                    <div class="dia-monto pago" style="flex-shrink:0;margin-left:8px;">+S/ ${c.MONTO || '0'}</div>
+                </div>`;
+            });
+        } else {
+            html += `<div style="font-size:12px;color:#bbb;padding:5px 0;">Sin pagos registrados aún.</div>`;
+        }
+
+        // ── Footer: vendido | cobrado | estado ────────────────────────────
+        html += `<div class="dia-footer">
+            <span style="color:#888;">Vendido: <strong>S/ ${Math.round(total)}</strong></span>
+            <span style="color:#27ae60;">Cobrado: <strong>S/ ${Math.round(totalCobrado)}</strong></span>
+            ${estadoHtml}
+        </div>`;
+
+        html += `</div>`;
+    });
+
+    // ── Créditos / pagos sin ítem asignado ───────────────────────────────
+    const creditos = data.pagos.filter(c => !c.COD_ITEM || c.COD_ITEM === '');
+    if (creditos.length > 0) {
+        const totalCreditos = creditos.reduce((s, c) => s + parseFloat(c.MONTO || 0), 0);
+        html += `<div class="dia-block" style="border-left:3px solid #f0d060;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div>
+                    <strong style="font-size:14px;color:#856404;">Créditos a favor</strong>
+                    <div style="font-size:11px;color:#aaa;margin-top:2px;">Pagos sin servicio asignado</div>
+                </div>
+                <span class="dia-monto pago">+S/ ${Math.round(totalCreditos)}</span>
+            </div>`;
+        html += `<div class="dia-seccion-lbl pago-lbl">Detalle</div>`;
+        creditos.forEach(c => {
+            const cat   = c.CATEGORIA || '';
+            const nota  = cat.replace(/^CRÉDITO:?\s*/i,'').replace(/^ANTICIPO:?\s*/i,'').trim();
+            html += `<div class="dia-row">
+                <div class="dia-concepto">
+                    ${c.FECHA || '—'}
+                    ${nota ? `<br><small style="color:#888;">${nota}</small>` : ''}
+                    <br><small style="color:#aaa;">${metodosPago(c)}</small>
+                </div>
+                <div class="dia-monto pago" style="flex-shrink:0;margin-left:8px;">+S/ ${c.MONTO || '0'}</div>
+            </div>`;
+        });
+        html += `</div>`;
+    }
+
+    return html || '<p class="sin-datos">Sin historial registrado.</p>';
+}
+
+function renderVistaCrono(data) {
+    if (data.ventas.length === 0 && data.pagos.length === 0)
+        return '<p class="sin-datos">Sin historial registrado.</p>';
+
+    const diasSet = new Set();
+    data.ventas.forEach(v => { if (v.FECHA) diasSet.add(v.FECHA); });
+    data.pagos.forEach(c => { if (c.FECHA) diasSet.add(c.FECHA); });
+    const dias = Array.from(diasSet).sort((a, b) => parseFechaStr(b) - parseFechaStr(a));
+
+    let html = '';
+    dias.forEach(dia => {
+        const ventasDia = data.ventas.filter(v => v.FECHA === dia);
+        const pagosDia = data.pagos.filter(c => c.FECHA === dia);
+        const totalVendido = ventasDia.reduce((s, v) => s + parseFloat(v['TOTAL S/ (PEN)'] || v['TOTAL'] || 0), 0);
+        const totalCobrado = pagosDia.reduce((s, c) => s + parseFloat(c.MONTO || 0), 0);
+
+        html += `<div class="dia-block"><div class="dia-header">${dia}</div>`;
+
+        if (ventasDia.length > 0) {
+            html += `<div class="dia-seccion-lbl">Ventas</div>`;
+            ventasDia.forEach(v => {
+                const totalVal = v['TOTAL S/ (PEN)'] || v['TOTAL'] || '0';
+                const zona = v['ZONA/CANTIDAD/ENVASE'] ? `<br><small style="color:#aaa">${v['ZONA/CANTIDAD/ENVASE']}</small>` : '';
+                html += `<div class="dia-row">
+                    <div class="dia-concepto">
+                        ${v.CATEGORIA || v.TIPO || '—'}
+                        ${v.COD_ITEM ? `<span class="dia-cod">${v.COD_ITEM}</span>` : ''}${zona}
+                    </div>
+                    <div class="dia-monto" style="flex-shrink:0;margin-left:8px;">S/ ${totalVal}</div>
+                </div>`;
+            });
+        }
+
+        if (pagosDia.length > 0) {
+            html += `<div class="dia-seccion-lbl pago-lbl">Pagos recibidos</div>`;
+            pagosDia.forEach(c => {
+                const codItem = c.COD_ITEM ? `<span class="dia-cod">${c.COD_ITEM}</span>` : '';
+                html += `<div class="dia-row">
+                    <div class="dia-concepto">
+                        ${c.CATEGORIA || '—'}${codItem}
+                        <br><small style="color:#888;">${metodosPago(c)}</small>
+                    </div>
+                    <div class="dia-monto pago" style="flex-shrink:0;margin-left:8px;">+S/ ${c.MONTO || '0'}</div>
+                </div>`;
+            });
+        }
+
+        html += `<div class="dia-footer">`;
+        if (ventasDia.length > 0)
+            html += `<span style="color:#888;">Vendido: <strong>S/ ${Math.round(totalVendido)}</strong></span>`;
+        if (pagosDia.length > 0)
+            html += `<span style="color:#27ae60;">Cobrado: <strong>S/ ${Math.round(totalCobrado)}</strong></span>`;
+        if (ventasDia.length === 0 && pagosDia.length > 0)
+            html += `<span style="color:#27ae60;font-style:italic;">Solo pago</span>`;
+        if (ventasDia.length > 0 && pagosDia.length === 0)
+            html += `<span style="color:#C0392B;font-style:italic;">Sin pago registrado este día</span>`;
+        html += `</div></div>`;
+    });
+    return html;
+}
+
+function renderHistorial(data) {
+    const wrapH = document.getElementById('historial-cliente');
+    wrapH.innerHTML = vistaCliente === 'item' ? renderVistaItem(data) : renderVistaCrono(data);
+}
+
+function buscarCliente() {
+    const nombre = document.getElementById('input-buscar').value.trim();
+    if (!nombre) return;
+
+    fetch('/cliente?nombre=' + encodeURIComponent(nombre))
+        .then(r => r.json())
+        .then(data => {
+            clienteDataCache = data;
+            document.getElementById('resultado-cliente').style.display = 'block';
+
+            // ── Saldo card ──
+            const saldo = data.saldo;
+            const card = document.getElementById('saldo-card');
+            if (saldo > 0.5) {
+                card.className = 'saldo-card deuda';
+                document.querySelector('#saldo-card .saldo-label').textContent = 'Saldo pendiente';
+                document.getElementById('saldo-valor').textContent = 'S/ ' + saldo.toFixed(2);
+            } else if (saldo < -0.5) {
+                card.className = 'saldo-card ok';
+                document.querySelector('#saldo-card .saldo-label').textContent = 'Saldo a favor';
+                document.getElementById('saldo-valor').textContent = 'S/ ' + Math.abs(saldo).toFixed(2);
+            } else {
+                card.className = 'saldo-card ok';
+                document.querySelector('#saldo-card .saldo-label').textContent = 'Al día';
+                document.getElementById('saldo-valor').textContent = 'S/ 0.00';
+            }
+            document.getElementById('saldo-debe').textContent    = 'S/ ' + data.facturado_total.toFixed(2);
+            document.getElementById('saldo-cobrado').textContent = 'S/ ' + data.cobrado_total.toFixed(2);
+
+            renderHistorial(data);
+        })
+        .catch(() => alert('Error al buscar. Verificá la conexión.'));
+}
+
+function actualizarMonedaBadges(moneda) {
+    const simbolo = moneda === 'DOLARES' ? 'US$' : 'S/';
+    document.querySelectorAll('.moneda-badge').forEach(el => el.textContent = simbolo);
+}
+
+// ── Inicialización ────────────────────────────────────────────────────────────
+const activeTab = "{{ active_tab }}";
+cambiarTab(activeTab || 'venta');
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+let charts = {};
+let dashCargado = false;
+
+const COLORES = ['#C0392B','#2980B9','#27AE60','#8E44AD','#E67E22','#16A085','#2C3E50','#D35400','#7F8C8D','#F39C12'];
+
+function fmt(n) { return 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function mesLabel(ym) { const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; const[y,m]=ym.split('-'); return M[parseInt(m)-1]+' '+y.slice(2); }
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function setPeriodo(p, btn) {
+    document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const hoy = new Date(), hasta = hoy.toISOString().split('T')[0];
+    let desde = '';
+    if      (p==='mes')  desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+    else if (p==='3m')   { const d=new Date(hoy); d.setMonth(d.getMonth()-3); desde=d.toISOString().split('T')[0]; }
+    else if (p==='6m')   { const d=new Date(hoy); d.setMonth(d.getMonth()-6); desde=d.toISOString().split('T')[0]; }
+    else if (p==='anio') desde = new Date(hoy.getFullYear(), 0, 1).toISOString().split('T')[0];
+    document.getElementById('dash-desde').value = desde;
+    document.getElementById('dash-hasta').value = p==='todo' ? '' : hasta;
+    cargarDashboard();
+}
+
+function cambiarSubtabDash(subtab, btn) {
+    document.querySelectorAll('.dash-panel').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.dash-subtab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('dash-panel-' + subtab).style.display = 'block';
+    btn.classList.add('active');
+}
+
+function cargarDashboard() {
+    const desde = document.getElementById('dash-desde').value;
+    const hasta = document.getElementById('dash-hasta').value;
+    document.getElementById('dash-loading').style.display = 'block';
+    document.getElementById('dash-contenido').style.display = 'none';
+
+    let url = '/api/dashboard';
+    const p = [];
+    if (desde) p.push('desde='+desde);
+    if (hasta) p.push('hasta='+hasta);
+    if (p.length) url += '?' + p.join('&');
+
+    fetch(url).then(r => r.json()).then(d => {
+        document.getElementById('dash-loading').style.display = 'none';
+        if (d.sin_datos) {
+            document.getElementById('dash-loading').textContent = 'Sin datos para este período.';
+            document.getElementById('dash-loading').style.display = 'block';
+            return;
+        }
+
+        // ── GENERAL: KPIs financieros ──
+        document.getElementById('kpi-total').textContent     = fmt(d.ventas_total);
+        document.getElementById('kpi-cobrado').textContent   = fmt(d.cobrado_total);
+        document.getElementById('kpi-pendiente').textContent = fmt(d.pendiente_total);
+        document.getElementById('kpi-ticket').textContent    = fmt(d.ticket_promedio);
+        document.getElementById('kpi-tasa').textContent      = d.tasa_cobro + '%';
+        const balEl = document.getElementById('kpi-balance'), balCard = document.getElementById('kpi-balance-card');
+        balEl.textContent = fmt(d.balance_neto);
+        balEl.style.color = d.balance_neto >= 0 ? '#27ae60' : '#C0392B';
+        balCard.classList.remove('kpi-verde','kpi-rojo');
+        balCard.classList.add(d.balance_neto >= 0 ? 'kpi-verde' : 'kpi-rojo');
+        document.getElementById('kpi-gastos-sub').textContent = 'Gastos: ' + fmt(d.total_gastos);
+
+        // ── GENERAL: KPIs operativos ──
+        document.getElementById('kpi-atenciones').textContent = d.num_atenciones;
+        document.getElementById('kpi-clientes').textContent   = d.num_clientes;
+        document.getElementById('kpi-promos').textContent     = d.num_promociones;
+        document.getElementById('kpi-trat').textContent       = fmt(d.total_tratamientos);
+        document.getElementById('kpi-prod').textContent       = fmt(d.total_productos);
+        document.getElementById('kpi-gastos').textContent     = fmt(d.total_gastos);
+        if (d.total_descuentos > 0) {
+            const el = document.getElementById('kpi-descuentos');
+            if (el) el.textContent = fmt(d.total_descuentos);
+            const wrap = document.getElementById('kpi-descuentos-wrap');
+            if (wrap) wrap.style.display = 'block';
+        }
+
+        // ── GENERAL: comparativas mes ──
+        function deltaChip(val) {
+            if (val === null || val === undefined) return '<span style="font-size:11px;color:#aaa;">Sin datos anteriores</span>';
+            const col = val >= 0 ? '#27ae60' : '#C0392B';
+            const arrow = val >= 0 ? '▲' : '▼';
+            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(val)}%</span> <span style="font-size:11px;color:#aaa;">vs mes ant.</span>`;
+        }
+        function deltaChipAño(val) {
+            if (val === null || val === undefined) return '<span style="font-size:11px;color:#aaa;">Sin datos año anterior</span>';
+            const col = val >= 0 ? '#27ae60' : '#C0392B';
+            const arrow = val >= 0 ? '▲' : '▼';
+            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(val)}%</span> <span style="font-size:11px;color:#aaa;">vs año ant.</span>`;
+        }
+        document.getElementById('comp-mes-act').textContent = fmt(d.comp_mes_actual);
+        document.getElementById('comp-mes-ant-lbl').textContent = 'Mes ant: ' + fmt(d.comp_mes_anterior);
+        document.getElementById('comp-mes-delta').innerHTML = deltaChip(d.comp_mes_delta);
+        document.getElementById('comp-año-act').textContent = fmt(d.comp_año_actual);
+        document.getElementById('comp-año-ant-lbl').textContent = 'Año ant: ' + fmt(d.comp_año_anterior);
+        document.getElementById('comp-año-delta').innerHTML = deltaChipAño(d.comp_año_delta);
+
+        // ── GENERAL: ventas por mes (stacked) ──
+        destroyChart('meses');
+        charts['meses'] = new Chart(document.getElementById('chart-meses'), {
+            type: 'bar',
+            data: { labels: d.por_mes.map(x=>mesLabel(x.mes)), datasets: [
+                { label:'Cobrado',   data: d.por_mes.map(x=>x.cobrado), backgroundColor:'#27AE60', borderRadius:4 },
+                { label:'Pendiente', data: d.por_mes.map(x=>x.debe),    backgroundColor:'#E74C3C', borderRadius:4 },
+            ]},
+            options: { plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}, scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}} }
+        });
+
+        // ── GENERAL: por tipo mes actual vs anterior ──
+        const tiposK = ['Tratamiento','Producto','Otro'];
+        const tiposLabel = ['Tratamientos','Productos','Otros'];
+        const tiposColores = ['#8E44AD','#2980B9','#7F8C8D'];
+        let htmlTipo = '<table class="tabla-rec"><thead><tr><th>Tipo</th><th>Mes actual</th><th>Mes anterior</th><th>Variación</th></tr></thead><tbody>';
+        tiposK.forEach((k, i) => {
+            const act = d.tipo_mes_actual[k] || 0;
+            const ant = d.tipo_mes_anterior[k] || 0;
+            if (act === 0 && ant === 0) return;
+            const varPct = ant > 0 ? ((act - ant) / ant * 100).toFixed(1) : null;
+            const varHtml = varPct === null ? '<span style="color:#aaa;">—</span>'
+                : `<span style="color:${parseFloat(varPct)>=0?'#27ae60':'#C0392B'};font-weight:bold;">${parseFloat(varPct)>=0?'▲':'▼'} ${Math.abs(varPct)}%</span>`;
+            htmlTipo += `<tr>
+                <td><span style="background:${tiposColores[i]};color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;">${tiposLabel[i]}</span></td>
+                <td><strong>${fmt(act)}</strong></td>
+                <td style="color:#888;">${fmt(ant)}</td>
+                <td>${varHtml}</td>
+            </tr>`;
+        });
+        document.getElementById('tabla-tipo-mes').innerHTML = htmlTipo + '</tbody></table>';
+
+        // ── GENERAL: top categorías del mes ──
+        destroyChart('cats-mes');
+        if (d.top_cats_mes.length > 0) {
+            charts['cats-mes'] = new Chart(document.getElementById('chart-cats-mes'), {
+                type:'bar',
+                data:{ labels:d.top_cats_mes.map(x=>x.cat), datasets:[{ label:'S/', data:d.top_cats_mes.map(x=>x.total), backgroundColor:'#C0392B', borderRadius:4 }]},
+                options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} }
+            });
+        }
+
+        // ── GENERAL: mix tratamientos/productos ──
+        destroyChart('mix');
+        const mixL=['Tratamientos','Productos','Otros'], mixV=[d.total_tratamientos,d.total_productos,d.total_otros];
+        charts['mix'] = new Chart(document.getElementById('chart-mix'), {
+            type: 'doughnut',
+            data: { labels:mixL.filter((_,i)=>mixV[i]>0), datasets:[{ data:mixV.filter(v=>v>0), backgroundColor:['#C0392B','#2980B9','#7F8C8D'], hoverOffset:6 }]},
+            options: { plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}, cutout:'60%' }
+        });
+
+        // ── GENERAL: atenciones recientes ──
+        let htmlR='<table class="tabla-rec"><thead><tr><th>Fecha</th><th>Cliente</th><th>Categoría</th><th>Total</th><th>Debe</th></tr></thead><tbody>';
+        d.recientes.forEach(r => {
+            htmlR+=`<tr><td>${r.fecha}</td><td>${r.cliente}</td><td>${r.categoria}</td><td>${r.total?fmt(r.total):'—'}</td><td>${r.debe>0?'<span class="debe-badge">'+fmt(r.debe)+'</span>':'—'}</td></tr>`;
+        });
+        document.getElementById('tabla-recientes').innerHTML = htmlR + '</tbody></table>';
+
+        // ── CLIENTES: top 20% tabla con evolución ──
+        let html20 = '<table class="tabla-rec"><thead><tr><th>#</th><th>Cliente</th><th>Facturado</th><th>Visitas</th><th>Frec./mes</th><th>Lo que más compra</th><th>Este mes</th><th>Mes ant.</th><th>Tendencia</th></tr></thead><tbody>';
+        if (d.top20_clientes.length === 0) {
+            html20 += '<tr><td colspan="9" style="text-align:center;color:#aaa;padding:16px;">Sin datos en el período</td></tr>';
+        } else {
+            d.top20_clientes.forEach((c, i) => {
+                const tendIcon = c.tendencia === 'up'
+                    ? '<span style="color:#27ae60;font-size:16px;">▲</span>'
+                    : c.tendencia === 'down'
+                    ? '<span style="color:#C0392B;font-size:16px;">▼</span>'
+                    : '<span style="color:#aaa;font-size:16px;">—</span>';
+                const debeHtml = c.debe > 0 ? `<br><span class="debe-badge">${fmt(c.debe)}</span>` : '';
+                html20 += `<tr>
+                    <td style="color:#aaa;font-size:11px;">${i+1}</td>
+                    <td><strong>${c.cliente}</strong>${debeHtml}</td>
+                    <td>${fmt(c.total)}</td>
+                    <td style="text-align:center;">${c.visitas}</td>
+                    <td style="text-align:center;">${c.frecuencia}</td>
+                    <td style="font-size:11px;color:#666;">${c.cat_principal}</td>
+                    <td style="color:#27ae60;">${c.mes_actual > 0 ? fmt(c.mes_actual) : '—'}</td>
+                    <td style="color:#888;">${c.mes_anterior > 0 ? fmt(c.mes_anterior) : '—'}</td>
+                    <td style="text-align:center;">${tendIcon}</td>
+                </tr>`;
+            });
+        }
+        document.getElementById('tabla-top20').innerHTML = html20 + '</tbody></table>';
+
+        // ── CLIENTES: top clientes chart ──
+        destroyChart('clientes');
+        const topCl = d.top20_clientes.slice(0,10);
+        charts['clientes'] = new Chart(document.getElementById('chart-clientes'), {
+            type:'bar',
+            data:{ labels:topCl.map(x=>x.cliente), datasets:[{ label:'Facturado (S/)', data:topCl.map(x=>x.total), backgroundColor:COLORES, borderRadius:4 }]},
+            options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}} }
+        });
+
+        // ── CLIENTES: top categorías ──
+        destroyChart('cats');
+        charts['cats'] = new Chart(document.getElementById('chart-cats'), {
+            type:'bar',
+            data:{ labels:d.por_categoria.map(x=>x.categoria), datasets:[{ label:'Total (S/)', data:d.por_categoria.map(x=>x.total), backgroundColor:'#C0392B', borderRadius:4 }]},
+            options:{ indexAxis:'y', plugins:{legend:{display:false}, tooltip:{callbacks:{afterLabel:ctx=>'  Veces: '+d.por_categoria[ctx.dataIndex].count}}}, scales:{x:{beginAtZero:true}} }
+        });
+
+        // ── CLIENTES: deudores por antigüedad ──
+        function renderAging(aging, elId) {
+            const buckets = [
+                { key:'menos_30', label:'Menos de 1 mes',  color:'#e67e22' },
+                { key:'30_60',    label:'1 – 2 meses',     color:'#e74c3c' },
+                { key:'60_90',    label:'2 – 3 meses',     color:'#c0392b' },
+                { key:'mas_90',   label:'Más de 3 meses',  color:'#7b241c' },
+            ];
+            let html = '';
+            let hayDatos = false;
+            buckets.forEach(b => {
+                const data_b = aging[b.key];
+                if (!data_b || data_b.count === 0) return;
+                hayDatos = true;
+                html += `<div style="border-left:4px solid ${b.color};background:#fafafa;border-radius:6px;padding:10px 12px;margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                        <span style="font-size:12px;font-weight:bold;color:${b.color};">${b.label}</span>
+                        <span style="font-size:13px;font-weight:bold;color:${b.color};">${data_b.count} ítem(s) · ${fmt(data_b.total)}</span>
+                    </div>
+                    <table class="tabla-rec" style="margin:0;"><thead><tr><th>Cliente</th><th>Categoría</th><th>Debe</th><th>Fecha venta</th><th>Días</th></tr></thead><tbody>`;
+                data_b.items.forEach(it => {
+                    html += `<tr>
+                        <td>${it.cliente}</td>
+                        <td style="font-size:11px;">${it.categoria || '—'}</td>
+                        <td><span class="debe-badge">${fmt(it.debe)}</span></td>
+                        <td style="font-size:11px;color:#aaa;">${it.fecha}</td>
+                        <td style="text-align:center;color:#888;font-size:11px;">${it.dias}d</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div>';
+            });
+            const elAging = document.getElementById(elId);
+            if (elAging) elAging.innerHTML = hayDatos ? html : '<p style="color:#aaa;font-size:13px;text-align:center;padding:16px;">Sin deudas pendientes ✓</p>';
+        }
+        renderAging(d.deudores_aging, 'tabla-deudores-aging');
+
+        // ── PAGOS: KPIs ──
+        const pagosTotal = d.pagos_ef_efectivo + d.pagos_ef_yape + d.pagos_ef_plin + d.pagos_ef_giro;
+        document.getElementById('kpi-pagos-total').textContent  = fmt(pagosTotal);
+        document.getElementById('kpi-pagos-count').textContent  = d.pagos_recientes.length + (d.pagos_recientes.length === 10 ? '+' : '');
+        document.getElementById('kpi-pago-ef').textContent = fmt(d.pagos_ef_efectivo);
+        document.getElementById('kpi-pago-yp').textContent = fmt(d.pagos_ef_yape);
+        document.getElementById('kpi-pago-pl').textContent = fmt(d.pagos_ef_plin);
+        document.getElementById('kpi-pago-gi').textContent = fmt(d.pagos_ef_giro);
+
+        // ── PAGOS: métodos donut ──
+        destroyChart('metodos');
+        const metV=[d.pagos_ef_efectivo,d.pagos_ef_yape,d.pagos_ef_plin,d.pagos_ef_giro], metL=['Efectivo','Yape','Plin','Giro'];
+        charts['metodos'] = new Chart(document.getElementById('chart-metodos'), {
+            type: 'doughnut',
+            data: { labels: metL.filter((_,i)=>metV[i]>0), datasets:[{ data:metV.filter(v=>v>0), backgroundColor:COLORES, hoverOffset:6 }]},
+            options: { plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}, cutout:'60%' }
+        });
+
+        // ── PAGOS: tabla pagos recientes ──
+        let htmlCR='<table class="tabla-rec"><thead><tr><th>Fecha</th><th>Cliente</th><th>Categoría</th><th>Monto</th><th>Método</th></tr></thead><tbody>';
+        if (d.pagos_recientes.length === 0) {
+            htmlCR += '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px;">Sin pagos en este período</td></tr>';
+        } else {
+            d.pagos_recientes.forEach(c => {
+                htmlCR+=`<tr>
+                    <td>${c.fecha}</td>
+                    <td>${c.cliente}</td>
+                    <td>${c.categoria || '—'}${c.cod_item ? '<br><small style="color:#bbb">'+c.cod_item+'</small>' : ''}</td>
+                    <td>${fmt(c.monto)}</td>
+                    <td style="font-size:11px;">${c.metodo}</td>
+                </tr>`;
+            });
+        }
+        document.getElementById('tabla-pagos-recientes').innerHTML = htmlCR + '</tbody></table>';
+
+        // ── PAGOS: pendientes por antigüedad ──
+        renderAging(d.pendientes_pago, 'tabla-pendientes-pago');
+
+        document.getElementById('dash-contenido').style.display = 'block';
+        dashCargado = true;
+    }).catch(err => {
+        console.error('Dashboard error:', err);
+        document.getElementById('dash-loading').textContent = 'Error al cargar datos: ' + err.message;
+        document.getElementById('dash-loading').style.display = 'block';
+    });
+}
+
+const _cambiarTabOriginal = cambiarTab;
+cambiarTab = function(tab) {
+    _cambiarTabOriginal(tab);
+    if (tab === 'dashboard' && !dashCargado) {
+        setPeriodo('todo', document.querySelector('.periodo-btn'));
+    }
+};
+
+// ── Anti-doble-envío: deshabilitar botón al hacer submit ─────────────────────
+// Excluir forms que manejan su propio botón (venta y pago)
+document.querySelectorAll('form').forEach(form => {
+    if (form.id === 'form-venta' || form.id === 'form-pago') return;
+    form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        if (!btn) return;
+        if (btn.disabled) { e.preventDefault(); return false; }
+        btn.dataset.originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+        btn.style.opacity = '0.65';
+        btn.style.cursor = 'not-allowed';
+    });
+});
+
+// Fechas de hoy por defecto
+['fecha-venta', 'fecha-gasto', 'fecha-pago'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.valueAsDate = new Date();
+});
+
+// Cargar primer ítem al iniciar
+cargarConfig().then(() => agregarItem());
+
+// ══════════════════════════════════════════════════════════════════════
+// ═══ LIBRO DE MOVIMIENTOS — Transparencia total de datos ═════════════
+// ══════════════════════════════════════════════════════════════════════
+
+let libroData = null;       // Cache de datos del /api/libro
+let libroFiltrado = null;   // Datos después de aplicar filtros
+
+function cargarLibro() {
+    if (libroData) { filtrarLibro(); return; }
+    const container = document.getElementById('libro-tabla');
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;">Cargando movimientos...</div>';
+    fetch('/api/libro')
+        .then(r => r.json())
+        .then(data => {
+            libroData = data;
+            filtrarLibro();
+        })
+        .catch(() => { container.innerHTML = '<div style="color:#C0392B;padding:20px;">Error al cargar datos.</div>'; });
+}
+
+function filtrarLibro() {
+    if (!libroData) return;
+    const desde    = document.getElementById('libro-desde').value;
+    const hasta    = document.getElementById('libro-hasta').value;
+    const tipo     = document.getElementById('libro-tipo').value;
+    const cliente  = document.getElementById('libro-cliente').value.trim().toLowerCase();
+    const categoria = document.getElementById('libro-categoria').value.trim().toLowerCase();
+    const metodo   = document.getElementById('libro-metodo').value;
+
+    // Unificar todos los movimientos en un solo array con tipo marcado
+    let movimientos = [];
+    if (!tipo || tipo === 'venta') {
+        libroData.ventas.forEach(v => {
+            let met = '';
+            if (v.efectivo > 0) met = 'efectivo';
+            else if (v.yape > 0) met = 'yape';
+            else if (v.plin > 0) met = 'plin';
+            else if (v.giro > 0) met = 'giro';
+            movimientos.push({
+                _tipo: 'venta', fecha: v.fecha, cliente: v.cliente, categoria: v.categoria,
+                monto: v.total, metodo: met, codigo: v.cod_item, vinculado_a: '', _raw: v
+            });
+        });
+    }
+    if (!tipo || tipo === 'pago') {
+        libroData.pagos.forEach(p => {
+            let met = '';
+            if (p.efectivo > 0) met = 'efectivo';
+            else if (p.yape > 0) met = 'yape';
+            else if (p.plin > 0) met = 'plin';
+            else if (p.giro > 0) met = 'giro';
+            movimientos.push({
+                _tipo: 'pago', fecha: p.fecha, cliente: p.cliente, categoria: p.categoria,
+                monto: p.monto, metodo: met, codigo: p.cod_pago, vinculado_a: p.cod_item || '', _raw: p
+            });
+        });
+    }
+    if (!tipo || tipo === 'gasto') {
+        libroData.gastos.forEach(g => {
+            movimientos.push({
+                _tipo: 'gasto', fecha: g.fecha, cliente: g.destinatario || '—',
+                categoria: g.tipo, monto: g.monto, metodo: g.metodo_pago || '', codigo: '', vinculado_a: '', _raw: g
+            });
+        });
+    }
+
+    // Aplicar filtros
+    if (desde) movimientos = movimientos.filter(m => m.fecha >= desde);
+    if (hasta) movimientos = movimientos.filter(m => m.fecha <= hasta);
+    if (cliente) movimientos = movimientos.filter(m => m.cliente.toLowerCase().includes(cliente));
+    if (categoria) movimientos = movimientos.filter(m => m.categoria.toLowerCase().includes(categoria));
+    if (metodo) movimientos = movimientos.filter(m => m.metodo.toLowerCase().includes(metodo));
+
+    // Ordenar: fecha desc, dentro del mismo día: venta → su pago (agrupados por COD_ITEM)
+    movimientos.sort((a, b) => {
+        if (a.fecha !== b.fecha) return b.fecha.localeCompare(a.fecha);
+        const codA = a._tipo === 'venta' ? a.codigo : (a.vinculado_a || '');
+        const codB = b._tipo === 'venta' ? b.codigo : (b.vinculado_a || '');
+        if (codA && codB && codA !== codB) return codA.localeCompare(codB);
+        const prioA = a._tipo === 'venta' ? 0 : a._tipo === 'pago' ? 1 : 2;
+        const prioB = b._tipo === 'venta' ? 0 : b._tipo === 'pago' ? 1 : 2;
+        return prioA - prioB;
+    });
+
+    libroFiltrado = movimientos;
+    renderLibro(movimientos);
+}
+
+function renderLibro(movimientos) {
+    // Contador
+    const nVentas = movimientos.filter(m => m._tipo === 'venta').length;
+    const nPagos  = movimientos.filter(m => m._tipo === 'pago').length;
+    const nGastos = movimientos.filter(m => m._tipo === 'gasto').length;
+    document.getElementById('libro-contador').textContent =
+        `Mostrando ${movimientos.length} movimientos (${nVentas} ventas, ${nPagos} pagos, ${nGastos} gastos)`;
+
+    // Totales
+    const totVentas = movimientos.filter(m => m._tipo === 'venta').reduce((s, m) => s + m.monto, 0);
+    const totPagos  = movimientos.filter(m => m._tipo === 'pago').reduce((s, m) => s + m.monto, 0);
+    const totGastos = movimientos.filter(m => m._tipo === 'gasto').reduce((s, m) => s + m.monto, 0);
+    const balance = totVentas - totPagos - totGastos;
+    document.getElementById('libro-totales').innerHTML = `
+        <div style="background:#e8f8e8;padding:8px 14px;border-radius:8px;font-size:13px;">
+            <strong>Ventas:</strong> S/ ${Math.round(totVentas).toLocaleString()}
+        </div>
+        <div style="background:#e0f0ff;padding:8px 14px;border-radius:8px;font-size:13px;">
+            <strong>Pagos:</strong> S/ ${Math.round(totPagos).toLocaleString()}
+        </div>
+        <div style="background:#ffe8e8;padding:8px 14px;border-radius:8px;font-size:13px;">
+            <strong>Gastos:</strong> S/ ${Math.round(totGastos).toLocaleString()}
+        </div>
+        <div style="background:#f8f4e8;padding:8px 14px;border-radius:8px;font-size:13px;">
+            <strong>Balance:</strong> S/ ${Math.round(balance).toLocaleString()}
+        </div>`;
+
+    if (movimientos.length === 0) {
+        document.getElementById('libro-tabla').innerHTML =
+            '<div style="text-align:center;padding:20px;color:#aaa;">No hay movimientos con estos filtros.</div>';
+        return;
+    }
+
+    // Pre-computar: total pagado por cada COD_ITEM (para saber si una venta está pagada o no)
+    const pagosPorItem = {};
+    if (libroData) {
+        libroData.pagos.forEach(p => {
+            if (p.cod_item) {
+                pagosPorItem[p.cod_item] = (pagosPorItem[p.cod_item] || 0) + p.monto;
+            }
+        });
+    }
+
+    const tipoLabel = { venta: 'Venta', pago: 'Pago', gasto: 'Gasto' };
+    const tipoDot   = { venta: '🟢', pago: '🔵', gasto: '🔴' };
+    const tipoColor = { venta: '#27ae60', pago: '#2980b9', gasto: '#C0392B' };
+
+    let html = `<table id="libro-table" style="width:max-content;border-collapse:collapse;font-size:13px;white-space:nowrap;">
+        <thead><tr style="background:#f5f5f5;text-align:left;position:sticky;top:0;z-index:1;">
+            <th style="padding:8px 6px;border-bottom:2px solid #ddd;background:#f5f5f5;">Fecha</th>
+            <th style="padding:8px 6px;border-bottom:2px solid #ddd;background:#f5f5f5;">Tipo</th>
+            <th style="padding:8px 6px;border-bottom:2px solid #ddd;background:#f5f5f5;">Cliente</th>
+            <th class="libro-col-cat" style="padding:8px 6px;border-bottom:2px solid #ddd;background:#f5f5f5;">Categoría</th>
+            <th style="padding:8px 6px;border-bottom:2px solid #ddd;background:#f5f5f5;text-align:right;">Monto</th>
+            <th style="padding:8px 6px;border-bottom:2px solid #ddd;background:#f5f5f5;">Estado</th>
+        </tr></thead><tbody>`;
+
+    // Mapa COD_ITEM → descripción legible (para mostrar en pagos qué se pagó)
+    const ventaInfo = {};
+    if (libroData) {
+        libroData.ventas.forEach(v => {
+            if (v.cod_item) {
+                const clienteCorto = v.cliente.length > 15 ? v.cliente.substring(0, 15) + '..' : v.cliente;
+                ventaInfo[v.cod_item] = `${v.categoria} (${clienteCorto})`;
+            }
+        });
+    }
+
+    movimientos.forEach((m, idx) => {
+        const fechaFmt = m.fecha ? m.fecha.split('-').reverse().join('/') : '';
+        const codEnlace = m._tipo === 'venta' ? m.codigo : m.vinculado_a;
+
+        // Calcular Estado según tipo
+        let estado = '';
+        if (m._tipo === 'venta') {
+            const totalPagado = pagosPorItem[m.codigo] || 0;
+            const debe = m.monto - totalPagado;
+            const cod = m.codigo ? ` · <span style="color:#888;font-size:11px;">${m.codigo}</span>` : '';
+            if (m.monto === 0) {
+                estado = `<span style="color:#27ae60;font-weight:bold;">🎁 Gratis</span>${cod}`;
+            } else if (debe <= 0.5) {
+                estado = `<span style="color:#27ae60;font-weight:bold;">✅ Pagado</span>${cod}`;
+            } else {
+                estado = `<span style="color:#C0392B;font-weight:bold;">⚠ Debe S/${Math.round(debe)}</span>${cod}`;
+            }
+        } else if (m._tipo === 'pago') {
+            if (m.vinculado_a) {
+                estado = `<span class="libro-enlace" data-enlace="${m.vinculado_a}" style="color:#2980b9;cursor:pointer;font-size:12px;" onclick="event.stopPropagation();toggleResaltado('${m.vinculado_a}')">→ ${m.vinculado_a}</span>`;
+            } else {
+                estado = '<span style="color:#888;font-size:12px;">sin vínculo</span>';
+            }
+        } else {
+            estado = '<span style="color:#888;">—</span>';
+        }
+
+        html += `<tr data-cod-enlace="${codEnlace}" style="border-bottom:1px solid #f0f0f0;cursor:pointer;" onclick="mostrarDetalleLibro(${idx})">
+            <td style="padding:7px 6px;white-space:nowrap;">${fechaFmt}</td>
+            <td style="padding:7px 6px;color:${tipoColor[m._tipo]};font-weight:bold;white-space:nowrap;">${tipoDot[m._tipo]} ${tipoLabel[m._tipo]}</td>
+            <td style="padding:7px 6px;">${m.cliente}</td>
+            <td class="libro-col-cat" style="padding:7px 6px;">${m.categoria}</td>
+            <td style="padding:7px 6px;text-align:right;font-weight:bold;">S/ ${Math.round(m.monto).toLocaleString()}</td>
+            <td style="padding:7px 6px;">${estado}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('libro-tabla').innerHTML = html;
+}
+
+function mostrarDetalleLibro(idx) {
+    const m = libroFiltrado[idx];
+    if (!m) return;
+    const raw = m._raw;
+    let html = '';
+
+    if (m._tipo === 'venta') {
+        // Buscar pagos relacionados a este COD_ITEM
+        const pagosRelacionados = libroData.pagos.filter(p => p.cod_item === raw.cod_item);
+        const totalPagado = pagosRelacionados.reduce((s, p) => s + p.monto, 0);
+        const debeReal = raw.total - totalPagado;
+
+        html = `
+        <div style="font-size:11px;text-transform:uppercase;color:#27ae60;font-weight:bold;letter-spacing:1px;margin-bottom:8px;">Detalle de Venta</div>
+        <div style="font-size:18px;font-weight:bold;margin-bottom:4px;">${raw.categoria} — ${raw.tipo}</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px;">${raw.cod_item} · ${raw.fecha ? raw.fecha.split('-').reverse().join('/') : ''}</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+            <div style="background:#f8f8f8;padding:10px;border-radius:8px;">
+                <div style="font-size:11px;color:#888;">Cliente</div>
+                <div style="font-weight:bold;">${raw.cliente}</div>
+                <div style="font-size:11px;color:#aaa;">${raw.cod_cliente}</div>
+            </div>
+            <div style="background:#f8f8f8;padding:10px;border-radius:8px;">
+                <div style="font-size:11px;color:#888;">Zona</div>
+                <div style="font-weight:bold;">${raw.zona || '—'}</div>
+            </div>
+        </div>
+
+        <div style="background:#f0faf0;padding:12px;border-radius:8px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:bold;color:#27ae60;margin-bottom:8px;">CÓMO SE CALCULÓ</div>
+            ${(() => {
+                const tienePromo = raw.precio_lista > 0 && raw.descuento > 0;
+                const esGratis = tienePromo && raw.descuento >= raw.precio_lista && raw.total === 0;
+                const esDescuento = tienePromo && !esGratis;
+
+                if (esGratis) {
+                    return `<table style="width:100%;font-size:13px;">
+                        <tr><td>Precio original</td><td style="text-align:right;">S/ ${Math.round(raw.precio_lista)}</td></tr>
+                        <tr style="color:#27ae60;"><td>Descuento</td><td style="text-align:right;">- S/ ${Math.round(raw.descuento)} (100%)</td></tr>
+                        <tr style="font-weight:bold;border-top:1px solid #ccc;">
+                            <td>TOTAL COBRADO</td>
+                            <td style="text-align:right;color:#27ae60;">S/ 0 — GRATIS</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:6px;font-size:11px;color:#888;">
+                        Este ítem se registró como <strong>gratis</strong>. El precio original (S/ ${Math.round(raw.precio_lista)}) se guardó como referencia.
+                        No entra en facturado ni en por cobrar.
+                    </div>`;
+                } else if (esDescuento) {
+                    const pct = Math.round((raw.descuento / raw.precio_lista) * 100);
+                    return `<table style="width:100%;font-size:13px;">
+                        <tr><td>Precio original</td><td style="text-align:right;">S/ ${Math.round(raw.precio_lista)}</td></tr>
+                        <tr style="color:#e67e22;"><td>Descuento</td><td style="text-align:right;">- S/ ${Math.round(raw.descuento)} (${pct}%)</td></tr>
+                        <tr style="font-weight:bold;border-top:1px solid #ccc;">
+                            <td>TOTAL COBRADO</td>
+                            <td style="text-align:right;">S/ ${Math.round(raw.total)}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:6px;font-size:11px;color:#888;">
+                        Se aplicó un descuento de S/ ${Math.round(raw.descuento)} sobre el precio original de S/ ${Math.round(raw.precio_lista)}.
+                    </div>`;
+                } else {
+                    return `<table style="width:100%;font-size:13px;">
+                        <tr style="font-weight:bold;">
+                            <td>Precio de venta</td>
+                            <td style="text-align:right;">S/ ${Math.round(raw.total)}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:6px;font-size:11px;color:#888;">
+                        Venta directa sin descuento ni promoción.
+                    </div>`;
+                }
+            })()}
+        </div>
+
+        <div style="background:#f0f4fa;padding:12px;border-radius:8px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:bold;color:#2980b9;margin-bottom:8px;">PAGOS RECIBIDOS (${pagosRelacionados.length})</div>
+            ${pagosRelacionados.length > 0 ? pagosRelacionados.map(p => {
+                let metodo = p.efectivo > 0 ? 'Efectivo' : p.yape > 0 ? 'Yape' : p.plin > 0 ? 'Plin' : p.giro > 0 ? 'Giro' : '—';
+                return `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid #e8e8e8;">
+                    <span>${p.fecha ? p.fecha.split('-').reverse().join('/') : ''} · ${p.cod_pago} · ${metodo}</span>
+                    <span style="font-weight:bold;">S/ ${Math.round(p.monto)}</span>
+                </div>`;
+            }).join('') : '<div style="font-size:13px;color:#aaa;">Sin pagos registrados</div>'}
+            <div style="display:flex;justify-content:space-between;padding:8px 0 0;font-weight:bold;font-size:13px;border-top:1px solid #aaa;margin-top:4px;">
+                <span>Total pagado</span><span>S/ ${Math.round(totalPagado)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:${debeReal > 0.5 ? '#C0392B' : '#27ae60'};font-weight:bold;">
+                <span>${debeReal > 0.5 ? 'SALDO PENDIENTE' : 'PAGADO COMPLETAMENTE'}</span>
+                <span>${debeReal > 0.5 ? 'S/ ' + Math.round(debeReal) : '✅'}</span>
+            </div>
+        </div>
+
+        <details style="margin-top:12px;">
+            <summary style="cursor:pointer;font-size:12px;color:#888;font-weight:bold;">DATOS CRUDOS DE LA SHEET</summary>
+            <div style="background:#f8f8f8;padding:10px;border-radius:6px;margin-top:6px;font-family:monospace;font-size:11px;line-height:1.8;word-break:break-all;">
+                ${Object.entries(raw).map(([k,v]) => `<strong>${k}</strong>=${v}`).join(' · ')}
+            </div>
+        </details>`;
+
+    } else if (m._tipo === 'pago') {
+        // Buscar la venta asociada a este COD_ITEM
+        const ventaAsociada = libroData.ventas.find(v => v.cod_item === raw.cod_item);
+        let metodo = raw.efectivo > 0 ? `Efectivo S/ ${Math.round(raw.efectivo)}` :
+                     raw.yape > 0 ? `Yape S/ ${Math.round(raw.yape)}` :
+                     raw.plin > 0 ? `Plin S/ ${Math.round(raw.plin)}` :
+                     raw.giro > 0 ? `Giro S/ ${Math.round(raw.giro)}` : '—';
+
+        html = `
+        <div style="font-size:11px;text-transform:uppercase;color:#2980b9;font-weight:bold;letter-spacing:1px;margin-bottom:8px;">Detalle de Pago</div>
+        <div style="font-size:18px;font-weight:bold;margin-bottom:4px;">S/ ${Math.round(raw.monto)} — ${metodo}</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px;">${raw.cod_pago} · ${raw.fecha ? raw.fecha.split('-').reverse().join('/') : ''}</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+            <div style="background:#f8f8f8;padding:10px;border-radius:8px;">
+                <div style="font-size:11px;color:#888;">Cliente</div>
+                <div style="font-weight:bold;">${raw.cliente}</div>
+                <div style="font-size:11px;color:#aaa;">${raw.cod_cliente}</div>
+            </div>
+            <div style="background:#f8f8f8;padding:10px;border-radius:8px;">
+                <div style="font-size:11px;color:#888;">Categoría</div>
+                <div style="font-weight:bold;">${raw.categoria || '—'}</div>
+            </div>
+        </div>
+
+        ${raw.cod_item ? `
+        <div style="background:#f0faf0;padding:12px;border-radius:8px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:bold;color:#27ae60;margin-bottom:8px;">TRAZABILIDAD — ¿A QUÉ VENTA VA ESTE PAGO?</div>
+            ${ventaAsociada ? `
+                <div style="font-size:13px;">
+                    <div>Venta: <strong>${ventaAsociada.cod_item}</strong> — ${ventaAsociada.categoria} (${ventaAsociada.tipo})</div>
+                    <div>Fecha de venta: ${ventaAsociada.fecha ? ventaAsociada.fecha.split('-').reverse().join('/') : ''}</div>
+                    <div>Total venta: S/ ${Math.round(ventaAsociada.total)}</div>
+                    <div>Cliente de la venta: ${ventaAsociada.cliente}</div>
+                </div>
+            ` : `<div style="font-size:13px;color:#aaa;">COD_ITEM: ${raw.cod_item} (venta no encontrada en datos cargados)</div>`}
+        </div>` : `
+        <div style="background:#fff8e0;padding:12px;border-radius:8px;margin-bottom:16px;">
+            <div style="font-size:12px;color:#e67e22;">Este pago no está vinculado a un ítem específico (sin COD_ITEM).</div>
+            ${raw.notas ? `<div style="font-size:13px;margin-top:4px;">Notas: ${raw.notas}</div>` : ''}
+        </div>`}
+
+        <details style="margin-top:12px;">
+            <summary style="cursor:pointer;font-size:12px;color:#888;font-weight:bold;">DATOS CRUDOS DE LA SHEET</summary>
+            <div style="background:#f8f8f8;padding:10px;border-radius:6px;margin-top:6px;font-family:monospace;font-size:11px;line-height:1.8;word-break:break-all;">
+                ${Object.entries(raw).map(([k,v]) => `<strong>${k}</strong>=${v}`).join(' · ')}
+            </div>
+        </details>`;
+
+    } else if (m._tipo === 'gasto') {
+        html = `
+        <div style="font-size:11px;text-transform:uppercase;color:#C0392B;font-weight:bold;letter-spacing:1px;margin-bottom:8px;">Detalle de Gasto</div>
+        <div style="font-size:18px;font-weight:bold;margin-bottom:4px;">S/ ${Math.round(raw.monto)} — ${raw.tipo}</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px;">${raw.fecha ? raw.fecha.split('-').reverse().join('/') : ''}</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+            <div style="background:#f8f8f8;padding:10px;border-radius:8px;">
+                <div style="font-size:11px;color:#888;">Descripción</div>
+                <div style="font-weight:bold;">${raw.descripcion || '—'}</div>
+            </div>
+            <div style="background:#f8f8f8;padding:10px;border-radius:8px;">
+                <div style="font-size:11px;color:#888;">Destinatario</div>
+                <div style="font-weight:bold;">${raw.destinatario || '—'}</div>
+            </div>
+            <div style="background:#f8f8f8;padding:10px;border-radius:8px;">
+                <div style="font-size:11px;color:#888;">Método de pago</div>
+                <div style="font-weight:bold;">${raw.metodo_pago || '—'}</div>
+            </div>
+        </div>
+
+        <details style="margin-top:12px;">
+            <summary style="cursor:pointer;font-size:12px;color:#888;font-weight:bold;">DATOS CRUDOS DE LA SHEET</summary>
+            <div style="background:#f8f8f8;padding:10px;border-radius:6px;margin-top:6px;font-family:monospace;font-size:11px;line-height:1.8;word-break:break-all;">
+                ${Object.entries(raw).map(([k,v]) => `<strong>${k}</strong>=${v}`).join(' · ')}
+            </div>
+        </details>`;
+    }
+
+    document.getElementById('libro-detalle-contenido').innerHTML = html;
+    document.getElementById('libro-detalle-overlay').style.display = 'block';
+}
+
+function cerrarDetalleLibro() {
+    document.getElementById('libro-detalle-overlay').style.display = 'none';
+}
+
+function limpiarFiltrosLibro() {
+    document.getElementById('libro-desde').value = '';
+    document.getElementById('libro-hasta').value = '';
+    document.getElementById('libro-tipo').value = '';
+    document.getElementById('libro-cliente').value = '';
+    document.getElementById('libro-categoria').value = '';
+    document.getElementById('libro-metodo').value = '';
+    filtrarLibro();
+}
+
+let _resaltadoActivo = null;  // COD_ITEM actualmente resaltado
+
+function toggleResaltado(codItem) {
+    if (!codItem) return;
+    const table = document.getElementById('libro-table');
+    if (!table) return;
+    const rows = table.querySelectorAll('tbody tr');
+
+    if (_resaltadoActivo === codItem) {
+        // Ya está resaltado → quitar
+        rows.forEach(tr => { tr.style.background = ''; tr.style.boxShadow = ''; });
+        _resaltadoActivo = null;
+    } else {
+        // Resaltar las filas con este código
+        rows.forEach(tr => {
+            if (tr.dataset.codEnlace === codItem) {
+                tr.style.background = '#fffde0';
+                tr.style.boxShadow = 'inset 3px 0 0 #f1c40f';
+            } else {
+                tr.style.background = '';
+                tr.style.boxShadow = '';
+            }
+        });
+        _resaltadoActivo = codItem;
+    }
+}
+
+function exportarLibroCSV() {
+    if (!libroFiltrado || libroFiltrado.length === 0) return alert('No hay datos para exportar.');
+    const headers = ['Fecha','Tipo','Cliente','Categoría','Monto','Método','Código','Vinculado a'];
+    let csv = headers.join(',') + '\n';
+    libroFiltrado.forEach(m => {
+        const row = [
+            m.fecha,
+            m._tipo === 'venta' ? 'Venta' : m._tipo === 'pago' ? 'Pago' : 'Gasto',
+            '"' + (m.cliente || '').replace(/"/g, '""') + '"',
+            '"' + (m.categoria || '').replace(/"/g, '""') + '"',
+            Math.round(m.monto),
+            m.metodo || '',
+            m.codigo || '',
+            m.vinculado_a || ''
+        ];
+        csv += row.join(',') + '\n';
+    });
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `libro_movimientos_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>
