@@ -1,17 +1,21 @@
-"""Configuración del ERP Flask. Lee env vars con Pydantic Settings."""
+"""Configuración del ERP Flask. Lee env vars con Pydantic Settings.
+
+Durante MVP/dev usamos postgres superuser (ya configurado en postgres-data/.env).
+Pre-cutover (Fase 6): crear rol erp_user con permisos limitados (ADR-0026).
+"""
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    erp_db_user: str = "erp_user"
-    erp_db_password: str
+    erp_db_user: str = "postgres"
+    postgres_superuser_password: str
     erp_db_name: str = "livskin_erp"
     erp_db_host: str = "postgres-data"
     erp_db_port: int = 5432
 
-    flask_secret_key: str
+    flask_secret_key: str = "dev-only-change-in-production"
     flask_env: str = "production"
 
     session_duration_hours: int = 48
@@ -24,7 +28,7 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         return (
-            f"postgresql+psycopg2://{self.erp_db_user}:{self.erp_db_password}"
+            f"postgresql+psycopg2://{self.erp_db_user}:{self.postgres_superuser_password}"
             f"@{self.erp_db_host}:{self.erp_db_port}/{self.erp_db_name}"
         )
 
