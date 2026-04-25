@@ -602,36 +602,61 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 
 ### 11.4 Fase 2 — Gobierno datos + ERP refactor + segundo cerebro L1-L3 (Semanas 3-4)
 
-**Objetivo:** ERP refactorizado instalado en VPS 3 en **dormant standby** + segundo cerebro poblado con conocimiento base. **Render sigue siendo producción real; el cutover NO ocurre en esta fase** (se difiere a Fase 6 post-validación — ver memoria `project_cutover_strategy`).
+**Estado al 2026-04-26: implementación ~95% completa.** ERP refactorizado deployed en VPS 3, funcional, con data real backfilleada (134 clientes + 88 ventas + 84 pagos del Excel productivo). Pendiente: auth+audit middleware, tests ≥75% coverage, decisión erp-staging. **Render sigue siendo producción real; cutover continúa diferido a Fase 6** (memoria `project_cutover_strategy`).
+
+**Cambio operativo vs plan original (2026-04-26):** Dario aprobó saltar el plumbing sintético y backfillear directo data real. Razón: el script `scripts/backfill_excel.py` es idempotente, la migration 0001 puede recrear schema limpio si falla, y la data real (88 ventas) es chica + altamente representativa. Esto acelera la validación funcional sin riesgo de producción (Render sigue intacto).
+
+**Objetivo original:** ERP refactorizado instalado en VPS 3 en **dormant standby** + segundo cerebro poblado con conocimiento base.
 
 **Entregables:**
-- **Dossiers aprobados:** 0011 (modelo Lead/Cliente/Venta), 0012 (stages Vtiger), 0013 (dedup), 0014 (naming), 0018 (schema cerebro), 0023 (refactor), 0024 (strangler → clone+standby), 0025 (backfill re-runable), 0026 (auth), 0027 (audit log)
-- ERP refactorizado (instalado en VPS 3, sin tráfico real):
-  - SQLAlchemy + psycopg2 (reemplazo de gspread)
-  - Pydantic schemas para cada entidad
-  - Service layer (VentaService, ClienteService, PagoService)
-  - Type hints + mypy en CI
-  - Pytest cobertura ≥70% lógica negocio
-  - Logs estructurados (structlog)
-  - Dockerfile + docker-compose
-  - **Auth bcrypt + 2 cuentas fijas (tú + doctora)**
-  - **Audit log tabla inmutable**
-  - CSRF tokens + rate limiting
-- Vtiger configurado (pipeline 5 stages — ADR-0012, campos custom: fuente, utm_*, fbclid, gclid, tratamiento_interés, consent_marketing)
-- **Layer 1 del cerebro poblado:** catálogo completo (21 tratamientos + 12 productos + áreas) con embeddings
-- **Layer 2 del cerebro:** indexación del repo (todos los .md con embeddings, cron semanal)
-- **Layer 3 del cerebro:** vistas SQL consolidadas
-- **MCP server del cerebro desplegado** (yo puedo consultar desde Claude Code)
-- **Backfill SINTÉTICO** — script re-runable que puede poblar `livskin_erp` con data generada (shape similar al Excel) para testing. El mismo script tendrá modo "real" que se usa al cutover contra Google Sheets live.
-- Sync inicial Vtiger ↔ ERP (n8n flows básicos) — testeado con data sintética
-- **Backups daily activados** sobre el Postgres de VPS 3 (aunque aún sin data real)
+- **Dossiers aprobados:** 0011 (modelo Lead/Cliente/Venta), 0012 (stages Vtiger), 0013 (dedup), 0014 (naming), 0018 (schema cerebro), 0023 (refactor), 0024 (strangler → clone+standby), 0025 (backfill re-runable), 0026 (auth), 0027 (audit log) — ✅ todos completos al 2026-04-25
+- ERP refactorizado (instalado en VPS 3, validación interna, sin tráfico real):
+  - ✅ SQLAlchemy 2.0 + psycopg2 (reemplazo de gspread)
+  - ✅ Pydantic v2 schemas para cada entidad (cliente, venta, pago, gasto, catálogo, client_lookup)
+  - ✅ Service layer (VentaService, ClienteService, PagoService, GastoService, CatalogoService, DashboardService, LibroService, NormalizeService, CodgenService, ClientLookupService)
+  - ✅ Type hints
+  - ⏳ Pytest cobertura ≥75% (estructura existe, falta poblar)
+  - ✅ Logs estructurados (structlog)
+  - ✅ Dockerfile + docker-compose + gunicorn (production WSGI)
+  - ⏳ **Auth bcrypt + 2 cuentas fijas (tú + doctora)** — definido (ADR-0026), implementación pendiente
+  - ⏳ **Audit log tabla inmutable** — tabla `audit_log` ya existe en migration 0001, middleware pendiente (ADR-0027)
+  - ⏳ CSRF tokens + rate limiting
+  - ✅ **Las 6 fases de venta del Flask original preservadas exactas** en `venta_service.save_venta()`
+  - ✅ Trigger PL/pgSQL `recompute_venta_debe()` recalcula `pagado` y `debe` atómicamente (migration 0002)
+  - ✅ Capa de compat form-data → JSON (`routes/legacy_forms.py`) preserva HTML del Flask original
+- ⏳ Vtiger configurado — bloqueado por trámite WhatsApp Business API (no afecta path crítico ERP)
+- ⏳ Layer 1 del cerebro (catálogo) — pendiente
+- ✅ **Layer 2 del cerebro** (Fase 1): indexación del repo con embeddings, query CLI
+- ⏳ Layer 3 del cerebro: vistas SQL consolidadas — pendiente
+- ⏳ MCP server proper — diferido a Fase 6
+- ✅ **Backfill REAL ejecutado** (no sintético — Dario aprobó MVP-speed): 134 clientes + 88 ventas + 84 pagos del Excel productivo, vía `scripts/backfill_excel.py`
+- ⏳ Sync inicial Vtiger ↔ ERP — bloqueado con Vtiger
+- ⏳ Backups daily — pendiente (Fase 6 con resto de auto-mantenimiento)
 
-**Exit criteria:**
-- ERP nuevo corre end-to-end en `erp.livskin.site` contra data sintética (dormant standby — nadie lo usa productivamente aún)
-- Revenue sintético clasificable por fuente en Metabase (valida el modelo de atribución)
-- Render sigue operando como producción real SIN cambios — no hay cutover en esta fase
-- Backfill script probado en modo dry-run contra export estático de Google Sheets
-- Yo (Claude Code) puedo preguntar al MCP server "¿cuáles son las contraindicaciones de botox?" y obtener respuesta precisa
+**Exit criteria (revisados 2026-04-26):**
+- ✅ ERP nuevo corre end-to-end en `erp.livskin.site` con data real (modo validación interna — nadie lo usa productivamente)
+- ⏳ Revenue clasificable por fuente — pendiente tracking pixel + UTMs (Fase 3)
+- ✅ Render sigue operando como producción real SIN cambios
+- ✅ Backfill script ejecutado con éxito contra export real
+- ⏳ MCP server query — diferido
+- ⏳ Auth + audit middleware operativos — pendiente
+- ⏳ Tests coverage ≥75% — pendiente
+
+**CI/CD operativo (validado 2026-04-26):**
+- Workflow `.github/workflows/deploy-vps3.yml` cubre: erp-flask con `--build`, alembic-erp + brain-tools `build only`, nginx `-s reload`, retry verify de URLs públicas (3 intentos × 5s sleep, sleep inicial 20s)
+
+**Bugs corregidos durante implementación 2026-04-26:**
+- Códigos secuenciales colisionaban en venta multi-item → fix `next_codigos_batch(count)`
+- Pydantic aceptaba valores negativos en montos → fix `Field(ge=0)`
+- Atomicidad rota: try/except dentro de `session_scope` cachaba excepciones → fix try/except FUERA del context manager en routes
+- Abono fantasma con cod_item inexistente → fix excepción `AbonoCodItemInvalido`
+- Doble counting de `credito_aplicado` en agregados de cliente → fix en `cliente_service.get_full_history()`
+- Race condition CI/CD vs rebuild manual → workflow ahora maneja erp-flask + retry
+
+**Auditoría profunda Flask original** (tras feedback de usuaria sobre lectura superficial):
+- Documento `docs/erp-flask-original-deep-analysis.md` mapea 13 gaps entre original y refactor
+- 11 cerrados sistemáticamente (bloques A-F de commits)
+- 2 diferidos no críticos: métodos pago primera fila (cosmético), multi-currency por item
 
 ### 11.5 Fase 3 — Tracking + observabilidad (Semana 5)
 

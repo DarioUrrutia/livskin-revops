@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-04-18 (v1.0 — Fase 0)
+> Última actualización: 2026-04-26 (v1.4 — Fase 2 implementación ~95%)
 
 ---
 
@@ -158,13 +158,13 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 
 | Fase | Semana | Estado |
 |---|---|---|
-| 0 | 1 | 🚧 **En curso** (hoy, 2026-04-18) |
-| 1 | 2 | ⏳ Pendiente |
-| 2 | 3-4 | ⏳ |
-| 3 | 5 | ⏳ |
-| 4 | 6 | ⏳ |
-| 5 | 7-8 | ⏳ |
-| 6 | 9-10 | ⏳ |
+| 0 | 1 | ✅ Completada (2026-04-18) |
+| 1 | 2 | ✅ Completada (2026-04-20) |
+| 2 | 3-4 | 🚧 **Implementación ~95%** (definido + deployed + data real al 2026-04-26) |
+| 3 | 5 | ⏳ Pendiente |
+| 4 | 6 | ⏳ Pendiente |
+| 5 | 7-8 | ⏳ Pendiente |
+| 6 | 9-10 | ⏳ Pendiente (cutover ERP real aquí) |
 
 **Ver [docs/master-plan-mvp-livskin.md § 11](docs/master-plan-mvp-livskin.md#11-roadmap-10-semanas-con-6-workstreams) para detalle.**
 
@@ -258,33 +258,39 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-04-18 (cierre Fase 0)
+## 📝 Estado al 2026-04-26 (Fase 2 implementación ~95%)
 
 **Lo que está hecho:**
-- Repo conectado a GitHub `DarioUrrutia/livskin-revops`
-- SSH a los 2 VPS existentes funcionando desde esta máquina (`keys/claude-livskin`)
-- Auditoría en vivo completada sobre audit base 2026-04-16
-- Datos reales del negocio procesados (74 ventas, 135 clientes, catálogo completo)
-- ERP Livskin en producción en Render revisado (formulario-livskin.onrender.com)
-- **Plan maestro v1.0 consolidado** en [docs/master-plan-mvp-livskin.md](docs/master-plan-mvp-livskin.md)
-- **3 dossiers fundacionales aprobados** (segundo cerebro, arquitectura, seguridad)
-- Repo reorganizado a estructura definitiva (infra/, integrations/, agents/, analytics/)
-- Memoria Claude Code poblada con contexto completo
-- 10 principios operativos codificados
+- ✅ **Fase 0** (2026-04-18): repo + plan maestro v1.0 + 3 dossiers fundacionales + memoria poblada
+- ✅ **Fase 1** (2026-04-20): VPS 3 hardened + DO VPC + Postgres 16 + pgvector + embeddings + nginx + TLS + CI/CD + Alembic + brain Layer 2 (679 chunks indexados) + Obsidian
+- 🚧 **Fase 2** (2026-04-21 a hoy):
+  - **10 ADRs cerrados**: 0011-0015 (gobierno datos) + 0023-0027 (refactor + auth + audit)
+  - **ERP refactorizado FUNCIONAL** en `https://erp.livskin.site`:
+    - Stack: Flask + SQLAlchemy 2.0 + Pydantic v2 + structlog + gunicorn + Postgres 16
+    - 12 tablas via Alembic 0001 + trigger DEBE dinámico via 0002
+    - Las 6 fases de venta del Flask original preservadas exactas + auto-aplicar leftover FIFO con override
+    - Capa de compat form-data → JSON (HTML 3500 líneas legacy preservado)
+    - 12 endpoints implementados (CRUD clientes, client-lookup, dashboard, libro, gastos, pagos, venta legacy)
+    - **Backfill REAL ejecutado**: 134 clientes + 88 ventas + 84 pagos del Excel productivo
+  - **CI/CD workflow** cubre todo el stack con retry verify de URLs públicas
+  - **Auditoría profunda** Flask original: 13 gaps identificados, 11 cerrados
 
-**Lo que queda pendiente de tu parte:**
-1. Crear Meta App + activar WhatsApp test number (15 min) — instrucciones en `integrations/whatsapp/README.md`
-2. Iniciar trámite WhatsApp Business API para número producción (5-10 días Meta) — en paralelo
-3. Instalar Bitwarden + guardar `keys/.env.integrations` como respaldo
-4. Confirmar tu disponibilidad real semanal (asumido 12-15h)
+**Lo que queda pendiente para cerrar Fase 2 al 100% (~5%):**
+1. Decisión `erp-staging.livskin.site` (próxima sesión 2026-04-27)
+2. Auth bcrypt middleware + login/logout (ADR-0026 implementación)
+3. Audit log middleware (ADR-0027 implementación)
+4. Tests poblados a coverage ≥75%
+5. Vtiger configurado (bloqueado por trámite WhatsApp Business API — no path crítico)
 
-**Próximo paso (Fase 1, Semana 2):**
-- Provisionar VPS 3 ($12/mes)
-- Configurar DO VPC entre los 3 VPS
-- Instalar Docker + Postgres 16 + pgvector + embeddings service
-- GitHub Actions CI/CD
-- Alembic configurado
-- Staging env
+**Lo que queda pendiente de tu parte (Dario):**
+1. Activar WhatsApp test number — pendiente desde Fase 0
+2. Trámite WhatsApp Business API (5-10 días Meta) — pendiente
+3. Bitwarden + guardar `keys/.env.integrations` como respaldo
+4. Decidir mañana 2026-04-27: destino de `erp-staging.livskin.site` (3 opciones en backlog)
+
+**Próximo paso (cerrar Fase 2 + arrancar Fase 3):**
+- Sesión 2026-04-27: erp-staging decision + auth + audit + tests
+- Cuando Meta API approve: arrancar Conversation Agent (Fase 4) en paralelo a Fase 3 (tracking)
 
 ---
 

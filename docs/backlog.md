@@ -25,6 +25,76 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 Decidir destino de `erp-staging.livskin.site` (próxima sesión 2026-04-27)
+Hoy 2026-04-26, `erp.livskin.site` cambió de maintenance page → `proxy_pass` al container `erp-flask`. La URL `erp-staging.livskin.site` sigue sirviendo la maintenance page estática.
+
+**3 opciones a evaluar mañana:**
+- **A) Eliminar `erp-staging`** — Razonamiento: durante Fase 2-5 el ERP nuevo ESTÁ en validación interna (no producción real, Render sigue siendo producción). Tener `erp` y `erp-staging` apuntando a dos modos del mismo deploy puede confundir más que ayudar. Simplificar: solo `erp.livskin.site` hasta cutover de Fase 6.
+- **B) Apuntar `erp-staging` al mismo container** — Pragmático: alias DNS, sin DB separada. Útil si queremos URL distinta para "preview de cambios antes de mostrarlos a la doctora", pero hoy es la misma instancia.
+- **C) Implementar staging real con DB separada** — Robusto pero overkill ahora: `livskin_erp_staging` Postgres database adicional, container `erp-flask-staging` separado, deploys via branch. Cuesta tiempo de infra. Probable destino post-Fase 6.
+
+**Recomendación claude-code (no decidida):** A para Fase 2-5, C activado en Fase 6 cuando hagamos el cutover real (porque ahí sí necesitamos staging robusto para no romper producción).
+
+**Bloqueador:** ninguno técnico, solo decisión de Dario.
+**Fase sugerida:** decisión inmediata 2026-04-27 (impacta CI/CD workflow + nginx config).
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🔴 Implementar auth bcrypt middleware + login/logout (ADR-0026)
+ERP refactorizado funcional, pero sin auth. Pendiente:
+- Endpoints `/login` (form + bcrypt verify), `/logout`
+- Middleware Flask que protege todas las rutas excepto `/login`, `/ping`, webhooks
+- Tabla `users` ya existe en migration 0001 + `user_sessions` para tracking
+- 2 cuentas seedadas: Dario (admin) + doctora (operadora)
+- Lockout: 8 intentos fallidos → bloqueo 30min
+- Sesión: 48h máximo, 2h inactividad
+
+**Por qué urgente:** sin auth, cualquier persona con la URL puede ver/modificar 134 clientes reales con PII. Riesgo Ley 29733 (protección datos personales Perú).
+**Fase sugerida:** próxima sesión 2026-04-27 (después de erp-staging decision).
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🔴 Implementar audit log middleware (ADR-0027)
+Tabla `audit_log` ya existe en migration 0001. Falta:
+- After-request middleware Flask que captura POST/PUT/DELETE + login_success/failed/lockout
+- ~30 eventos definidos en ADR-0027
+- Dashboard admin para visualizar (solo Dario)
+- Triggers Postgres adicionales para INSERT/UPDATE/DELETE en ventas, pagos, clientes
+
+**Bloquea:** capacidades de seguridad del 5to agente (memoria `project_infra_security_agent`) que dependen del audit log.
+**Fase sugerida:** próxima sesión 2026-04-27 (junto con auth).
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🟡 Tests del ERP refactorizado a coverage ≥75%
+ADR-0023 establece coverage ≥75%. Estructura `tests/` existe en `infra/docker/erp-flask/`, falta poblar:
+- Unit tests de cada service (venta, pago, cliente, gasto, dashboard, libro, codgen)
+- Integration tests de endpoints (cliente lookup, venta legacy form, pagos día posterior)
+- Tests de las 6 fases de venta con casos edge (descuentos, gratis, abonos, créditos, auto-aplicar)
+- Tests del trigger DEBE dinámico (insert/update/delete de pagos)
+- Mocks de Postgres con factory_boy o pytest fixtures
+
+**Por qué importante:** los bugs de hoy (códigos duplicados, valores negativos, atomicidad rota, abono fantasma, doble counting) habrían sido detectados con tests. Sin coverage la próxima refactorización es frágil.
+**Fase sugerida:** próxima sesión 2026-04-27 después de auth+audit, o repartir en sesiones cortas.
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🟢 Limpiar gaps diferidos del Flask original
+Dos gaps documentados en `docs/erp-flask-original-deep-analysis.md` no se cerraron por ser cosméticos / no críticos:
+1. Métodos de pago primera fila — el HTML original tenía pre-fill heurístico de la primera fila de pagos según fecha; no replicado.
+2. Multi-currency por item — el original soporta moneda por línea de venta; el refactor unifica moneda a nivel venta.
+3. Categoría `__otro__` libre — el HTML acepta categoría arbitraria via `__otro__`, el refactor solo lista presets.
+
+**Cuándo:** si la doctora reporta fricción específica al usar el sistema.
+**Fase sugerida:** Fase 6 o reactiva.
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
 ### 🟡 Capa de auto-mantenimiento — implementar al cierre de Fase 6
 Para que Dario NO dependa de intervenir manualmente en el sistema cuando esté dirigiendo la empresa (target: 3-5 h/mes total incluyendo mantenimiento).
 
@@ -46,19 +116,6 @@ Para que Dario NO dependa de intervenir manualmente en el sistema cuando esté d
 
 ---
 
-### 🟢 Workflow CI/CD: agregar `nginx -s reload` tras cambios de nginx.conf/sites
-Hoy `docker compose up -d` es idempotente: si nada cambió en el compose file, nginx no reinicia. Pero los archivos `nginx.conf` y `sites/*.conf` están bind-mounted, así que cambios ahí NO disparan restart automático del container. Para que un cambio de config de nginx se aplique, hay que:
-- `docker exec nginx-vps3 nginx -t` (validar)
-- `docker exec nginx-vps3 nginx -s reload` (reload sin downtime)
-
-**Mejora al workflow:** en el step Deploy, detectar si archivos bajo `infra/docker/nginx-vps3/{nginx.conf,sites/}` cambiaron en el git pull; si sí, ejecutar reload. Alternativamente, siempre intentar reload (idempotente).
-
-**Por ahora no urgente** — cambios de HTML (en `html/prod|staging/`) sí se reflejan automáticamente porque nginx los lee en cada request. Solo configs del server requieren reload.
-
-**Fase sugerida:** cuando hagamos el primer cambio real a nginx.conf o sites/*.conf (probablemente en Fase 2 al agregar el proxy_pass al ERP Flask).  
-**Agregado por:** Claude Code · 2026-04-20
-
----
 
 ### 🟡 Agregar passphrase a `livskin-vps-erp.ppk` al cerrar Fase 2
 Durante Fase 1-2 la `.ppk` no tiene passphrase (decisión consciente por fricción de setup). Al terminar Fase 2 (cutover ERP completo), agregarle passphrase y guardar en Bitwarden.
@@ -213,6 +270,12 @@ Dario propuso, se aprobó, se actualizó ADR-0001 con sección 9.2.
 
 ### ✅ Whitelist Fail2Ban con ignoreip
 Tras incidente de auto-ban en instalación de UFW: whitelist permanente creada en `/etc/fail2ban/jail.d/ignoreip.local` con 127.0.0.1/8, ::1, 10.114.0.0/20 (VPC), 78.208.67.189 (Dario Milan). 2026-04-19.
+
+### ✅ CI/CD workflow extendido a stack ERP completo
+Commit `7eb2d63` (2026-04-26). Workflow `.github/workflows/deploy-vps3.yml` ahora cubre: erp-flask con `--build`, alembic-erp + brain-tools `build only`, nginx `-s reload` tras cambios de config, retry verify de URLs públicas (3 intentos × 5s, sleep inicial 20s). Resuelve además el item original "Workflow CI/CD: agregar nginx reload" (2026-04-20).
+
+### ✅ ERP refactorizado deployed funcional con data real
+Commits del 2026-04-26 (`815cb0b` → `7eb2d63`). Stack: Flask + SQLAlchemy 2.0 + Pydantic v2 + structlog + gunicorn. Migration 0001 (12 tablas) + 0002 (trigger DEBE) aplicadas. Backfill ejecutado: 134 clientes + 88 ventas + 84 pagos del Excel productivo. URL `https://erp.livskin.site` responde con formulario funcional. Auditoría profunda Flask original cerró 11 de 13 gaps. Capa compat form-data preserva HTML legacy. 2026-04-26.
 
 ---
 
