@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from db import session_scope
 from schemas.venta import PagoOut, VentaCreate, VentaItemOut, VentaSaveResponse, VentaSimpleOut
-from services import venta_service
+from services import pago_service, venta_service
 
 bp = Blueprint("api_venta", __name__)
 
@@ -63,6 +63,8 @@ def create_venta():  # type: ignore[no-untyped-def]
             return jsonify({"error": str(e)}), 404
         except venta_service.CreditoInsuficiente as e:
             return jsonify({"error": str(e)}), 409
+        except pago_service.AbonoCodItemInvalido as e:
+            return jsonify({"error": str(e)}), 400
         except (venta_service.TipoItemInvalido, ValueError) as e:
             return jsonify({"error": str(e)}), 400
 

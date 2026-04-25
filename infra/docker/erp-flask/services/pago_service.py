@@ -17,6 +17,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from models.pago import Pago
+from models.venta import Venta
 from services.codgen_service import next_codigo
 
 
@@ -24,6 +25,11 @@ VALID_TIPOS = {"normal", "credito_generado", "credito_aplicado", "abono_deuda"}
 
 
 class PagoTipoInvalido(Exception):
+    pass
+
+
+class AbonoCodItemInvalido(Exception):
+    """abono_deuda apunta a un cod_item que no existe en ventas (abono fantasma)."""
     pass
 
 
@@ -47,6 +53,15 @@ def create_pago(
         raise PagoTipoInvalido(
             f"tipo_pago '{tipo_pago}' no valido. Valores: {sorted(VALID_TIPOS)}"
         )
+
+    if tipo_pago == "abono_deuda" and cod_item:
+        existe = db.execute(
+            select(Venta.id).where(Venta.cod_item == cod_item)
+        ).scalar_one_or_none()
+        if existe is None:
+            raise AbonoCodItemInvalido(
+                f"cod_item '{cod_item}' no existe en ventas; no se puede crear abono"
+            )
 
     cod_pago = next_codigo(db, Pago, "cod_pago", "LIVPAGO")
 
