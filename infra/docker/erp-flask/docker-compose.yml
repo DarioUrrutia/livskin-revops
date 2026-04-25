@@ -14,7 +14,9 @@ services:
     environment:
       ERP_DB_HOST: postgres-data
       ERP_DB_NAME: livskin_erp
-      ERP_DB_USER: erp_user
+      # MVP/dev: usa superuser. Pre-cutover (Fase 6) crear rol erp_user con
+      # permisos limitados per ADR-0026.
+      ERP_DB_USER: postgres
     ports:
       - "127.0.0.1:8000:8000"
     networks:
