@@ -20,7 +20,7 @@ from models.cliente import Cliente
 from models.pago import Pago
 from models.venta import Venta
 from services import pago_service
-from services.codgen_service import next_codigo
+from services.codgen_service import next_codigos_batch
 
 
 PREFIX_BY_TIPO: dict[str, str] = {
@@ -148,11 +148,18 @@ def save_venta(
     result = SaveVentaResult(total_venta=total_venta_dia, total_pagado=total_pagado_hoy)
 
     # ============================================================
-    # FASE 1: generar códigos cod_item
+    # FASE 1: generar códigos cod_item (batch por prefijo para evitar
+    # duplicados cuando hay múltiples items del mismo tipo en la venta)
     # ============================================================
+    items_por_prefijo: dict[str, list[ItemVentaInput]] = {}
     for item in items:
         prefijo = PREFIX_BY_TIPO[item.tipo]
-        item.cod_item = next_codigo(db, Venta, "cod_item", prefijo)
+        items_por_prefijo.setdefault(prefijo, []).append(item)
+
+    for prefijo, items_grupo in items_por_prefijo.items():
+        codigos = next_codigos_batch(db, Venta, "cod_item", prefijo, len(items_grupo))
+        for item, codigo in zip(items_grupo, codigos):
+            item.cod_item = codigo
 
     # ============================================================
     # FASE 2: insertar 1 fila en ventas por item + FASE 3: pagos normales

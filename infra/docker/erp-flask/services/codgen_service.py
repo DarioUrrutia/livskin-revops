@@ -16,6 +16,25 @@ from sqlalchemy.orm import Session
 from models.base import Base
 
 
+def _max_existing(db: Session, model: Type[Base], col_name: str, prefijo: str) -> int:
+    col = getattr(model, col_name)
+    pattern = re.compile(rf"^{prefijo}(\d+)$")
+    rows = db.execute(select(col).where(col.like(f"{prefijo}%"))).scalars().all()
+    max_num = 0
+    for codigo in rows:
+        match = pattern.match(codigo)
+        if match:
+            num = int(match.group(1))
+            if num > max_num:
+                max_num = num
+    return max_num
+
+
+def _format_codigo(prefijo: str, num: int) -> str:
+    width = max(4, len(str(num)))
+    return f"{prefijo}{num:0{width}d}"
+
+
 def next_codigo(db: Session, model: Type[Base], col_name: str, prefijo: str) -> str:
     """Genera próximo código tipo LIVXXXX####.
 
@@ -28,18 +47,20 @@ def next_codigo(db: Session, model: Type[Base], col_name: str, prefijo: str) -> 
     Returns:
         Código nuevo (ej: 'LIVCLIENT0136')
     """
-    col = getattr(model, col_name)
-    pattern = re.compile(rf"^{prefijo}(\d+)$")
+    return _format_codigo(prefijo, _max_existing(db, model, col_name, prefijo) + 1)
 
-    rows = db.execute(select(col).where(col.like(f"{prefijo}%"))).scalars().all()
-    max_num = 0
-    for codigo in rows:
-        match = pattern.match(codigo)
-        if match:
-            num = int(match.group(1))
-            if num > max_num:
-                max_num = num
 
-    next_num = max_num + 1
-    width = max(4, len(str(next_num)))
-    return f"{prefijo}{next_num:0{width}d}"
+def next_codigos_batch(
+    db: Session, model: Type[Base], col_name: str, prefijo: str, count: int
+) -> list[str]:
+    """Genera N códigos consecutivos en un solo lookup.
+
+    Crítico para casos donde múltiples registros del mismo prefijo se crean
+    en la misma transacción (ej: venta con múltiples items del mismo tipo).
+    Usar next_codigo() en loop daría duplicados porque cada llamada lee max
+    desde DB sin ver los pendientes.
+    """
+    if count <= 0:
+        return []
+    base = _max_existing(db, model, col_name, prefijo)
+    return [_format_codigo(prefijo, base + i) for i in range(1, count + 1)]
