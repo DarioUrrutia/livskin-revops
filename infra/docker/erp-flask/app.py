@@ -8,6 +8,7 @@ from routes.api_cliente import bp as cliente_bp
 from routes.api_config import bp as config_bp
 from routes.api_dashboard import bp as dashboard_bp
 from routes.api_gasto import bp as gasto_bp
+from routes.api_libro import bp as libro_bp
 from routes.api_pagos import bp as pagos_bp
 from routes.api_venta import bp as venta_bp
 
@@ -22,6 +23,7 @@ def create_app() -> Flask:
     flask_app.register_blueprint(config_bp)
     flask_app.register_blueprint(dashboard_bp)
     flask_app.register_blueprint(gasto_bp)
+    flask_app.register_blueprint(libro_bp)
     flask_app.register_blueprint(pagos_bp)
     flask_app.register_blueprint(venta_bp)
 
