@@ -1,7 +1,9 @@
 """Rutas /admin/* — solo accesibles por rol admin (ADR-0026 + ADR-0027).
 
-Hoy: dashboard del audit log con filtros + paginación + export CSV.
-Próximo: /admin/users, /admin/sessions, /admin/system-health.
+Endpoints:
+- /admin/audit-log              — dashboard audit log (filtros + CSV)
+- /admin/audit-log/export.csv
+- /admin/system-health          — dashboard cross-VPS sensors (Bloque 0.4)
 """
 import csv
 import io
@@ -11,7 +13,7 @@ from flask import Blueprint, Response, render_template, request
 
 from db import session_scope
 from middleware.auth_middleware import require_role
-from services import audit_service
+from services import audit_service, infra_snapshot_service
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -150,3 +152,34 @@ def _json_short(value) -> str:  # type: ignore[no-untyped-def]
         return json.dumps(value, ensure_ascii=False, default=str)
     except (TypeError, ValueError):
         return str(value)
+
+
+@bp.get("/system-health")
+@require_role("admin")
+def system_health_view():  # type: ignore[no-untyped-def]
+    """Dashboard cross-VPS — última snapshot de cada VPS (Bloque 0.4)."""
+    with session_scope() as db:
+        latest = infra_snapshot_service.latest_per_vps(db)
+        snapshots = []
+        for alias, snap in latest.items():
+            if snap is None:
+                snapshots.append({"alias": alias, "error": "sin snapshot todavía", "captured_at": None})
+                continue
+            snapshots.append({
+                "alias": snap.vps_alias,
+                "role": snap.vps_role,
+                "captured_at": snap.captured_at.strftime("%Y-%m-%d %H:%M:%S UTC") if snap.captured_at else "",
+                "uptime_h": round((snap.uptime_seconds or 0) / 3600, 1),
+                "disk_pct": float(snap.disk_pct) if snap.disk_pct is not None else None,
+                "disk_used_gb": float(snap.disk_used_gb) if snap.disk_used_gb is not None else None,
+                "disk_total_gb": float(snap.disk_total_gb) if snap.disk_total_gb is not None else None,
+                "ram_pct": float(snap.ram_pct) if snap.ram_pct is not None else None,
+                "ram_used_mb": snap.ram_used_mb,
+                "ram_total_mb": snap.ram_total_mb,
+                "containers_count": snap.containers_count,
+                "last_deploy_sha": snap.last_deploy_sha,
+                "error": snap.error,
+                "raw": snap.raw_payload,
+            })
+
+    return render_template("admin_system_health.html", snapshots=snapshots)

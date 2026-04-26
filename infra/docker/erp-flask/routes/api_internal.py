@@ -115,9 +115,95 @@ def internal_health():  # type: ignore[no-untyped-def]
         return jsonify({"status": "degraded", "error": str(e)}), 503
 
 
+@bp.get("/internal/system-state")
+def internal_system_state():  # type: ignore[no-untyped-def]
+    """Snapshot detallado del estado del VPS 3 (Bloque 0.4).
+
+    Mismo schema que livskin-sensor:9100/api/system-state — para uniformidad
+    el recolector cross-VPS puede consumir tanto este endpoint como el de
+    los containers livskin-sensor en VPS 1 y 2.
+    """
+    _check_internal_token()
+
+    import os
+    import socket
+    import subprocess
+    from pathlib import Path
+
+    try:
+        import psutil  # type: ignore
+    except ImportError:
+        psutil = None  # type: ignore
+
+    def _disk():  # type: ignore[no-untyped-def]
+        if psutil is None:
+            return {"error": "psutil no instalado"}
+        u = psutil.disk_usage("/")
+        return {
+            "total_gb": round(u.total / 1024**3, 2),
+            "used_gb": round(u.used / 1024**3, 2),
+            "free_gb": round(u.free / 1024**3, 2),
+            "percent": u.percent,
+        }
+
+    def _ram():  # type: ignore[no-untyped-def]
+        if psutil is None:
+            return {"error": "psutil no instalado"}
+        m = psutil.virtual_memory()
+        return {
+            "total_mb": round(m.total / 1024**2),
+            "used_mb": round(m.used / 1024**2),
+            "available_mb": round(m.available / 1024**2),
+            "percent": m.percent,
+        }
+
+    def _uptime() -> int:
+        if psutil is not None:
+            import time as _time
+            return int(_time.time() - psutil.boot_time())
+        try:
+            with open("/proc/uptime", encoding="utf-8") as f:
+                return int(float(f.read().split()[0]))
+        except OSError:
+            return 0
+
+    def _last_sha() -> str:
+        head = Path("/repo/.git/HEAD")
+        if not head.exists():
+            return "unknown"
+        try:
+            content = head.read_text(encoding="utf-8").strip()
+            if content.startswith("ref:"):
+                ref_path = Path("/repo/.git") / content.split(" ", 1)[1].strip()
+                if ref_path.exists():
+                    return ref_path.read_text(encoding="utf-8").strip()[:7]
+            return content[:7]
+        except OSError:
+            return "unknown"
+
+    def _containers():  # type: ignore[no-untyped-def]
+        # Container erp-flask no tiene acceso a docker.sock por seguridad,
+        # así que retornamos lista vacía. El livskin-sensor (que SÍ tiene
+        # acceso) reportará containers de VPS 2.
+        return []
+
+    return jsonify({
+        "vps_alias": os.environ.get("VPS_ALIAS", socket.gethostname()),
+        "vps_role": "vps3-erp",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "uptime_seconds": _uptime(),
+        "disk": _disk(),
+        "ram": _ram(),
+        "containers": _containers(),
+        "host_services": [],
+        "last_deploy_sha": _last_sha(),
+    })
+
+
 # Asegurar que estos endpoints estén en allowlist del middleware auth
 def register_public_endpoints() -> None:
     """Marca los endpoints públicos (sin sesión bcrypt) en el middleware."""
     PUBLIC_ENDPOINTS.add("api_internal.system_map_json")
     PUBLIC_ENDPOINTS.add("api_internal.receive_audit_event")
     PUBLIC_ENDPOINTS.add("api_internal.internal_health")
+    PUBLIC_ENDPOINTS.add("api_internal.internal_system_state")

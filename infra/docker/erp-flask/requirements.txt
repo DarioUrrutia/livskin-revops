@@ -11,6 +11,8 @@ gunicorn==23.0.0
 python-dateutil==2.9.0
 openpyxl==3.1.5
 PyYAML==6.0.2
+psutil==6.1.0
+requests==2.32.3
 pytest==8.3.3
 pytest-cov==5.0.0
 pytest-mock==3.14.0

@@ -1,0 +1,46 @@
+# livskin-sensor — sensor uniforme cross-VPS (Bloque 0.4)
+#
+# Despliegue:
+# - VPS 2 (livskin-ops): este compose se copia a /srv/livskin-revops/infra/
+#   docker/vps2-ops/livskin-sensor/ y deploy-vps2.yml lo levanta.
+# - VPS 3 (livskin-erp): el endpoint /api/system-state vive directo en
+#   erp-flask (no requiere container separado).
+# - VPS 1 (livskin-wp): no tiene docker — usa sensor.py via systemd
+#   (ver infra/docker/vps1-wp/install.sh para setup).
+#
+# El sensor expone 9100 al host bind 127.0.0.1 (no público); para que el
+# recolector cross-VPS pueda llegarle, hay que abrir UFW en cada VPS:
+#   ufw allow from 10.114.0.0/20 to any port 9100
+
+services:
+  livskin-sensor:
+    build:
+      context: .
+    image: livskin/sensor:latest
+    container_name: livskin-sensor
+    restart: unless-stopped
+    environment:
+      - VPS_ALIAS=${VPS_ALIAS:-unknown}
+      - VPS_ROLE=${VPS_ROLE:-unknown}
+      - AUDIT_INTERNAL_TOKEN=${AUDIT_INTERNAL_TOKEN}
+      - REPO_PATH=/repo
+    volumes:
+      # Necesario para reportar containers Docker corriendo
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Necesario para reportar último deploy SHA
+      - /srv/livskin-revops:/repo:ro
+    ports:
+      # Bind a 0.0.0.0 para que recolector via VPC pueda alcanzarlo.
+      # UFW del host bloquea conexiones que no vengan de 10.114.0.0/20.
+      - "9100:9100"
+    networks:
+      - revops_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9100/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  revops_net:
+    external: true

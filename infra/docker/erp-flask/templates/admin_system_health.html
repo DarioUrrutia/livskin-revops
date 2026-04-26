@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>System Health — Livskin ERP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #1a1a1a;
+            padding: 1.5rem;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        header h1 { font-size: 1.4rem; }
+        header .meta { font-size: 0.85rem; color: #666; }
+        header .meta a { color: #4a6cf7; text-decoration: none; margin-left: 1rem; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 1rem;
+        }
+        .card {
+            background: #fff;
+            padding: 1.25rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border-left: 4px solid #4a6cf7;
+        }
+        .card.error { border-left-color: #b91c1c; }
+        .card.warn { border-left-color: #d97706; }
+        .card.ok { border-left-color: #059669; }
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+        }
+        .card .role {
+            font-size: 0.78rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+        .card .timestamp {
+            font-size: 0.78rem;
+            color: #888;
+            margin-bottom: 1rem;
+            font-family: monospace;
+        }
+        table { width: 100%; font-size: 0.85rem; }
+        th, td {
+            text-align: left;
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid #f0f1f4;
+        }
+        th { font-weight: 600; color: #666; font-size: 0.78rem; text-transform: uppercase; }
+        td.metric { font-family: monospace; }
+        .bar {
+            display: inline-block;
+            width: 80px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            position: relative;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+        .bar-fill { display: block; height: 100%; }
+        .bar-fill.green { background: #059669; }
+        .bar-fill.yellow { background: #d97706; }
+        .bar-fill.red { background: #b91c1c; }
+        .error-msg {
+            background: #fef2f2;
+            color: #b91c1c;
+            padding: 0.6rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+        details {
+            margin-top: 0.75rem;
+            font-size: 0.78rem;
+        }
+        details summary { cursor: pointer; color: #4a6cf7; }
+        pre {
+            background: #f8f9fb;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            margin-top: 0.4rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>System Health — cross-VPS</h1>
+        <div class="meta">
+            {% if current_user %}{{ current_user.nombre_completo }}{% endif %}
+            <a href="{{ url_for('views.index') }}">← formulario</a>
+            <a href="{{ url_for('admin.audit_log_view') }}">audit log</a>
+            <a href="{{ url_for('auth.logout') }}">cerrar sesión</a>
+        </div>
+    </header>
+
+    <div class="grid">
+    {% for s in snapshots %}
+    <div class="card {% if s.error %}error{% elif s.disk_pct and s.disk_pct >= 85 %}warn{% elif s.ram_pct and s.ram_pct >= 90 %}warn{% else %}ok{% endif %}">
+        <h2>{{ s.alias }}</h2>
+        <div class="role">{{ s.role or '—' }}</div>
+        <div class="timestamp">{{ s.captured_at or 'sin captura' }}</div>
+
+        {% if s.error %}
+            <div class="error-msg">{{ s.error }}</div>
+        {% else %}
+            <table>
+                <tr>
+                    <th>Uptime</th>
+                    <td class="metric">{{ s.uptime_h }}h</td>
+                </tr>
+                <tr>
+                    <th>Disk</th>
+                    <td class="metric">
+                        {{ s.disk_used_gb }} / {{ s.disk_total_gb }} GB ({{ s.disk_pct }}%)
+                        {% if s.disk_pct %}
+                        <span class="bar"><span class="bar-fill {% if s.disk_pct < 70 %}green{% elif s.disk_pct < 85 %}yellow{% else %}red{% endif %}" style="width: {{ s.disk_pct }}%"></span></span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>RAM</th>
+                    <td class="metric">
+                        {{ s.ram_used_mb }} / {{ s.ram_total_mb }} MB ({{ s.ram_pct }}%)
+                        {% if s.ram_pct %}
+                        <span class="bar"><span class="bar-fill {% if s.ram_pct < 70 %}green{% elif s.ram_pct < 90 %}yellow{% else %}red{% endif %}" style="width: {{ s.ram_pct }}%"></span></span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Containers</th>
+                    <td class="metric">{{ s.containers_count if s.containers_count is not none else '—' }}</td>
+                </tr>
+                <tr>
+                    <th>Deploy SHA</th>
+                    <td class="metric">{{ s.last_deploy_sha or '—' }}</td>
+                </tr>
+            </table>
+
+            {% if s.raw %}
+            <details>
+                <summary>raw payload</summary>
+                <pre>{{ s.raw | tojson(indent=2) }}</pre>
+            </details>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+    </div>
+</div>
+</body>
+</html>
