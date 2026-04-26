@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Audit Log — Livskin ERP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #1a1a1a;
+            padding: 1.5rem;
+            line-height: 1.4;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        header h1 { font-size: 1.4rem; }
+        header .meta { font-size: 0.85rem; color: #666; }
+        header .meta a { color: #4a6cf7; text-decoration: none; margin-left: 1rem; }
+        .filters {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            margin-bottom: 1rem;
+        }
+        .filters form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.6rem 0.75rem;
+            align-items: end;
+        }
+        .filters label { font-size: 0.75rem; color: #666; display: block; margin-bottom: 0.2rem; }
+        .filters input,
+        .filters select {
+            width: 100%;
+            padding: 0.4rem 0.55rem;
+            border: 1px solid #d8dde3;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        .filters .actions { display: flex; gap: 0.4rem; }
+        .filters button,
+        .filters a.btn {
+            padding: 0.45rem 0.85rem;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .filters a.btn-secondary { background: #6b7280; }
+        .filters a.btn-export { background: #059669; }
+        .stats {
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 0.75rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            font-size: 0.82rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.55rem 0.7rem;
+            border-bottom: 1px solid #f0f1f4;
+        }
+        th {
+            background: #f8f9fb;
+            font-weight: 600;
+            color: #444;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafbfc; }
+        td.action-success { color: #059669; }
+        td.action-failure { color: #b91c1c; }
+        .tag {
+            display: inline-block;
+            padding: 0.1rem 0.45rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            background: #eef2ff;
+            color: #4338ca;
+            font-weight: 500;
+        }
+        .tag.tag-auth { background: #fef3c7; color: #92400e; }
+        .tag.tag-venta { background: #dcfce7; color: #166534; }
+        .tag.tag-pago { background: #dbeafe; color: #1e40af; }
+        .tag.tag-gasto { background: #fce7f3; color: #9d174d; }
+        .tag.tag-cliente { background: #f3e8ff; color: #6b21a8; }
+        details summary { cursor: pointer; color: #4a6cf7; font-size: 0.78rem; list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
+        details[open] summary { color: #1e40af; }
+        pre {
+            background: #f8f9fb;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            margin-top: 0.3rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-width: 480px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.4rem;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+        .pagination a,
+        .pagination span {
+            padding: 0.35rem 0.65rem;
+            border: 1px solid #d8dde3;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #444;
+            background: #fff;
+        }
+        .pagination .current { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+        .pagination .disabled { opacity: 0.3; pointer-events: none; }
+        .empty {
+            text-align: center;
+            padding: 2rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Audit Log — Livskin ERP</h1>
+        <div class="meta">
+            {% if current_user %}{{ current_user.nombre_completo }} · {{ current_user.rol }}{% endif %}
+            <a href="{{ url_for('views.index') }}">← formulario</a>
+            <a href="{{ url_for('auth.logout') }}">cerrar sesión</a>
+        </div>
+    </header>
+
+    <div class="filters">
+        <form method="GET" action="{{ url_for('admin.audit_log_view') }}">
+            <div>
+                <label>Desde</label>
+                <input type="date" name="fecha_desde" value="{{ filters_raw.fecha_desde }}">
+            </div>
+            <div>
+                <label>Hasta</label>
+                <input type="date" name="fecha_hasta" value="{{ filters_raw.fecha_hasta }}">
+            </div>
+            <div>
+                <label>Acción</label>
+                <select name="action">
+                    <option value="">— todas —</option>
+                    {% for a in distinct.actions %}
+                    <option value="{{ a }}" {% if filters_raw.action == a %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Categoría</label>
+                <select name="category">
+                    <option value="">— todas —</option>
+                    {% for c in distinct.categories %}
+                    <option value="{{ c }}" {% if filters_raw.category == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Usuario</label>
+                <select name="user_username">
+                    <option value="">— todos —</option>
+                    {% for u in distinct.users %}
+                    <option value="{{ u }}" {% if filters_raw.user_username == u %}selected{% endif %}>{{ u }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Resultado</label>
+                <select name="result">
+                    <option value="">— ambos —</option>
+                    <option value="success" {% if filters_raw.result == "success" %}selected{% endif %}>success</option>
+                    <option value="failure" {% if filters_raw.result == "failure" %}selected{% endif %}>failure</option>
+                </select>
+            </div>
+            <div>
+                <label>Entity ID</label>
+                <input type="text" name="entity_id" placeholder="LIVTRAT0001" value="{{ filters_raw.entity_id }}">
+            </div>
+            <div class="actions">
+                <button type="submit">Filtrar</button>
+                <a href="{{ url_for('admin.audit_log_view') }}" class="btn btn-secondary">Limpiar</a>
+                {% set qs = request.query_string.decode() %}
+                <a href="{{ url_for('admin.audit_log_export') }}{% if qs %}?{{ qs }}{% endif %}" class="btn btn-export">Export CSV</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="stats">
+        {{ total }} eventos &middot; mostrando página {{ page }} de {{ total_pages or 1 }} ({{ entries|length }} de {{ per_page }} por página)
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Cuándo (UTC)</th>
+                <th>Acción</th>
+                <th>Usuario</th>
+                <th>IP</th>
+                <th>Entity</th>
+                <th>Resultado</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if entries %}
+            {% for e in entries %}
+            <tr>
+                <td style="white-space: nowrap; font-family: monospace; font-size: 0.78rem;">{{ e.occurred_at }}</td>
+                <td>
+                    <span class="tag tag-{{ e.category }}">{{ e.action }}</span>
+                </td>
+                <td>{{ e.user_username or '—' }}{% if e.user_role %} <small style="color:#888">({{ e.user_role }})</small>{% endif %}</td>
+                <td style="font-family: monospace; font-size: 0.78rem;">{{ e.ip or '—' }}</td>
+                <td>{% if e.entity_type %}{{ e.entity_type }}{% if e.entity_id %} · <span style="font-family: monospace; font-size: 0.78rem;">{{ e.entity_id }}</span>{% endif %}{% else %}—{% endif %}</td>
+                <td class="action-{{ e.result }}">{{ e.result }}{% if e.error_detail %} <small>· {{ e.error_detail }}</small>{% endif %}</td>
+                <td>
+                    {% if e.before_state or e.after_state or e.metadata %}
+                    <details>
+                        <summary>ver</summary>
+                        {% if e.before_state %}<strong>before:</strong><pre>{{ e.before_state | tojson(indent=2) }}</pre>{% endif %}
+                        {% if e.after_state %}<strong>after:</strong><pre>{{ e.after_state | tojson(indent=2) }}</pre>{% endif %}
+                        {% if e.metadata %}<strong>metadata:</strong><pre>{{ e.metadata | tojson(indent=2) }}</pre>{% endif %}
+                    </details>
+                    {% else %}—{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="7" class="empty">No hay entries que coincidan con los filtros.</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    {% if total_pages and total_pages > 1 %}
+    {% set qs_args = {} %}
+    {% set _ = qs_args.update(filters_raw) %}
+    <div class="pagination">
+        {% if page > 1 %}
+            <a href="{{ url_for('admin.audit_log_view', page=page-1, per_page=per_page, **filters_raw) }}">← anterior</a>
+        {% else %}
+            <span class="disabled">← anterior</span>
+        {% endif %}
+        <span class="current">{{ page }} / {{ total_pages }}</span>
+        {% if page < total_pages %}
+            <a href="{{ url_for('admin.audit_log_view', page=page+1, per_page=per_page, **filters_raw) }}">siguiente →</a>
+        {% else %}
+            <span class="disabled">siguiente →</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

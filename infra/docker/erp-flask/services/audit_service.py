@@ -1,8 +1,10 @@
-"""Audit service — escribe eventos inmutables en audit_log (ADR-0027)."""
+"""Audit service — escribe + consulta eventos inmutables en audit_log (ADR-0027)."""
 import logging
+from datetime import date, datetime, time, timezone
 from typing import Any, Optional
 
 from flask import g, has_request_context, request
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from models.audit_log import AuditLog
@@ -144,3 +146,82 @@ def log_isolated(
             log(db, action=action, **kwargs)
     except Exception:
         logger.exception("audit_isolated: error con %s", action)
+
+
+def query_audit(
+    db: Session,
+    *,
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+    action: Optional[str] = None,
+    category: Optional[str] = None,
+    user_username: Optional[str] = None,
+    result: Optional[str] = None,
+    entity_type: Optional[str] = None,
+    entity_id: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 50,
+) -> tuple[list[AuditLog], int]:
+    """Lista entries del audit_log filtrados + paginados.
+
+    Returns: (entries, total_count) — total_count para calcular num páginas.
+    """
+    stmt = select(AuditLog)
+    count_stmt = select(func.count()).select_from(AuditLog)
+
+    if fecha_desde is not None:
+        ts_desde = datetime.combine(fecha_desde, time.min, tzinfo=timezone.utc)
+        stmt = stmt.where(AuditLog.occurred_at >= ts_desde)
+        count_stmt = count_stmt.where(AuditLog.occurred_at >= ts_desde)
+    if fecha_hasta is not None:
+        ts_hasta = datetime.combine(fecha_hasta, time.max, tzinfo=timezone.utc)
+        stmt = stmt.where(AuditLog.occurred_at <= ts_hasta)
+        count_stmt = count_stmt.where(AuditLog.occurred_at <= ts_hasta)
+    if action:
+        stmt = stmt.where(AuditLog.action == action)
+        count_stmt = count_stmt.where(AuditLog.action == action)
+    if category:
+        stmt = stmt.where(AuditLog.category == category)
+        count_stmt = count_stmt.where(AuditLog.category == category)
+    if user_username:
+        stmt = stmt.where(AuditLog.user_username == user_username)
+        count_stmt = count_stmt.where(AuditLog.user_username == user_username)
+    if result:
+        stmt = stmt.where(AuditLog.result == result)
+        count_stmt = count_stmt.where(AuditLog.result == result)
+    if entity_type:
+        stmt = stmt.where(AuditLog.entity_type == entity_type)
+        count_stmt = count_stmt.where(AuditLog.entity_type == entity_type)
+    if entity_id:
+        stmt = stmt.where(AuditLog.entity_id.ilike(f"%{entity_id}%"))
+        count_stmt = count_stmt.where(AuditLog.entity_id.ilike(f"%{entity_id}%"))
+
+    total = db.execute(count_stmt).scalar_one()
+
+    stmt = stmt.order_by(AuditLog.occurred_at.desc()).offset((page - 1) * per_page).limit(per_page)
+    entries = list(db.execute(stmt).scalars().all())
+
+    return entries, total
+
+
+def list_distinct_values(db: Session) -> dict[str, list[str]]:
+    """Lista valores únicos para los filtros del dropdown del dashboard."""
+    actions = [
+        r[0] for r in db.execute(
+            select(AuditLog.action).distinct().order_by(AuditLog.action)
+        ).all()
+    ]
+    categories = [
+        r[0] for r in db.execute(
+            select(AuditLog.category).distinct().order_by(AuditLog.category)
+        ).all()
+    ]
+    users = [
+        r[0] for r in db.execute(
+            select(AuditLog.user_username)
+            .where(AuditLog.user_username.is_not(None))
+            .distinct()
+            .order_by(AuditLog.user_username)
+        ).all()
+    ]
+    return {"actions": actions, "categories": categories, "users": users}

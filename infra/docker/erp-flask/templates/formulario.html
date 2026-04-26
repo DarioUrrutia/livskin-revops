@@ -232,6 +232,10 @@
         {% if current_user %}
         <div style="position: absolute; top: 8px; right: 12px; font-size: 0.8rem; color: #666;">
             <span>{{ current_user.nombre_completo }}</span>
+            {% if current_user.rol == 'admin' %}
+            &middot;
+            <a href="{{ url_for('admin.audit_log_view') }}" style="color: #059669; text-decoration: none;">audit log</a>
+            {% endif %}
             &middot;
             <a href="{{ url_for('auth.change_password_get') }}" style="color: #4a6cf7; text-decoration: none;">cambiar contraseña</a>
             &middot;

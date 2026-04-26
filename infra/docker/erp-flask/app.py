@@ -3,6 +3,7 @@ from flask import Flask, g
 
 from config import settings
 from middleware.auth_middleware import init_auth_middleware
+from routes.admin import bp as admin_bp
 from routes.api_catalogo import bp as catalogo_bp
 from routes.api_client_lookup import bp as client_lookup_bp
 from routes.api_cliente import bp as cliente_bp
@@ -22,6 +23,7 @@ def create_app() -> Flask:
     flask_app.config["SECRET_KEY"] = settings.flask_secret_key
 
     flask_app.register_blueprint(auth_bp)
+    flask_app.register_blueprint(admin_bp)
     flask_app.register_blueprint(views_bp)
     flask_app.register_blueprint(legacy_forms_bp)
     flask_app.register_blueprint(client_lookup_bp)
