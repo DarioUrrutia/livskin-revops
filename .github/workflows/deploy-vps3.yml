@@ -65,7 +65,10 @@ jobs:
         env:
           DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
         run: |
-          doctl auth init --access-token "$DO_API_TOKEN"
+          # Strip whitespace/newlines del token (paste-from-clipboard puede agregar \n)
+          TOKEN=$(printf '%s' "$DO_API_TOKEN" | tr -d '[:space:]')
+          [ -z "$TOKEN" ] && { echo "ERROR: DO_API_TOKEN vacio"; exit 1; }
+          doctl auth init --access-token "$TOKEN"
           doctl account get | head -3
 
       - name: Pre-deploy snapshot
@@ -190,7 +193,7 @@ jobs:
           SNAPSHOT_ID: ${{ steps.snapshot.outputs.snapshot_id }}
         run: |
           echo "=== ROLLBACK AUTOMATICO VPS 3 ==="
-          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/doctl-auth.sh "$DO_API_TOKEN"
           bash .github/scripts/do-snapshot.sh restore livskin-vps-erp "$SNAPSHOT_ID"
 
       - name: Cleanup old snapshots
@@ -198,7 +201,7 @@ jobs:
         env:
           DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
         run: |
-          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/doctl-auth.sh "$DO_API_TOKEN"
           bash .github/scripts/do-snapshot.sh cleanup livskin-vps-erp pre-deploy
 
       - name: Audit deploy event
