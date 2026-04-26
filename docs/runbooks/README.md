@@ -1,80 +1,86 @@
-# Runbooks — Procedimientos operativos
+---
+type: runbooks-index
+version: 2.0
+last_updated: 2026-04-26
+authoritative: true
+description: Índice de runbooks operativos. Cada runbook tiene frontmatter YAML ejecutable que el 5to agente (Infra+Security) puede consumir como skill MCP.
+---
 
-Procedimientos ejecutables paso-a-paso para operaciones rutinarias y de emergencia.
+# 📘 Runbooks Operativos — Livskin
 
-## Runbooks planeados
+## Estructura de cada runbook
 
-### Operaciones rutinarias
+Todos los runbooks tienen frontmatter YAML estructurado:
 
-| Runbook | Cuándo se ejecuta | Estado |
-|---|---|---|
-| `monthly-audit.md` | 1 del mes | ⏳ Fase 1 |
-| `key-rotation.md` | Trimestral por key, o tras incidente | ⏳ Fase 0 |
-| `backup-restore-test.md` | Trimestral | ⏳ Fase 2 |
-| `ssl-cert-renewal-check.md` | Pre-expiración | ⏳ Fase 1 |
-| `adr-new-decision.md` | Al tomar decisión arquitectónica | ⏳ Fase 0 |
-| `session-log-writing.md` | Al cerrar sesión de trabajo | ⏳ Fase 0 |
-
-### Deploys y migraciones
-
-| Runbook | Cuándo | Estado |
-|---|---|---|
-| `deploy-to-vps.md` | Cada cambio en infra | ⏳ Fase 1 |
-| `erp-migration-cutover.md` | Fase 2 única vez | ⏳ Fase 2 |
-| `erp-rollback-to-render.md` | Si cutover falla | ⏳ Fase 2 |
-| `database-migration-alembic.md` | Cada cambio schema | ⏳ Fase 1 |
-
-### Respuesta a incidentes
-
-| Runbook | Cuándo | Estado |
-|---|---|---|
-| `incident-response-template.md` | Plantilla para cualquier P0/P1 | ⏳ Fase 0 |
-| `vps-down.md` | VPS no responde | ⏳ Fase 1 |
-| `database-corruption.md` | Data corrupta detectada | ⏳ Fase 2 |
-| `api-key-leaked.md` | Fuga confirmada de credencial | ⏳ Fase 0 |
-| `ddos-mitigation.md` | Ataque sostenido detectado | ⏳ Fase 3 |
-| `conversation-agent-wrong-response.md` | Agente da respuesta dañina | ⏳ Fase 4 |
-
-### Compliance
-
-| Runbook | Cuándo | Estado |
-|---|---|---|
-| `patient-data-supression.md` | Paciente pide supresión (Ley 29733) | ⏳ Fase 6 |
-| `data-access-request.md` | Paciente pide copia de sus datos | ⏳ Fase 6 |
-
-## Formato de runbook
-
-Cada runbook sigue esta estructura:
-
-```markdown
-# Runbook: <Título>
-
-**Cuándo ejecutar:** ...
-**Tiempo estimado:** ...
-**Pre-requisitos:** ...
-**Quién ejecuta:** ...
-
-## Pasos
-
-1. Paso 1 con comando exacto
-2. Paso 2
-...
-
-## Validación
-
-Cómo verificar que funcionó.
-
-## Si falla
-
-Plan B.
-
-## Registro
-
-Dónde queda evidencia (docs/audits/, docs/sesiones/, etc.)
+```yaml
+---
+runbook: <nombre-kebab-case>
+severity: low | medium | high | critical
+auto_executable: true | false           # ¿el agente puede ejecutar sin autorización?
+trigger:
+  - "<condición que dispara este runbook>"
+required_secrets:                        # qué secretos hace falta tener
+  - SECRET_NAME
+commands_diagnose:                       # comandos read-only para identificar
+  - "comando 1"
+commands_fix:                            # comandos que aplican el fix
+  - "comando 1"
+commands_verify:                         # confirmar que el fix funcionó
+  - "comando 1"
+escalation:
+  if_fail: <quién o qué hacer>
+related_skills:                          # skills MCP que usan este runbook
+  - skill-name
+---
 ```
 
-## Ver también
+## Catálogo Bloque 0.6 (12 runbooks ejecutables)
 
-- [docs/decisiones/](../decisiones/) — ADRs que motivan estos runbooks
-- [docs/seguridad/](../seguridad/) — políticas marco
-- [docs/audits/](../audits/) — outputs de ejecuciones
+### Operacional
+
+| # | Runbook | Severity | Auto |
+|---|---|---|---|
+| 1 | [ssl-cert-expiring](ssl-cert-expiring.md) | medium | ✅ |
+| 2 | [disk-full](disk-full.md) | high | ⚠️ partial |
+| 3 | [container-crashloop](container-crashloop.md) | high | ⚠️ |
+| 4 | [postgres-connections-exhausted](postgres-connections-exhausted.md) | high | ❌ |
+| 5 | [n8n-workflow-failing](n8n-workflow-failing.md) | medium | ❌ |
+| 6 | [backup-failed](backup-failed.md) | high | ⚠️ |
+
+### Disaster Recovery
+
+| # | Runbook | Severity | Auto |
+|---|---|---|---|
+| 7 | [migration-failed-mid-deploy](migration-failed-mid-deploy.md) | critical | ❌ |
+| 8 | [vpc-down](vpc-down.md) | critical | ❌ |
+| 9 | [disaster-recovery-vps1](disaster-recovery-vps1.md) | critical | ❌ |
+| 10 | [disaster-recovery-vps2](disaster-recovery-vps2.md) | critical | ❌ |
+| 11 | [disaster-recovery-vps3](disaster-recovery-vps3.md) | critical | ❌ |
+
+### Seguridad
+
+| # | Runbook | Severity | Auto |
+|---|---|---|---|
+| 12 | [credential-leaked](credential-leaked.md) | critical | ❌ |
+
+## Runbooks históricos (pre-Bloque 0.6)
+
+| Runbook | Estado |
+|---|---|
+| [obsidian-setup](obsidian-setup.md) | ✅ Fase 1 |
+
+## Cómo el agente IA usa esto
+
+El 5to agente consume estos runbooks así:
+
+1. Recibe alerta (ej: "disk_pct=92% en livskin-wp")
+2. Busca runbook con trigger matching
+3. Si `auto_executable: true`: ejecuta diagnose → fix → verify, reporta resumen
+4. Si `auto_executable: false`: ejecuta solo diagnose, propone fix con autorización pendiente
+
+## Convenciones
+
+- **`required_secrets`** se carga de Bitwarden o GitHub Secrets
+- **`commands_diagnose`** debe ser idempotente y read-only
+- **`commands_fix`** debe ser idempotente cuando posible
+- **`commands_verify`** debe ser determinístico
