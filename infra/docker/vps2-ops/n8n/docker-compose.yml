@@ -1,0 +1,34 @@
+# n8n — orquestador de workflows (ADR-0005)
+#
+# Sirve flow.livskin.site (vía nginx-vps2 con TLS).
+# Webhooks recibidos: SureForms POST, WhatsApp Cloud API (Fase 4).
+#
+# Volumen: ./data/ contiene database.sqlite + workflows + credentials.
+# Backup: tarball nightly de ./data/ (cross-VPS).
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: always
+
+    environment:
+      - N8N_HOST=${N8N_HOST:-flow.livskin.site}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-https://flow.livskin.site}
+      # Habilitar autenticación basic en futuro:
+      # - N8N_BASIC_AUTH_ACTIVE=true
+      # - N8N_BASIC_AUTH_USER=${N8N_BASIC_USER}
+      # - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_PASS}
+
+    volumes:
+      - ./data:/home/node/.n8n
+
+    networks:
+      - revops_net
+
+networks:
+  revops_net:
+    external: true

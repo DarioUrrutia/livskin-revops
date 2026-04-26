@@ -1,0 +1,31 @@
+# Metabase — dashboards de analítica
+#
+# Sirve dash.livskin.site (vía nginx-vps2 con TLS).
+# Backend: usa la database `metabase` en postgres-analytics (mismo VPS) para
+# guardar configs, dashboards, queries.
+#
+# Conecta a las DBs operacionales (analytics + livskin_erp via DO VPC) para
+# pull de data en queries.
+#
+# Puerto 3000 expuesto solo a 127.0.0.1 (loopback) — el público va via nginx.
+
+services:
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    restart: always
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=${ANALYTICS_DB_USER:-analytics_user}
+      - MB_DB_PASS=${ANALYTICS_DB_PASSWORD}  # Bitwarden
+      - MB_DB_HOST=postgres-analytics
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - revops_net
+
+networks:
+  revops_net:
+    external: true

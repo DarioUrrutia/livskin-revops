@@ -1,0 +1,32 @@
+# Postgres-analytics — warehouse OLAP de Livskin
+#
+# Hosts 2 bases:
+# - `analytics` (analytics_user owner) — tablas warehouse: leads, events,
+#   opportunities, ads_metrics, llm_costs, conversation_summary, crm_stages
+# - `metabase` — backend interno de Metabase (configs + dashboards)
+#
+# NO se expone puerto al host — solo accesible vía network revops_net
+# (metabase, n8n) y vía DO VPC desde VPS 3 (cross-VPS queries).
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-analytics
+    restart: always
+    environment:
+      - POSTGRES_DB=analytics
+      - POSTGRES_USER=${ANALYTICS_DB_USER:-analytics_user}
+      - POSTGRES_PASSWORD=${ANALYTICS_DB_PASSWORD}  # Bitwarden
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - revops_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ANALYTICS_DB_USER:-analytics_user} -d analytics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  revops_net:
+    external: true
