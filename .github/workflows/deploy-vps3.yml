@@ -3,6 +3,7 @@ name: Deploy to VPS 3 (livskin-vps-erp)
 # VPS 3 hosts: ERP refactorizado + Postgres + pgvector (brain) + embeddings + nginx
 # Path: /srv/livskin-revops/infra/docker/<servicio>/ (paths legacy — ver
 # infra/docker/README.md sobre asimetria intencional con vps2-ops/)
+# Last validated: 2026-04-26 — token v2 con image:create scope correcto
 
 on:
   push:
