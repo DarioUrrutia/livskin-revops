@@ -35,8 +35,8 @@ SEED_USERS = [
     },
     {
         "cod_usuario": "USR0002",
-        "username": "doctora",
-        "nombre_completo": "Doctora Livskin",
+        "username": "claudia",
+        "nombre_completo": "Claudia Delgado",
         "email": None,
         "rol": "operadora",
     },
