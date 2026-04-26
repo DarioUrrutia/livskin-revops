@@ -718,6 +718,7 @@ ai_agent_consumption:
 | Fecha | Cambio | SHA |
 |---|---|---|
 | 2026-04-26 | v1.0 — creación inicial post-Bloque 0.3 | TBD |
+| 2026-04-26 | v1.1 — Bloque 0 activado en producción: sensors live VPS 1 (systemd) + VPS 2 (container) + VPS 3 (endpoint), recolector cron 5min + tabla `infra_snapshots` con data real, agent_budgets seedados $134/mes, audit_internal_token deployed, UFW puerto 9100 abierto cross-VPS | 4adfc79 |
 
 ---
 
