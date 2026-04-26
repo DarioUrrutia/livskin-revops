@@ -19,6 +19,10 @@ services:
       ERP_DB_USER: postgres
     ports:
       - "127.0.0.1:8000:8000"
+    volumes:
+      # Repo root mounted read-only para que el endpoint /api/system-map.json
+      # pueda leer docs/sistema-mapa.md sin rebuild de la imagen.
+      - ../../../:/repo:ro
     networks:
       - data_net
     healthcheck:

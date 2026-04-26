@@ -1,0 +1,240 @@
+openapi: 3.0.3
+info:
+  title: Livskin System API
+  version: 1.0.0
+  description: |
+    API uniforme expuesta por los 3 VPS de Livskin para observabilidad
+    cross-VPS y operación AI-friendly.
+
+    **Implementación:**
+    - VPS 1 (livskin-wp): `livskin-sensor` systemd service en puerto 9100
+    - VPS 2 (livskin-ops): container `livskin-sensor` en puerto 9100
+    - VPS 3 (livskin-erp): endpoints en `erp-flask` (puerto 8000) — los
+      mismos paths con prefix `/api/internal/`
+
+    **Auth:**
+    - `/api/health` — público (liveness solamente)
+    - `/api/system-state` — header `X-Internal-Token`
+    - `/api/internal/audit-event` — header `X-Internal-Token`
+    - `/api/system-map.json` — público (sin secretos)
+
+    **Whitelist UFW:** puerto 9100 solo accesible desde DO VPC `10.114.0.0/20`.
+
+  contact:
+    name: Livskin Ops
+    url: https://github.com/DarioUrrutia/livskin-revops
+
+servers:
+  - url: http://10.114.0.3:9100
+    description: VPS 1 (livskin-wp) sensor
+  - url: http://10.114.0.2:9100
+    description: VPS 2 (livskin-ops) sensor
+  - url: https://erp.livskin.site
+    description: VPS 3 (livskin-erp) — endpoints en erp-flask con prefix /api/internal/
+
+components:
+  securitySchemes:
+    InternalToken:
+      type: apiKey
+      in: header
+      name: X-Internal-Token
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, service, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        service:
+          type: string
+          example: livskin-sensor
+        vps_alias:
+          type: string
+        vps_role:
+          type: string
+          enum: [vps1-wp, vps2-ops, vps3-erp]
+        timestamp:
+          type: string
+          format: date-time
+
+    SystemState:
+      type: object
+      required: [vps_alias, vps_role, timestamp, uptime_seconds, disk, ram]
+      properties:
+        vps_alias:
+          type: string
+        vps_role:
+          type: string
+          enum: [vps1-wp, vps2-ops, vps3-erp]
+        timestamp:
+          type: string
+          format: date-time
+        uptime_seconds:
+          type: integer
+        disk:
+          $ref: '#/components/schemas/DiskInfo'
+        ram:
+          $ref: '#/components/schemas/RamInfo'
+        containers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerInfo'
+        host_services:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostService'
+        last_deploy_sha:
+          type: string
+          example: abc1234
+
+    DiskInfo:
+      type: object
+      properties:
+        total_gb: { type: number }
+        used_gb: { type: number }
+        free_gb: { type: number }
+        percent: { type: number }
+
+    RamInfo:
+      type: object
+      properties:
+        total_mb: { type: integer }
+        used_mb: { type: integer }
+        available_mb: { type: integer }
+        percent: { type: number }
+
+    ContainerInfo:
+      type: object
+      properties:
+        name: { type: string }
+        image: { type: string }
+        status: { type: string }
+        started_at: { type: string }
+
+    HostService:
+      type: object
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [active, inactive, failed, unknown] }
+        type: { type: string, enum: [systemd, docker] }
+
+    AuditEvent:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          example: infra.deploy_completed
+          description: Nombre del evento — debe estar en KNOWN_ACTIONS del audit_service o se loguea como warning
+        entity_type:
+          type: string
+          example: vps
+        entity_id:
+          type: string
+          example: livskin-vps-erp
+        result:
+          type: string
+          enum: [success, failure]
+          default: success
+        error_detail:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    SystemMap:
+      type: object
+      properties:
+        metadata:
+          type: object
+        vps:
+          type: array
+          items: { type: object }
+        containers:
+          type: array
+          items: { type: object }
+        cross_vps_connections:
+          type: array
+        dependency_matrix:
+          type: array
+        spofs:
+          type: array
+        public_urls:
+          type: array
+        backups:
+          type: array
+        secrets_inventory:
+          type: array
+        capacity:
+          type: array
+        ai_agent_consumption:
+          type: object
+
+paths:
+  /api/health:
+    get:
+      summary: Liveness check (sin auth)
+      operationId: getHealth
+      responses:
+        '200':
+          description: Servicio operativo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+        '503':
+          description: Servicio degradado
+
+  /api/system-state:
+    get:
+      summary: Snapshot detallado del VPS
+      operationId: getSystemState
+      security:
+        - InternalToken: []
+      responses:
+        '200':
+          description: Estado completo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SystemState' }
+        '403':
+          description: X-Internal-Token inválido
+        '503':
+          description: Token no configurado
+
+  /api/internal/audit-event:
+    post:
+      summary: Recibe eventos de infra (deploys, backups, alertas)
+      description: |
+        Solo expuesto en VPS 3 (erp-flask). Los workflows GHA y crons
+        de los 3 VPS POST aquí para persistir eventos en audit_log.
+      operationId: postAuditEvent
+      security:
+        - InternalToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuditEvent' }
+      responses:
+        '201':
+          description: Evento registrado
+        '400':
+          description: Body inválido (action faltante)
+        '403':
+          description: X-Internal-Token inválido
+
+  /api/system-map.json:
+    get:
+      summary: System map machine-readable (sin auth)
+      description: |
+        Solo expuesto en VPS 3 (erp-flask). Sirve docs/sistema-mapa.md
+        parseado como JSON estructurado. Cache 60s.
+      operationId: getSystemMap
+      responses:
+        '200':
+          description: System map estructurado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SystemMap' }

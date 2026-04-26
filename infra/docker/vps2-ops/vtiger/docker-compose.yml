@@ -1,0 +1,45 @@
+# Vtiger 8.2 — CRM master del lead digital (ADR-0015)
+#
+# Sirve crm.livskin.site (vía nginx-vps2 con TLS).
+# DB MariaDB en network aislada (vtiger_internal) — defensa-en-profundidad
+# (ADR-0003): ningún otro container puede tocarla, solo vtiger app.
+#
+# Stages pipeline (ADR-0012): nuevo → contactado → agendado → asistio →
+# cliente → perdido (5 stages + final state perdido).
+
+services:
+  vtiger:
+    image: vtigercrm/vtigercrm-8.2.0:latest
+    container_name: vtiger
+    restart: always
+    environment:
+      - DB_HOST=vtiger-db
+      - DB_PORT=3306
+      - DB_NAME=${VTIGER_DB_NAME:-livskin_db}
+      - DB_USER=${VTIGER_DB_USER:-livskin}
+      - DB_PASSWORD=${VTIGER_DB_PASSWORD}  # required, no default — Bitwarden
+    volumes:
+      - ./data:/var/www/html
+    networks:
+      - revops_net           # solo para que nginx pueda hacer proxy_pass
+      - vtiger_internal      # única forma de hablar con vtiger-db
+
+  vtiger-db:
+    image: mariadb:10.6
+    container_name: vtiger-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${VTIGER_DB_ROOT_PASSWORD}  # Bitwarden
+      - MYSQL_DATABASE=${VTIGER_DB_NAME:-livskin_db}
+      - MYSQL_USER=${VTIGER_DB_USER:-livskin}
+      - MYSQL_PASSWORD=${VTIGER_DB_PASSWORD}            # Bitwarden
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - vtiger_internal      # AISLADA — ningún otro container la toca
+
+networks:
+  revops_net:
+    external: true
+  vtiger_internal:
+    driver: bridge

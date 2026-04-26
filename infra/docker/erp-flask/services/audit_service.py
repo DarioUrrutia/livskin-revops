@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 # Lista canónica de actions reconocidas. Extender al agregar nuevos tipos.
+# Schema documentado en docs/audit-events-schema.md.
 KNOWN_ACTIONS = {
-    # Auth (7)
+    # Auth (8)
     "auth.login_success",
     "auth.login_failed",
     "auth.lockout_triggered",
@@ -53,6 +54,31 @@ KNOWN_ACTIONS = {
     # Webhooks (2)
     "webhook.form_submit_received",
     "webhook.whatsapp_received",
+    # Infra (Bloque 0.8) — eventos cross-system de operación de la plataforma
+    "infra.deploy_started",
+    "infra.deploy_completed",
+    "infra.deploy_failed",
+    "infra.deploy_rolled_back",
+    "infra.snapshot_created",
+    "infra.snapshot_restored",
+    "infra.backup_started",
+    "infra.backup_completed",
+    "infra.backup_verified",
+    "infra.backup_failed",
+    "infra.cert_renewed",
+    "infra.cert_warning",        # <14 días para expirar
+    "infra.healthcheck_red",     # un sensor reportó rojo
+    "infra.disk_warning",        # disk_pct >= 85
+    "infra.ram_warning",         # ram_pct >= 90
+    "infra.container_unhealthy", # restart count >= 3
+    "infra.dr_drill_completed",  # DR drill terminó
+    "infra.credential_rotated",  # rotación post credential-leaked
+    "infra.budget_warning",      # Bloque 0.10 — agente alcanzó threshold (default 80%)
+    "infra.budget_exceeded",     # Bloque 0.10 — agente superó hard limit
+    # Agent (Bloque 0.10) — uso de recursos LLM API
+    "agent.api_call_completed",  # call individual a Claude API persistido
+    "agent.api_call_blocked",    # llamada bloqueada por budget hard-limit
+    "admin.budget_changed",      # admin modificó agent_budgets
 }
 
 

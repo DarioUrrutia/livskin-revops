@@ -33,8 +33,9 @@ data/
 db/
 
 # --- Backups pulled localmente (pueden ser grandes) ---
-backups/
-!backups/.gitkeep
+/backups/
+!/backups/.gitkeep
+# Nota: solo `/backups/` en raíz se ignora — `infra/scripts/backups/` SÍ se versiona
 
 # --- Docker volumes y caches ---
 **/volumes/

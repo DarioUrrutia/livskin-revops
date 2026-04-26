@@ -25,60 +25,48 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🔴 Decidir destino de `erp-staging.livskin.site` (próxima sesión 2026-04-27)
-Hoy 2026-04-26, `erp.livskin.site` cambió de maintenance page → `proxy_pass` al container `erp-flask`. La URL `erp-staging.livskin.site` sigue sirviendo la maintenance page estática.
+### 🟡 Sesión estratégica — Estructura organizacional de agentes IA
+**Antes de Fase 5 (Brand Orchestrator).** Dario pidió pensar el sistema como organización empresarial: él CEO, agentes con rangos + funciones + subagentes + skills.
 
-**3 opciones a evaluar mañana:**
-- **A) Eliminar `erp-staging`** — Razonamiento: durante Fase 2-5 el ERP nuevo ESTÁ en validación interna (no producción real, Render sigue siendo producción). Tener `erp` y `erp-staging` apuntando a dos modos del mismo deploy puede confundir más que ayudar. Simplificar: solo `erp.livskin.site` hasta cutover de Fase 6.
-- **B) Apuntar `erp-staging` al mismo container** — Pragmático: alias DNS, sin DB separada. Útil si queremos URL distinta para "preview de cambios antes de mostrarlos a la doctora", pero hoy es la misma instancia.
-- **C) Implementar staging real con DB separada** — Robusto pero overkill ahora: `livskin_erp_staging` Postgres database adicional, container `erp-flask-staging` separado, deploys via branch. Cuesta tiempo de infra. Probable destino post-Fase 6.
+**Output esperado:**
+- ADR-0030 — Brand Orchestrator multi-agent architecture
+- `docs/agents/organization-chart.md` — organigrama + roles + rangos + cadencias reporting
+- Subdirs `docs/agents/<agent-name>/` con SKILL.md + prompts/ + tools.json + evals/ + cadence.md
+- Brand voice consolidado en `docs/brand/voice.md`
+- Approval flows + métricas de éxito por agente
 
-**Recomendación claude-code (no decidida):** A para Fase 2-5, C activado en Fase 6 cuando hagamos el cutover real (porque ahí sí necesitamos staging robusto para no romper producción).
+**Visión clave registrada en memoria `project_agent_org_design.md`:**
+- Brand Orchestrator (era Content Agent) expandido a director creativo end-to-end (ads + landings + copies + email + implementación)
+- Patrón: orquestador + subagentes especializados (Research, Concept, Copywriter, Visual, Implementation)
+- Skills compartidas cross-agent (research-competition usado por Brand + Acquisition + Growth)
+- Aprobación bloqueante de anuncios (NUNCA publica sin OK Dario)
 
-**Bloqueador:** ninguno técnico, solo decisión de Dario.
-**Fase sugerida:** decisión inmediata 2026-04-27 (impacta CI/CD workflow + nginx config).
+**Combinable con:** Interludio Estratégico (entre Fase 3 y Fase 4) — mismo bloque ~4-8h porque consume arquetipos del interludio.
+
+**Fase sugerida:** post-Fase 3, pre-Fase 4 (interludio + sesión organizacional juntos).
 **Agregado por:** Claude Code · 2026-04-26
 
 ---
 
-### 🔴 Implementar auth bcrypt middleware + login/logout (ADR-0026)
-ERP refactorizado funcional, pero sin auth. Pendiente:
-- Endpoints `/login` (form + bcrypt verify), `/logout`
-- Middleware Flask que protege todas las rutas excepto `/login`, `/ping`, webhooks
-- Tabla `users` ya existe en migration 0001 + `user_sessions` para tracking
-- 2 cuentas seedadas: Dario (admin) + doctora (operadora)
-- Lockout: 8 intentos fallidos → bloqueo 30min
-- Sesión: 48h máximo, 2h inactividad
+### 🟢 Dashboards admin secundarios — `/admin/users`, `/admin/sessions`, `/admin/system-health`
+ADR-0026 + ADR-0027 mencionan estos dashboards. Hoy solo está `/admin/audit-log`. Pendiente:
+- `/admin/users` — lista usuarios + status + last_login + reset password de otro
+- `/admin/sessions` — sesiones activas + ability to revoke
+- `/admin/system-health` — status de containers + backups + cert expiry
 
-**Por qué urgente:** sin auth, cualquier persona con la URL puede ver/modificar 134 clientes reales con PII. Riesgo Ley 29733 (protección datos personales Perú).
-**Fase sugerida:** próxima sesión 2026-04-27 (después de erp-staging decision).
+**Por qué baja prioridad:** la Ley 29733 ya está cubierta con `/admin/audit-log`. Estos dashboards mejoran capacidad operativa pero no son bloqueadores.
+**Fase sugerida:** post-Fase 3 si Dario los necesita
 **Agregado por:** Claude Code · 2026-04-26
 
 ---
 
-### 🔴 Implementar audit log middleware (ADR-0027)
-Tabla `audit_log` ya existe en migration 0001. Falta:
-- After-request middleware Flask que captura POST/PUT/DELETE + login_success/failed/lockout
-- ~30 eventos definidos en ADR-0027
-- Dashboard admin para visualizar (solo Dario)
-- Triggers Postgres adicionales para INSERT/UPDATE/DELETE en ventas, pagos, clientes
+### 🟢 CI/CD: tests pre-deploy en lugar de post-deploy
+Hoy el workflow `deploy-vps3.yml` corre pytest DESPUÉS del deploy. Eso significa que código broken puede llegar a producción antes de que los tests lo detengan.
 
-**Bloquea:** capacidades de seguridad del 5to agente (memoria `project_infra_security_agent`) que dependen del audit log.
-**Fase sugerida:** próxima sesión 2026-04-27 (junto con auth).
-**Agregado por:** Claude Code · 2026-04-26
+**Mejora:** build el container en el runner GHA, levantar Postgres temporal, correr pytest contra el build. Si pasa → deploy. Si falla → no deploy.
 
----
-
-### 🟡 Tests del ERP refactorizado a coverage ≥75%
-ADR-0023 establece coverage ≥75%. Estructura `tests/` existe en `infra/docker/erp-flask/`, falta poblar:
-- Unit tests de cada service (venta, pago, cliente, gasto, dashboard, libro, codgen)
-- Integration tests de endpoints (cliente lookup, venta legacy form, pagos día posterior)
-- Tests de las 6 fases de venta con casos edge (descuentos, gratis, abonos, créditos, auto-aplicar)
-- Tests del trigger DEBE dinámico (insert/update/delete de pagos)
-- Mocks de Postgres con factory_boy o pytest fixtures
-
-**Por qué importante:** los bugs de hoy (códigos duplicados, valores negativos, atomicidad rota, abono fantasma, doble counting) habrían sido detectados con tests. Sin coverage la próxima refactorización es frágil.
-**Fase sugerida:** próxima sesión 2026-04-27 después de auth+audit, o repartir en sesiones cortas.
+**Mitigación actual:** el ERP refactorizado está en validación interna (no producción real, Render sigue siendo prod hasta Fase 6). El riesgo es bajo.
+**Fase sugerida:** Fase 6 antes del cutover Render→VPS 3
 **Agregado por:** Claude Code · 2026-04-26
 
 ---
@@ -91,6 +79,19 @@ Dos gaps documentados en `docs/erp-flask-original-deep-analysis.md` no se cerrar
 
 **Cuándo:** si la doctora reporta fricción específica al usar el sistema.
 **Fase sugerida:** Fase 6 o reactiva.
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🟢 Subir coverage de tests más allá del 81% actual
+Actualmente 81.31% (target ADR-0023 era ≥75%, superado). Áreas con coverage bajo:
+- `routes/api_venta.py` — 25%
+- `routes/api_cliente.py` — 39%
+- `services/dashboard_service.py` — 75% (falta cubrir cálculo aging + comparativas)
+- `services/normalize_service.py` — 86% (edge cases de phone/email)
+
+Subir a 90%+ daría más confianza para refactors futuros, pero no es bloqueador.
+**Fase sugerida:** opcional, post-Fase 3
 **Agregado por:** Claude Code · 2026-04-26
 
 ---
@@ -276,6 +277,21 @@ Commit `7eb2d63` (2026-04-26). Workflow `.github/workflows/deploy-vps3.yml` ahor
 
 ### ✅ ERP refactorizado deployed funcional con data real
 Commits del 2026-04-26 (`815cb0b` → `7eb2d63`). Stack: Flask + SQLAlchemy 2.0 + Pydantic v2 + structlog + gunicorn. Migration 0001 (12 tablas) + 0002 (trigger DEBE) aplicadas. Backfill ejecutado: 134 clientes + 88 ventas + 84 pagos del Excel productivo. URL `https://erp.livskin.site` responde con formulario funcional. Auditoría profunda Flask original cerró 11 de 13 gaps. Capa compat form-data preserva HTML legacy. 2026-04-26.
+
+### ✅ erp-staging.livskin.site eliminado (decisión Opción A)
+Durante Fases 2-5 el ERP nuevo está en validación interna (Render sigue siendo producción). Tener un staging del que ya está en validación era redundante. Staging real con DB separada se reabrirá en Fase 6 al hacer cutover real (ADR-0024 strangler fig). Commit `59e37c2`. DNS Cloudflare borrado por Dario. 2026-04-26.
+
+### ✅ Auth bcrypt + login/logout + sesiones (ADR-0026)
+Commit `87c07b5`. Stack: bcrypt 12 rounds, sesión 48h con auto-revoke por 2h inactividad, lockout 8 intentos / 15 min. 2 cuentas seedadas: Dario (admin) + Claudia Delgado (operadora). Templates login.html + change_password.html. Middleware Flask before_request protege todas las rutas excepto allowlist (login, logout, ping, static). CurrentUser dataclass desacoplado de SQLAlchemy session. Decorator @require_role para granularidad por rol. Passwords iniciales generadas + entregadas + cambiadas (Dario hizo su primer cambio). 2026-04-26.
+
+### ✅ Audit log middleware + 30 eventos canónicos (ADR-0027)
+Commit `75683c6` + migration 0003 (`0003_audit_immutable`). Trigger PL/pgSQL `audit_log_immutable()` rechaza UPDATE/DELETE a nivel DB (verificado: ni superuser puede modificar). AuditService.log() escribe entry atómicamente con la business logic dentro del session_scope. AuditService.log_isolated() para flujos donde el principal ya falló. 30 KNOWN_ACTIONS canónicos en 7 categorías (auth, venta, pago, gasto, cliente, lead, admin, webhook). Hooks instalados en auth (login_success/failed/lockout/logout/expired/inactivity/password_changed) + legacy_forms (venta/pago/gasto created con before/after states). Captura automática de IP, user-agent, user_id, user_role via flask.g + request. 2026-04-26.
+
+### ✅ Dashboard /admin/audit-log con filtros + export CSV
+Commit `9d72a60`. Tabla paginada (50/pag, max 500). Filtros: rango fechas, action, category, user, result, entity_id (búsqueda parcial). Export CSV respeta filtros, max 10000 filas, incluye before/after/metadata como JSON. UI minimalista con tags por categoría. @require_role("admin") protege endpoints (403 para Claudia). Header del formulario.html muestra link "audit log" solo para admin. Dropdowns muestran TODAS las categorías canónicas (no solo las que ya tienen entries) — fix `0dc52f5`. 2026-04-26.
+
+### ✅ Test coverage 81.31% (target ADR-0023: ≥75%)
+Commits `b7acedb` → `6450ae0`. 186 tests pasan en 76s. Cubre: auth_service (99%), audit_service (88%), cliente_service (87%), venta_service (93%), pago_service (93%), catalogo_service (100%), libro_service (100%), codgen_service (100%), middleware (100%), schemas (100%). Tests routes para auth + admin + legacy_forms + API JSON. CI/CD workflow ahora corre pytest post-deploy automáticamente (commit `6450ae0`). Conftest pattern: TRUNCATE-based cleanup, fixtures admin_user/operadora_user committeadas para que session_scope() las vea, db_session separada. DB livskin_erp_test creada en Postgres VPS 3. 2026-04-26.
 
 ---
 

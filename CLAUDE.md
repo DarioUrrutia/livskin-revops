@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-04-26 (v1.4 — Fase 2 implementación ~95%)
+> Última actualización: 2026-04-26 (v2.0 — Bloque 0 cimientos cross-VPS state-of-the-art completo)
 
 ---
 
@@ -22,13 +22,16 @@
 
 Lee en este orden antes de cualquier tarea sustantiva:
 
-1. **[docs/master-plan-mvp-livskin.md](docs/master-plan-mvp-livskin.md)** — plan maestro vivo, referencia autoritativa
-2. **[docs/decisiones/README.md](docs/decisiones/README.md)** — index de 40+ ADRs con estado
-3. **[docs/backlog.md](docs/backlog.md)** — backlog vivo de ideas/cambios/dudas (revisar qué retomar)
-4. **[notes/compartido/](notes/compartido/)** — notas colaborativas recientes si las hay
-5. **[docs/sesiones/](docs/sesiones/)** — último log de sesión para entender dónde quedamos
-6. **Blueprint original** — [docs/livskin_pensamientos para una implemetacion profesional basica pero basada en ia.docx](docs/livskin_pensamientos%20para%20una%20implemetacion%20profesional%20basica%20pero%20basada%20en%20ia.docx)
-7. **Memoria Claude Code** — ya cargada automáticamente (`user_profile`, `project_livskin_overview`, `project_stack`, `project_roadmap`, `feedback_operating_principles`, `vps_access`, `project_adr_system`, `reference_docs`)
+1. **[docs/sistema-mapa.md](docs/sistema-mapa.md)** — ⭐ system-map machine-readable autoritativo (Bloque 0.3) — VPS/containers/dependencias/SPOFs
+2. **[docs/master-plan-mvp-livskin.md](docs/master-plan-mvp-livskin.md)** — plan maestro vivo
+3. **[docs/audit-events-schema.md](docs/audit-events-schema.md)** — schema de los 49 eventos auditables (Bloque 0.8)
+4. **[docs/runbooks/README.md](docs/runbooks/README.md)** — 12 runbooks ejecutables + DR drill procedure (Bloque 0.6 + 0.7)
+5. **[skills/README.md](skills/README.md)** — capacidades AI-operables (livskin-ops + livskin-deploy)
+6. **[docs/decisiones/README.md](docs/decisiones/README.md)** — index de 40+ ADRs con estado
+7. **[docs/backlog.md](docs/backlog.md)** — backlog vivo
+8. **[docs/sesiones/](docs/sesiones/)** — último log de sesión
+9. **Blueprint original** — [docs/livskin_pensamientos para una implemetacion profesional basica pero basada en ia.docx](docs/livskin_pensamientos%20para%20una%20implemetacion%20profesional%20basica%20pero%20basada%20en%20ia.docx)
+10. **Memoria Claude Code** — autoload (`user_profile`, `project_roadmap`, `project_stack`, etc.)
 
 ---
 
@@ -154,17 +157,18 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 
 ---
 
-## 🗺️ Roadmap 10 semanas — estado actual
+## 🗺️ Roadmap — estado actual
 
-| Fase | Semana | Estado |
-|---|---|---|
-| 0 | 1 | ✅ Completada (2026-04-18) |
-| 1 | 2 | ✅ Completada (2026-04-20) |
-| 2 | 3-4 | 🚧 **Implementación ~95%** (definido + deployed + data real al 2026-04-26) |
-| 3 | 5 | ⏳ Pendiente |
-| 4 | 6 | ⏳ Pendiente |
-| 5 | 7-8 | ⏳ Pendiente |
-| 6 | 9-10 | ⏳ Pendiente (cutover ERP real aquí) |
+| Fase | Estado |
+|---|---|
+| 0 | ✅ Completada (2026-04-18) |
+| 1 | ✅ Completada (2026-04-20) |
+| 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage al 2026-04-26) |
+| **0 v2 (Bloque foundation cross-VPS)** | ✅ **Completado 2026-04-26** — versionado VPS 1+2 + CI/CD multi-VPS + system-map + sensors + backups + runbooks + DR drill + skills + MCP scaffold |
+| 3 | ⏳ Próxima — tracking + observabilidad (Meta Pixel + GA4 + GTM + Langfuse + UTMs) |
+| 4 | ⏳ Conversation Agent (WhatsApp test number) |
+| 5 | ⏳ Content + Acquisition Agents |
+| 6 | ⏳ Growth + cutover ERP real + 5to agente Infra+Security |
 
 **Ver [docs/master-plan-mvp-livskin.md § 11](docs/master-plan-mvp-livskin.md#11-roadmap-10-semanas-con-6-workstreams) para detalle.**
 
@@ -258,7 +262,45 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-04-26 (Fase 2 implementación ~95%)
+## 📝 Estado al 2026-04-26 (Bloque foundation completo + Fase 2 ~99%)
+
+### Bloque 0 v2 — Cimientos cross-VPS state-of-the-art (cierre 2026-04-26)
+
+Sistema **AI-operable end-to-end**:
+
+| Sub-bloque | Estado |
+|---|---|
+| 0.1 Versionar 3 VPS al repo | ✅ VPS 1 + VPS 2 al repo (VPS 3 mantiene paths legacy hasta Fase 6) |
+| 0.2 CI/CD multi-VPS | ✅ deploy-vps[1\|2\|3].yml con snapshot DO + rollback automático + audit |
+| 0.3 System map autoritativo | ✅ docs/sistema-mapa.md machine-readable + endpoint /api/system-map.json |
+| 0.4 Sensors uniformes cross-VPS | ✅ livskin-sensor + recolector cron + dashboard /admin/system-health |
+| 0.5 Backups daily verificados | ✅ scripts cross-VPS + verify automático + audit log integration |
+| 0.6 12 runbooks ejecutables | ✅ frontmatter YAML compatible con MCP skill execution |
+| 0.7 DR drill procedure | ✅ cadencia semestral/trimestral + post-mortem template |
+| 0.8 Audit log expandido | ✅ 49 eventos canónicos (8 categorías) + schema doc |
+| 0.9 Skills + MCP scaffold | ✅ skills/livskin-ops + skills/livskin-deploy + mcp-livskin scaffold |
+
+**Pendiente activar en producción:**
+1. GitHub Secrets nuevos: DO_API_TOKEN, AUDIT_INTERNAL_TOKEN, VPS1_*, VPS2_*
+2. Configurar `audit_internal_token` en .env de erp-flask en VPS 3
+3. Migrate VPS 2 con `migrate-from-home.sh` (idempotente)
+4. Deploy livskin-sensor en VPS 1 (systemd) + VPS 2 (container)
+5. Instalar crons backup + sensor-collect (`install-cron.sh`)
+6. Ejecutar `alembic upgrade head` (incluye migration 0004 infra_snapshots)
+
+### Fase 2 — Implementación ~99%
+
+(Lo que ya estaba al cierre del 2026-04-25, ahora extendido con Bloque 0:)
+
+- ✅ ERP refactorizado funcional en https://erp.livskin.site con data real
+- ✅ Auth bcrypt + login/logout (ADR-0026)
+- ✅ Audit log middleware + dashboard /admin/audit-log (ADR-0027)
+- ✅ Tests pytest 81% coverage (target ≥75%)
+- ✅ CI/CD post-deploy testing en GitHub Actions
+- ✅ Auditoría profunda Flask original — 11/13 gaps cerrados
+- ⏳ Pendiente: Vtiger config (bloqueado WhatsApp Business API trámite)
+
+### Histórico (pre-2026-04-26)
 
 **Lo que está hecho:**
 - ✅ **Fase 0** (2026-04-18): repo + plan maestro v1.0 + 3 dossiers fundacionales + memoria poblada
