@@ -3,6 +3,7 @@
 **IP pública:** 167.172.97.197
 **IP privada VPC:** 10.114.0.2
 **Hostname:** `livskin-vps-operations`
+**Estado:** sensors live + repo versionado + CI/CD activo (Bloque 0 v2 — 2026-04-26)
 
 ## Rol
 
