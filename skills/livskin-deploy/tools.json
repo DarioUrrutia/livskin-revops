@@ -1,0 +1,95 @@
+{
+  "name": "livskin-deploy",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "trigger_deploy",
+      "description": "Dispara workflow_dispatch del CI/CD del VPS especificado. RISKY — siempre requiere autorización Dario.",
+      "input_schema": {
+        "type": "object",
+        "required": ["vps"],
+        "properties": {
+          "vps": {
+            "type": "string",
+            "enum": ["livskin-wp", "livskin-vps-operations", "livskin-vps-erp"]
+          },
+          "branch": { "type": "string", "default": "main" },
+          "skip_snapshot": {
+            "type": "boolean",
+            "default": false,
+            "description": "Saltar snapshot DO pre-deploy. Solo en hotfixes con autorización explícita."
+          },
+          "skip_tests": {
+            "type": "boolean",
+            "default": false,
+            "description": "Solo aplicable a VPS 3. Skipea pytest post-deploy."
+          },
+          "authorization_token": {
+            "type": "string",
+            "description": "Token de autorización Dario (REQUIRED)"
+          },
+          "context": {
+            "type": "string",
+            "description": "Razón del deploy — para audit log"
+          }
+        }
+      }
+    },
+    {
+      "name": "monitor_deploy",
+      "description": "Monitor de un deploy en curso (poll cada 30s).",
+      "input_schema": {
+        "type": "object",
+        "required": ["workflow_run_id"],
+        "properties": {
+          "workflow_run_id": { "type": "integer" },
+          "max_wait_s": { "type": "integer", "default": 600 }
+        }
+      }
+    },
+    {
+      "name": "request_rollback",
+      "description": "Restaura un VPS desde snapshot DO. VERY RISKY — pierde data escrita post-snapshot.",
+      "input_schema": {
+        "type": "object",
+        "required": ["vps", "authorization_token"],
+        "properties": {
+          "vps": {
+            "type": "string",
+            "enum": ["livskin-wp", "livskin-vps-operations", "livskin-vps-erp"]
+          },
+          "snapshot_id": {
+            "type": "string",
+            "description": "ID del snapshot DO. Si vacío, usa el más reciente con tag pre-deploy."
+          },
+          "authorization_token": {
+            "type": "string",
+            "description": "Token Dario REQUIRED. Confirma que sabe qué data se pierde."
+          },
+          "context": {
+            "type": "string",
+            "description": "Razón del rollback (audit log)"
+          }
+        }
+      }
+    },
+    {
+      "name": "list_recent_deploys",
+      "description": "Audit log de los deploys más recientes con contexto.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "vps": {
+            "type": "string",
+            "enum": ["livskin-wp", "livskin-vps-operations", "livskin-vps-erp", "all"]
+          },
+          "limit": { "type": "integer", "default": 10 },
+          "outcome_filter": {
+            "type": "string",
+            "enum": ["success", "failed", "rolled_back"]
+          }
+        }
+      }
+    }
+  ]
+}

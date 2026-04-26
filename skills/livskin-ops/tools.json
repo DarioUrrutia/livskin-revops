@@ -1,0 +1,110 @@
+{
+  "name": "livskin-ops",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "query_system_state",
+      "description": "Snapshot reciente del estado de un VPS (containers, disk, RAM, uptime, last deploy SHA). Read-only, sin auth.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "vps": {
+            "type": "string",
+            "enum": ["livskin-wp", "livskin-ops", "livskin-erp", "all"],
+            "description": "VPS a consultar. 'all' devuelve los 3.",
+            "default": "all"
+          }
+        }
+      }
+    },
+    {
+      "name": "query_audit_log",
+      "description": "Lista eventos del audit_log con filtros. Useful para forense, anomaly detection, reportes.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "action_pattern": {
+            "type": "string",
+            "description": "Patrón SQL LIKE para filtrar action (ej: 'infra.%', 'auth.login_%')"
+          },
+          "user": { "type": "string" },
+          "since": {
+            "type": "string",
+            "description": "ISO timestamp o intervalo Postgres (ej: '24 hours', '7 days')"
+          },
+          "result": {
+            "type": "string",
+            "enum": ["success", "failure"]
+          },
+          "limit": { "type": "integer", "default": 50, "maximum": 500 }
+        }
+      }
+    },
+    {
+      "name": "query_system_map",
+      "description": "Devuelve sections del system-map (machine-readable). Source of truth de containers/VPS/dependencies.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "section": {
+            "type": "string",
+            "enum": [
+              "vps", "containers", "cross_vps_connections",
+              "dependency_matrix", "spofs", "public_urls",
+              "backups", "secrets_inventory", "capacity"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "query_runbooks",
+      "description": "Lista runbooks disponibles, filtra por trigger keyword.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "trigger_keyword": {
+            "type": "string",
+            "description": "Keyword en el campo 'trigger' (ej: 'disk_pct', 'cert')"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+          },
+          "auto_executable_only": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    {
+      "name": "trigger_runbook",
+      "description": "Ejecuta un runbook. Si auto_executable=true, ejecuta directo. Si no, requiere autorización Dario.",
+      "input_schema": {
+        "type": "object",
+        "required": ["runbook"],
+        "properties": {
+          "runbook": {
+            "type": "string",
+            "description": "Nombre del runbook (ej: 'ssl-cert-expiring')"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "default": true,
+            "description": "Si true, ejecuta solo commands_diagnose"
+          },
+          "authorization_token": {
+            "type": "string",
+            "description": "Token de auth Dario (requerido si auto_executable=false)"
+          }
+        }
+      }
+    },
+    {
+      "name": "query_backups_status",
+      "description": "Estado de backups: último verificado de cada componente.",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}
