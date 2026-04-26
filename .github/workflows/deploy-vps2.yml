@@ -4,12 +4,15 @@ name: Deploy to VPS 2 (livskin-vps-operations)
 # Path: /srv/livskin-revops/infra/docker/vps2-ops/<servicio>/
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'infra/docker/vps2-ops/**'
-      - '.github/workflows/deploy-vps2.yml'
-      - '.github/scripts/**'
+  # Push trigger DESHABILITADO temporalmente hasta que VPS 2 sea migrado
+  # de /home/livskin/apps/* a /srv/livskin-revops/infra/docker/vps2-ops/*.
+  # Si push se activa antes de la migración, Docker recreará containers
+  # con volumes vacíos → DATA LOSS de n8n workflows + vtiger DB.
+  #
+  # Procedimiento de re-activación (post-migración):
+  # 1. Ejecutar migrate-from-home.sh en VPS 2 (zero-downtime)
+  # 2. Validar manualmente con workflow_dispatch + service=nginx (idempotente)
+  # 3. Si OK → restaurar el bloque push: { branches:[main], paths:[...] }
   workflow_dispatch:
     inputs:
       skip_snapshot:

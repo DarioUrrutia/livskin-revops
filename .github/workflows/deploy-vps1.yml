@@ -5,12 +5,9 @@ name: Deploy to VPS 1 (livskin-wp)
 # NO versionable: WP core + plugins instalados por UI + DB (backups).
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'infra/docker/vps1-wp/**'
-      - '.github/workflows/deploy-vps1.yml'
-      - '.github/scripts/**'
+  # Push trigger DESHABILITADO temporalmente hasta validacion manual del
+  # workflow con cambio cosmetico (rsync nginx config + reload). Una vez
+  # validado, restaurar el bloque push: { branches:[main], paths:[...] }.
   workflow_dispatch:
     inputs:
       skip_snapshot:
