@@ -198,7 +198,12 @@ def query_audit(
 
     total = db.execute(count_stmt).scalar_one()
 
-    stmt = stmt.order_by(AuditLog.occurred_at.desc()).offset((page - 1) * per_page).limit(per_page)
+    stmt = (
+        stmt
+        .order_by(AuditLog.occurred_at.desc(), AuditLog.id.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
     entries = list(db.execute(stmt).scalars().all())
 
     return entries, total

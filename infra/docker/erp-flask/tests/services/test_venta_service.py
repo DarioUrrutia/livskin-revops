@@ -241,6 +241,7 @@ class TestCreditoDelCliente:
             credito_aplicado=Decimal("50"),
         )
         v = result.ventas[0]
+        db_session.refresh(v)  # trigger DEBE actualiza debe/pagado en DB, refrescar el ORM
         # Total 300, pagado 250 cash + 50 credito = 300 → debe 0
         assert v.debe == Decimal("0")
         assert v.pagado == Decimal("300")
