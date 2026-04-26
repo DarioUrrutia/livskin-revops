@@ -120,38 +120,44 @@ def engine():
 
 @pytest.fixture(scope="function")
 def db_session(engine):
-    """Sesión SQLAlchemy con SAVEPOINT que rollbackea al final del test.
+    """Sesión SQLAlchemy. Cleanup via TRUNCATE de todas las tablas al final.
 
-    Nota: el trigger audit_log_immutable bloquea ROLLBACK? No — un rollback
-    deshace el INSERT antes de que el trigger BEFORE UPDATE/DELETE corra.
-    El trigger solo se dispara en UPDATE/DELETE explícitos.
+    Más simple que SAVEPOINTs porque permite que sessions abiertas por
+    session_scope() (en routes) vean datos creados por la session principal
+    sin pelearse con savepoints anidados.
     """
-    connection = engine.connect()
-    transaction = connection.begin()
-    session_factory = sessionmaker(bind=connection, autocommit=False, autoflush=False)
-    session = session_factory()
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+    from sqlalchemy.orm import sessionmaker
+    Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    session = Session()
+    try:
+        yield session
+    finally:
+        session.close()
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "TRUNCATE TABLE audit_log, user_sessions, users, pagos, ventas, "
+                    "gastos, leads, lead_touchpoints, dedup_candidates, form_submissions, "
+                    "catalogos, clientes RESTART IDENTITY CASCADE;"
+                )
+            )
 
 
 @pytest.fixture(scope="function")
 def patched_session_scope(monkeypatch, engine):
-    """Override db.session_scope para que use el engine de test.
+    """Override db.session_scope con session real (commit funcional).
 
-    Usar este fixture en tests de routes/services que llaman session_scope()
-    internamente (ej: legacy_forms.py).
+    Las routes ven datos commiteados por db_session (vía session.commit()
+    explícito en los fixtures user/cliente). El cleanup via TRUNCATE
+    de db_session los limpia al final.
     """
     from contextlib import contextmanager
 
-    session_factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
     @contextmanager
     def _scope():
-        s = session_factory()
+        s = Session()
         try:
             yield s
             s.commit()
@@ -186,7 +192,7 @@ def client(app):
 
 @pytest.fixture(scope="function")
 def admin_user(db_session):
-    """Crea un usuario admin para tests de auth/admin."""
+    """Usuario admin commiteado para tests de auth/admin (visible por session_scope)."""
     from models.user import User
     from services.auth_service import hash_password
 
@@ -201,13 +207,14 @@ def admin_user(db_session):
         failed_login_count=0,
     )
     db_session.add(u)
-    db_session.flush()
+    db_session.commit()
+    db_session.refresh(u)
     return u
 
 
 @pytest.fixture(scope="function")
 def operadora_user(db_session):
-    """Crea un usuario operadora para tests de roles/permisos."""
+    """Usuario operadora commiteado para tests de roles/permisos."""
     from models.user import User
     from services.auth_service import hash_password
 
@@ -222,5 +229,6 @@ def operadora_user(db_session):
         failed_login_count=0,
     )
     db_session.add(u)
-    db_session.flush()
+    db_session.commit()
+    db_session.refresh(u)
     return u

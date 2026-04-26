@@ -9,15 +9,15 @@ from services import audit_service
 
 
 class TestLog:
-    def test_log_success_creates_entry(self, db_session):
+    def test_log_success_creates_entry(self, db_session, admin_user):
         audit_service.log(
             db_session,
             action="auth.login_success",
             entity_type="user",
-            entity_id="42",
-            user_id=42,
-            user_username="dario",
-            user_role="admin",
+            entity_id=str(admin_user.id),
+            user_id=admin_user.id,
+            user_username=admin_user.username,
+            user_role=admin_user.rol,
             ip="1.2.3.4",
         )
         db_session.flush()
@@ -27,9 +27,8 @@ class TestLog:
         assert e.action == "auth.login_success"
         assert e.category == "auth"
         assert e.entity_type == "user"
-        assert e.entity_id == "42"
-        assert e.user_id == 42
-        assert e.user_username == "dario"
+        assert e.user_id == admin_user.id
+        assert e.user_username == admin_user.username
         assert e.user_role == "admin"
         assert str(e.ip) == "1.2.3.4"
         assert e.result == "success"
