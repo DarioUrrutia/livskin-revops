@@ -76,6 +76,11 @@ def receive_audit_event():  # type: ignore[no-untyped-def]
     result_str = body.get("result", "success")
     error_detail = body.get("error_detail")
 
+    # Extraer IP del header — Cloudflare puede pasar "ip1, ip2" con multiples
+    # proxies. Postgres INET solo acepta UNA IP, asi que tomamos la primera.
+    raw_xff = request.headers.get("X-Forwarded-For", "") or ""
+    client_ip = raw_xff.split(",")[0].strip() if raw_xff else (request.remote_addr or None)
+
     try:
         with session_scope() as db:
             audit_service.log(
@@ -88,7 +93,7 @@ def receive_audit_event():  # type: ignore[no-untyped-def]
                 error_detail=error_detail,
                 user_username="ci-cd",  # marcar como sistema, no humano
                 user_role="system",
-                ip=request.headers.get("X-Forwarded-For", request.remote_addr),
+                ip=client_ip,
             )
         return jsonify({"ok": True, "action": action}), 201
     except Exception as e:
