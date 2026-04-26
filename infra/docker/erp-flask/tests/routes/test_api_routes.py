@@ -58,14 +58,14 @@ class TestApiCliente(_LoginMixin):
 
 class TestApiCatalogo(_LoginMixin):
     def test_requires_auth(self, client):
-        response = client.get("/api/catalogo", follow_redirects=False)
+        response = client.get("/api/catalogos", follow_redirects=False)
         assert response.status_code == 302
 
     def test_list(self, client, admin_user, db_session):
         catalogo_service.add_valor(db_session, "x", "TestVal")
         db_session.commit()
         self._login(client, admin_user, "TestPass123")
-        response = client.get("/api/catalogo")
+        response = client.get("/api/catalogos")
         assert response.status_code == 200
 
 
