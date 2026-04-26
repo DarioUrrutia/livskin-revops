@@ -54,11 +54,12 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 | `gasto.*` | 3 | idem + api_gasto.py |
 | `cliente.*` | 3 | api_cliente.py |
 | `lead.*` | 5 | n8n workflows (Fase 4+) |
-| `admin.*` | 4 | admin actions (manual) |
+| `admin.*` | 5 | admin actions (incluye `admin.budget_changed` Bloque 0.10) |
 | `webhook.*` | 2 | n8n SureForms + WhatsApp |
-| `infra.*` | 18 | CI/CD workflows + crons + sensors (Bloque 0) |
+| `infra.*` | 20 | CI/CD + crons + sensors (Bloque 0) — incluye `infra.budget_warning/exceeded` |
+| `agent.*` | 2 | wrappers de agentes IA (Bloque 0.10) |
 
-**Total: 49 eventos canónicos.**
+**Total: 54 eventos canónicos.**
 
 ## Catálogo completo por categoría
 
@@ -155,6 +156,15 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 | `infra.container_unhealthy` | sensor restart_count >= 3 | `{vps, container, restart_count}` |
 | `infra.dr_drill_completed` | DR drill post-mortem | `{runbook, duration_min, success: bool, gaps_found: [str]}` |
 | `infra.credential_rotated` | post credential-leaked | `{credential_type, reason}` |
+| `infra.budget_warning` | agente alcanzó alert_threshold (default 80%) | `{scope: 'daily'\|'monthly', usd_consumed, usd_limit, pct}` |
+| `infra.budget_exceeded` | agente superó hard limit | `{scope, usd_consumed, usd_limit, pct}` |
+
+### agent.* (2) — Bloque 0.10 uso de recursos LLM API
+
+| Action | Cuándo | Metadata |
+|---|---|---|
+| `agent.api_call_completed` | call individual a Claude API persistido | `{agent, model, tokens, cost_usd, outcome}` |
+| `agent.api_call_blocked` | llamada bloqueada por budget hard-limit | `{agent, reason, would_have_cost}` |
 
 ## Queries comunes (machine-readable para agentes IA)
 

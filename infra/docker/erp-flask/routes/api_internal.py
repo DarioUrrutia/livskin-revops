@@ -200,6 +200,97 @@ def internal_system_state():  # type: ignore[no-untyped-def]
     })
 
 
+@bp.post("/internal/agent-api-call")
+def receive_agent_api_call():  # type: ignore[no-untyped-def]
+    """Recibe registros de llamadas Claude API desde wrappers de agentes (Bloque 0.10).
+
+    Body JSON esperado:
+        {
+          "agent_name": "conversation",
+          "model": "claude-sonnet-4-6",
+          "input_tokens": 1234,
+          "output_tokens": 567,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0,
+          "task_id": "lead_LIVCLIENT0042",
+          "prompt_template_id": "conversation-greeting-v1.2",
+          "request_id": "msg_abc123",
+          "latency_ms": 1245,
+          "outcome": "success",
+          "metadata": {...}
+        }
+
+    AgentResourceService calcula cost_usd, persiste, evalúa thresholds, y
+    emite audit events si cruzó budget.
+    """
+    _check_internal_token()
+
+    body = request.get_json(silent=True) or {}
+    required = ["agent_name", "model", "input_tokens", "output_tokens"]
+    missing = [f for f in required if f not in body]
+    if missing:
+        abort(400, description=f"campos requeridos: {missing}")
+
+    from services import agent_resource_service as ars
+
+    try:
+        with session_scope() as db:
+            call = ars.record_call(
+                db,
+                agent_name=body["agent_name"],
+                model=body["model"],
+                input_tokens=int(body["input_tokens"]),
+                output_tokens=int(body["output_tokens"]),
+                cache_creation_input_tokens=int(body.get("cache_creation_input_tokens", 0)),
+                cache_read_input_tokens=int(body.get("cache_read_input_tokens", 0)),
+                task_id=body.get("task_id"),
+                prompt_template_id=body.get("prompt_template_id"),
+                request_id=body.get("request_id"),
+                latency_ms=body.get("latency_ms"),
+                outcome=body.get("outcome", "success"),
+                error_detail=body.get("error_detail"),
+                metadata=body.get("metadata"),
+            )
+            return jsonify({
+                "ok": True,
+                "id": call.id,
+                "cost_usd": str(call.cost_usd),
+            }), 201
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@bp.get("/internal/agent-budget-check")
+def agent_budget_check():  # type: ignore[no-untyped-def]
+    """Pre-check antes de hacer llamada API. Devuelve can_proceed + razón."""
+    _check_internal_token()
+
+    agent_name = request.args.get("agent_name", "").strip()
+    if not agent_name:
+        abort(400, description="agent_name requerido")
+
+    from decimal import Decimal as _D
+    try:
+        estimated = _D(request.args.get("estimated_cost_usd", "0.01"))
+    except Exception:
+        abort(400, description="estimated_cost_usd inválido")
+
+    from services import agent_resource_service as ars
+
+    with session_scope() as db:
+        result = ars.check_budget_or_block(
+            db, agent_name=agent_name, estimated_cost_usd=estimated
+        )
+        return jsonify({
+            "can_proceed": result.can_proceed,
+            "reason": result.reason,
+            "daily_consumed_usd": str(result.daily_consumed) if result.daily_consumed is not None else None,
+            "daily_limit_usd": str(result.daily_limit) if result.daily_limit is not None else None,
+            "monthly_consumed_usd": str(result.monthly_consumed) if result.monthly_consumed is not None else None,
+            "monthly_limit_usd": str(result.monthly_limit) if result.monthly_limit is not None else None,
+        })
+
+
 # Asegurar que estos endpoints estén en allowlist del middleware auth
 def register_public_endpoints() -> None:
     """Marca los endpoints públicos (sin sesión bcrypt) en el middleware."""
@@ -207,3 +298,5 @@ def register_public_endpoints() -> None:
     PUBLIC_ENDPOINTS.add("api_internal.receive_audit_event")
     PUBLIC_ENDPOINTS.add("api_internal.internal_health")
     PUBLIC_ENDPOINTS.add("api_internal.internal_system_state")
+    PUBLIC_ENDPOINTS.add("api_internal.receive_agent_api_call")
+    PUBLIC_ENDPOINTS.add("api_internal.agent_budget_check")

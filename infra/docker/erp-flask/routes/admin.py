@@ -4,6 +4,7 @@ Endpoints:
 - /admin/audit-log              — dashboard audit log (filtros + CSV)
 - /admin/audit-log/export.csv
 - /admin/system-health          — dashboard cross-VPS sensors (Bloque 0.4)
+- /admin/agent-costs            — dashboard uso recursos LLM API (Bloque 0.10)
 """
 import csv
 import io
@@ -13,7 +14,7 @@ from flask import Blueprint, Response, render_template, request
 
 from db import session_scope
 from middleware.auth_middleware import require_role
-from services import audit_service, infra_snapshot_service
+from services import agent_resource_service, audit_service, infra_snapshot_service
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -183,3 +184,22 @@ def system_health_view():  # type: ignore[no-untyped-def]
             })
 
     return render_template("admin_system_health.html", snapshots=snapshots)
+
+
+@bp.get("/agent-costs")
+@require_role("admin")
+def agent_costs_view():  # type: ignore[no-untyped-def]
+    """Dashboard de uso de recursos LLM API por agente (Bloque 0.10).
+
+    Solo está vacío hoy — se llena con data real cuando los agentes operen
+    (Fase 4+ Conversation Agent es el primero).
+    """
+    try:
+        days = max(1, min(365, int(request.args.get("days", "30"))))
+    except ValueError:
+        days = 30
+
+    with session_scope() as db:
+        data = agent_resource_service.query_costs(db, days=days)
+
+    return render_template("admin_agent_costs.html", data=data, days=days)

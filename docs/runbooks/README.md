@@ -34,7 +34,7 @@ related_skills:                          # skills MCP que usan este runbook
 ---
 ```
 
-## Catálogo Bloque 0.6 (12 runbooks ejecutables)
+## Catálogo Bloque 0.6 + 0.10 (13 runbooks ejecutables)
 
 ### Operacional
 
@@ -46,6 +46,7 @@ related_skills:                          # skills MCP que usan este runbook
 | 4 | [postgres-connections-exhausted](postgres-connections-exhausted.md) | high | ❌ |
 | 5 | [n8n-workflow-failing](n8n-workflow-failing.md) | medium | ❌ |
 | 6 | [backup-failed](backup-failed.md) | high | ⚠️ |
+| 13 | [cost-budget-exceeded](cost-budget-exceeded.md) | high | ❌ (Bloque 0.10) |
 
 ### Disaster Recovery
 

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Agent Costs — Livskin ERP</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa; color: #1a1a1a; padding: 1.5rem;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        header h1 { font-size: 1.4rem; }
+        header .meta { font-size: 0.85rem; color: #666; }
+        header .meta a { color: #4a6cf7; text-decoration: none; margin-left: 1rem; }
+
+        .empty-state {
+            background: #fff7ed;
+            border-left: 4px solid #d97706;
+            padding: 1.25rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #78350f;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .card {
+            background: #fff;
+            padding: 1.25rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border-left: 4px solid #4a6cf7;
+        }
+        .card.over-warn { border-left-color: #d97706; }
+        .card.over-limit { border-left-color: #b91c1c; }
+        .card.no-budget { border-left-color: #94a3b8; opacity: 0.7; }
+        .card h3 { font-size: 1rem; margin-bottom: 0.4rem; text-transform: capitalize; }
+        .card .row {
+            display: flex; justify-content: space-between;
+            font-size: 0.85rem; padding: 0.3rem 0;
+            border-bottom: 1px solid #f0f1f4;
+        }
+        .card .row:last-child { border-bottom: none; }
+        .card .row .label { color: #666; }
+        .card .row .value { font-family: monospace; }
+        .bar { height: 6px; background: #e5e7eb; border-radius: 3px; margin-top: 0.4rem; overflow: hidden; }
+        .bar-fill { display: block; height: 100%; transition: width 0.3s; }
+        .bar-fill.green { background: #059669; }
+        .bar-fill.yellow { background: #d97706; }
+        .bar-fill.red { background: #b91c1c; }
+
+        table { width: 100%; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #f0f1f4; font-size: 0.85rem; }
+        th { background: #f8f9fb; font-size: 0.78rem; text-transform: uppercase; color: #555; font-weight: 600; }
+        td.metric { font-family: monospace; }
+
+        .filters {
+            display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem;
+        }
+        .filters input, .filters select {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #d8dde3;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Agent Costs — uso de recursos LLM API</h1>
+        <div class="meta">
+            {% if current_user %}{{ current_user.nombre_completo }}{% endif %}
+            <a href="{{ url_for('views.index') }}">← formulario</a>
+            <a href="{{ url_for('admin.audit_log_view') }}">audit log</a>
+            <a href="{{ url_for('admin.system_health_view') }}">system health</a>
+            <a href="{{ url_for('auth.logout') }}">cerrar sesión</a>
+        </div>
+    </header>
+
+    {% if not data.budgets or data.budgets|length == 0 or (data.totals.last_30_days|length == 0) %}
+    <div class="empty-state">
+        <strong>Estado: agentes no activos todavía.</strong><br>
+        Este dashboard se llena automáticamente cuando los agentes IA empiecen a operar (Fase 4 — Conversation Agent es el primero). Los budgets MVP están seedados (Conversation $3/día, Content $5/día, etc.) y los hard-limits están armados — solo falta que los wrappers de agentes empiecen a reportar via POST /api/internal/agent-api-call.
+    </div>
+    {% endif %}
+
+    <div class="grid">
+    {% for b in data.budgets %}
+        {% set daily_pct = (b.daily_consumed_usd / b.daily_limit_usd * 100) if b.daily_limit_usd > 0 else 0 %}
+        {% set monthly_pct = (b.monthly_consumed_usd / b.monthly_limit_usd * 100) if b.monthly_limit_usd > 0 else 0 %}
+        {% set max_pct = [daily_pct, monthly_pct] | max %}
+        <div class="card {% if max_pct >= 100 %}over-limit{% elif max_pct >= b.alert_threshold_pct %}over-warn{% endif %} {% if not b.active %}no-budget{% endif %}">
+            <h3>{{ b.agent }}</h3>
+            <div class="row">
+                <span class="label">Estado</span>
+                <span class="value">{% if b.active %}activo{% else %}inactivo{% endif %} {% if b.hard_block_at_limit %}🔒{% endif %}</span>
+            </div>
+            <div class="row">
+                <span class="label">Hoy</span>
+                <span class="value">${{ "%.4f"|format(b.daily_consumed_usd) }} / ${{ "%.2f"|format(b.daily_limit_usd) }} ({{ "%.0f"|format(daily_pct) }}%)</span>
+            </div>
+            <div class="bar">
+                <span class="bar-fill {% if daily_pct < 70 %}green{% elif daily_pct < b.alert_threshold_pct %}yellow{% else %}red{% endif %}" style="width: {{ daily_pct if daily_pct <= 100 else 100 }}%"></span>
+            </div>
+            <div class="row" style="margin-top: 0.5rem;">
+                <span class="label">Mes</span>
+                <span class="value">${{ "%.4f"|format(b.monthly_consumed_usd) }} / ${{ "%.2f"|format(b.monthly_limit_usd) }} ({{ "%.0f"|format(monthly_pct) }}%)</span>
+            </div>
+            <div class="bar">
+                <span class="bar-fill {% if monthly_pct < 70 %}green{% elif monthly_pct < b.alert_threshold_pct %}yellow{% else %}red{% endif %}" style="width: {{ monthly_pct if monthly_pct <= 100 else 100 }}%"></span>
+            </div>
+            <div class="row" style="margin-top: 0.5rem;">
+                <span class="label">Threshold alerta</span>
+                <span class="value">{{ b.alert_threshold_pct }}%</span>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+
+    <h2 style="margin: 1.5rem 0 0.75rem; font-size: 1.1rem;">Últimos {{ days }} días — breakdown diario</h2>
+
+    <form class="filters" method="GET">
+        <label>Días: <input type="number" name="days" value="{{ days }}" min="1" max="365" style="width: 80px;"></label>
+        <button type="submit" style="background: #1a1a1a; color: #fff; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer;">Aplicar</button>
+    </form>
+
+    {% if data.daily %}
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Agente</th>
+                <th style="text-align:right;">Cost USD</th>
+                <th style="text-align:right;">Calls</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in data.daily %}
+        <tr>
+            <td class="metric">{{ row.date }}</td>
+            <td>{{ row.agent }}</td>
+            <td class="metric" style="text-align:right;">${{ "%.6f"|format(row.cost_usd) }}</td>
+            <td class="metric" style="text-align:right;">{{ row.calls }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state" style="background: #f8f9fb; border-left-color: #94a3b8; color: #555;">
+        Sin actividad en los últimos {{ days }} días.
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

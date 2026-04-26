@@ -73,6 +73,12 @@ KNOWN_ACTIONS = {
     "infra.container_unhealthy", # restart count >= 3
     "infra.dr_drill_completed",  # DR drill terminó
     "infra.credential_rotated",  # rotación post credential-leaked
+    "infra.budget_warning",      # Bloque 0.10 — agente alcanzó threshold (default 80%)
+    "infra.budget_exceeded",     # Bloque 0.10 — agente superó hard limit
+    # Agent (Bloque 0.10) — uso de recursos LLM API
+    "agent.api_call_completed",  # call individual a Claude API persistido
+    "agent.api_call_blocked",    # llamada bloqueada por budget hard-limit
+    "admin.budget_changed",      # admin modificó agent_budgets
 }
 
 

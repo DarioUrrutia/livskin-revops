@@ -105,6 +105,33 @@
         "type": "object",
         "properties": {}
       }
+    },
+    {
+      "name": "query_agent_costs",
+      "description": "Resumen de uso de recursos LLM API por agente (Bloque 0.10). Daily breakdown + totales today/month/30d + status budgets. Read-only.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "agent_name": { "type": "string", "description": "Filtra por agente. Vacío = todos." },
+          "days": { "type": "integer", "default": 30, "minimum": 1, "maximum": 365 }
+        }
+      }
+    },
+    {
+      "name": "query_agent_budget_status",
+      "description": "Pre-check ¿agente puede hacer call API ahora? Devuelve can_proceed + razón. Útil antes de invocar Claude.",
+      "input_schema": {
+        "type": "object",
+        "required": ["agent_name"],
+        "properties": {
+          "agent_name": { "type": "string" },
+          "estimated_cost_usd": {
+            "type": "string",
+            "default": "0.01",
+            "description": "Decimal del costo estimado del call (ej: '0.05')"
+          }
+        }
+      }
     }
   ]
 }

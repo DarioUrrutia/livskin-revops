@@ -206,6 +206,22 @@ containers:
       - name: livskin_erp_test
         owner: postgres
         purpose: tests pytest CI (ephemeral, TRUNCATE between tests)
+      tables_critical:
+        # Bloque 0.10 — agent resource tracking
+        - agent_api_calls (raw events de cada call Claude API, retención 90d)
+        - agent_budgets (límites por agente, hard_block_at_limit default true)
+        - agent_budget_alerts (dedup state de alertas)
+        # Bloque 0.4
+        - infra_snapshots (sensors snapshots, retención 30d)
+        # ERP core
+        - audit_log (49 eventos canónicos, INMUTABLE via trigger PL/pgSQL)
+        - clientes, ventas, pagos, gastos (data productiva)
+        - users, user_sessions (auth ADR-0026)
+      sql_functions:
+        - daily_budget_consumed(agent_name) — Bloque 0.10
+        - monthly_budget_consumed(agent_name) — Bloque 0.10
+        - recompute_venta_debe(cod_item) — trigger DEBE dinámico
+        - audit_log_immutable() — trigger anti UPDATE/DELETE
     volumes:
       - host: ./data
         container: /var/lib/postgresql/data
@@ -224,12 +240,16 @@ containers:
     routes:
       - path: /login, /logout, /change-password (allowlist auth)
       - path: /admin/audit-log (admin only — ADR-0027)
+      - path: /admin/system-health (admin only — Bloque 0.4)
+      - path: /admin/agent-costs (admin only — Bloque 0.10)
       - path: /api/* (JSON, requires auth)
       - path: /webhook/form-submit (Fase 4)
       - path: /api/internal/audit-event (cross-VPS audit ingest)
+      - path: /api/internal/system-state (Bloque 0.4)
+      - path: /api/internal/agent-api-call (Bloque 0.10 — wrappers de agentes POSTean acá)
+      - path: /api/internal/agent-budget-check (Bloque 0.10 — pre-check budget)
       - path: /api/system-map.json (Bloque 0.3)
-      - path: /api/health (Bloque 0.4)
-      - path: /api/system-state (Bloque 0.4)
+      - path: /api/internal/health (Bloque 0.4)
     depends_on: [postgres-data]
 
   - name: embeddings-service
@@ -702,8 +722,6 @@ ai_agent_consumption:
 ---
 
 **Próximas actualizaciones esperadas:**
-- Bloque 0.4 → agregar sensors a §2
-- Bloque 0.5 → completar §7 con frecuencias reales
 - Fase 3 → agregar Langfuse + workflows n8n a §2 y §3
-- Fase 4 → agregar Conversation Agent a §2
-- Fase 6 → reorganizar VPS 3 paths + agregar staging
+- Fase 4 → agregar Conversation Agent a §2 + ingesta a agent_api_calls real
+- Fase 6 → reorganizar VPS 3 paths + agregar staging + agregar ETL agent_api_calls → analytics.llm_costs

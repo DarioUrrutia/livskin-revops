@@ -32,12 +32,14 @@ from config import settings  # noqa: E402
 from models.base import Base  # noqa: E402
 
 # Importar todos los models para que Base.metadata los registre
+from models import agent_api_call  # noqa: F401, E402
 from models import audit_log  # noqa: F401, E402
 from models import catalogo  # noqa: F401, E402
 from models import cliente  # noqa: F401, E402
 from models import dedup_candidate  # noqa: F401, E402
 from models import form_submission  # noqa: F401, E402
 from models import gasto  # noqa: F401, E402
+from models import infra_snapshot  # noqa: F401, E402
 from models import lead  # noqa: F401, E402
 from models import lead_touchpoint  # noqa: F401, E402
 from models import pago  # noqa: F401, E402
@@ -103,6 +105,37 @@ CREATE TRIGGER prevent_audit_modification
     EXECUTE FUNCTION audit_log_immutable();
 """
 
+# Funciones helper de migration 0005 (agent budget tracking)
+BUDGET_FUNCTIONS_SQL = """
+CREATE OR REPLACE FUNCTION daily_budget_consumed(p_agent_name TEXT)
+RETURNS NUMERIC AS $$
+DECLARE
+    consumed NUMERIC(10,4);
+BEGIN
+    SELECT COALESCE(SUM(cost_usd), 0) INTO consumed
+    FROM agent_api_calls
+    WHERE agent_name = p_agent_name
+      AND occurred_at::date = CURRENT_DATE
+      AND outcome IN ('success', 'error');
+    RETURN consumed;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION monthly_budget_consumed(p_agent_name TEXT)
+RETURNS NUMERIC AS $$
+DECLARE
+    consumed NUMERIC(10,4);
+BEGIN
+    SELECT COALESCE(SUM(cost_usd), 0) INTO consumed
+    FROM agent_api_calls
+    WHERE agent_name = p_agent_name
+      AND date_trunc('month', occurred_at) = date_trunc('month', NOW())
+      AND outcome IN ('success', 'error');
+    RETURN consumed;
+END;
+$$ LANGUAGE plpgsql STABLE;
+"""
+
 
 @pytest.fixture(scope="session")
 def engine():
@@ -114,6 +147,7 @@ def engine():
     with eng.begin() as conn:
         conn.execute(text(TRIGGER_DEBE_SQL))
         conn.execute(text(TRIGGER_AUDIT_IMMUTABLE_SQL))
+        conn.execute(text(BUDGET_FUNCTIONS_SQL))
 
     yield eng
     eng.dispose()
@@ -137,7 +171,8 @@ def db_session(engine):
         with engine.begin() as conn:
             conn.execute(
                 text(
-                    "TRUNCATE TABLE audit_log, user_sessions, users, pagos, ventas, "
+                    "TRUNCATE TABLE agent_budget_alerts, agent_api_calls, agent_budgets, "
+                    "infra_snapshots, audit_log, user_sessions, users, pagos, ventas, "
                     "gastos, leads, lead_touchpoints, dedup_candidates, form_submissions, "
                     "catalogos, clientes RESTART IDENTITY CASCADE;"
                 )
