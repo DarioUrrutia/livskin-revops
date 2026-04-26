@@ -227,8 +227,17 @@
 </head>
 <body>
 <div class="card">
-    <div class="header">
+    <div class="header" style="position: relative;">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="Livskin Logo">
+        {% if current_user %}
+        <div style="position: absolute; top: 8px; right: 12px; font-size: 0.8rem; color: #666;">
+            <span>{{ current_user.nombre_completo }}</span>
+            &middot;
+            <a href="{{ url_for('auth.change_password_get') }}" style="color: #4a6cf7; text-decoration: none;">cambiar contraseña</a>
+            &middot;
+            <a href="{{ url_for('auth.logout') }}" style="color: #b91c1c; text-decoration: none;">cerrar sesión</a>
+        </div>
+        {% endif %}
     </div>
 
     {% with messages = get_flashed_messages() %}
