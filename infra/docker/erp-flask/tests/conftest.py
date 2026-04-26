@@ -20,6 +20,7 @@ import sys
 # ERP_DB_NAME=livskin_erp del docker-compose.
 os.environ["ERP_DB_NAME"] = "livskin_erp_test"
 os.environ["FLASK_ENV"] = "testing"
+os.environ["AUDIT_INTERNAL_TOKEN"] = "test-internal-token-do-not-use-in-prod"
 
 sys.path.insert(0, "/app")
 

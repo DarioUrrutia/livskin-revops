@@ -1,0 +1,175 @@
+name: Deploy to VPS 2 (livskin-vps-operations)
+
+# VPS 2 hosts: n8n, vtiger, metabase, postgres-analytics, nginx-vps2
+# Path: /srv/livskin-revops/infra/docker/vps2-ops/<servicio>/
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/docker/vps2-ops/**'
+      - '.github/workflows/deploy-vps2.yml'
+      - '.github/scripts/**'
+  workflow_dispatch:
+    inputs:
+      skip_snapshot:
+        description: 'Skip pre-deploy snapshot DO (USE CON CUIDADO)'
+        type: boolean
+        default: false
+      service:
+        description: 'Solo redeploy 1 servicio (n8n|vtiger|metabase|postgres-analytics|nginx). Vacio = todos.'
+        type: string
+        default: ''
+
+# Evita deploys simultaneos del mismo branch
+concurrency:
+  group: deploy-vps2-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Snapshot + Deploy + Verify VPS 2
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        run: bash .github/scripts/install-doctl.sh
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS2_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS2_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          [ ! -s ~/.ssh/known_hosts ] && { echo "ERROR: ssh-keyscan vacio"; exit 1; }
+
+      - name: DO API auth
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+        run: |
+          doctl auth init --access-token "$DO_API_TOKEN"
+          doctl account get | head -3
+
+      # Snapshot pre-deploy (skipeable solo via workflow_dispatch input)
+      - name: Pre-deploy snapshot
+        if: ${{ inputs.skip_snapshot != true }}
+        id: snapshot
+        env:
+          DROPLET_NAME: livskin-vps-operations
+        run: |
+          SNAP_ID=$(bash .github/scripts/do-snapshot.sh create "$DROPLET_NAME" pre-deploy)
+          echo "snapshot_id=$SNAP_ID" >> "$GITHUB_OUTPUT"
+          echo "Snapshot pre-deploy creado: $SNAP_ID"
+
+      # Deploy via SSH
+      - name: Deploy services
+        env:
+          RAW_HOST: ${{ secrets.VPS2_HOST }}
+          RAW_USER: ${{ secrets.VPS2_USER }}
+          SERVICE_FILTER: ${{ inputs.service }}
+        run: |
+          TARGET_HOST=$(printf '%s' "$RAW_HOST" | tr -d '[:space:]')
+          TARGET_USER=$(printf '%s' "$RAW_USER" | tr -d '[:space:]')
+          [ -z "$TARGET_USER" ] || [ -z "$TARGET_HOST" ] && { echo "ERROR: secrets vacios"; exit 1; }
+
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" \
+            SERVICE="$SERVICE_FILTER" 'bash -s' <<'ENDSSH'
+          set -e
+          echo "=== Git pull ==="
+          cd /srv/livskin-revops
+          git pull origin main
+
+          BASE=/srv/livskin-revops/infra/docker/vps2-ops
+          ALL_SERVICES="n8n vtiger metabase postgres-analytics nginx"
+          SERVICES="${SERVICE:-$ALL_SERVICES}"
+
+          for svc in $SERVICES; do
+            COMPOSE_DIR="$BASE/$svc"
+            if [ ! -f "$COMPOSE_DIR/docker-compose.yml" ]; then
+              echo "SKIP $svc: $COMPOSE_DIR/docker-compose.yml no existe"
+              continue
+            fi
+            echo "--- Deploying $svc ---"
+            cd "$COMPOSE_DIR"
+            # Validar config antes de aplicar
+            docker compose config -q || { echo "ERROR: config invalida en $svc"; exit 1; }
+            docker compose up -d --quiet-pull
+          done
+
+          # Reload nginx si su config cambio
+          if echo "$SERVICES" | grep -qw "nginx"; then
+            echo "--- nginx reload ---"
+            docker exec nginx nginx -t 2>&1 | tail -3
+            docker exec nginx nginx -s reload 2>&1 | tail -3 || true
+          fi
+
+          echo
+          echo "=== Containers VPS 2 ==="
+          docker ps --format "table {{.Names}}\t{{.Status}}"
+          ENDSSH
+
+      # Verify URLs publicas
+      - name: Verify public endpoints
+        id: verify
+        run: |
+          sleep 15
+          FAILED=0
+          for url in https://flow.livskin.site https://crm.livskin.site https://dash.livskin.site; do
+            success=false
+            for attempt in 1 2 3; do
+              if curl -sI --max-time 10 "$url" 2>&1 | head -1 | grep -qE 'HTTP/.* (200|301|302|401)'; then
+                echo "OK: $url (intento $attempt)"
+                success=true
+                break
+              fi
+              echo "Intento $attempt fallo en $url, retry en 5s..."
+              sleep 5
+            done
+            [ "$success" = "false" ] && { echo "FAIL: $url tras 3 intentos"; FAILED=1; }
+          done
+          [ $FAILED -eq 0 ] || exit 1
+
+      # Rollback automatico si verify fallo
+      - name: Rollback on failure
+        if: ${{ failure() && steps.snapshot.outputs.snapshot_id != '' }}
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+          DROPLET_NAME: livskin-vps-operations
+          SNAPSHOT_ID: ${{ steps.snapshot.outputs.snapshot_id }}
+        run: |
+          echo "=== ROLLBACK AUTOMATICO ==="
+          echo "Verify fallo. Restoring desde snapshot $SNAPSHOT_ID..."
+          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/do-snapshot.sh restore "$DROPLET_NAME" "$SNAPSHOT_ID"
+          echo "Rollback completo. VPS 2 restaurado."
+
+      # Cleanup snapshots viejos (>7 dias) — ahorra costos
+      - name: Cleanup old snapshots
+        if: success()
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+        run: |
+          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/do-snapshot.sh cleanup livskin-vps-operations pre-deploy
+
+      - name: Audit deploy event
+        if: always()
+        env:
+          AUDIT_TOKEN: ${{ secrets.AUDIT_INTERNAL_TOKEN }}
+          OUTCOME: ${{ job.status }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          # Reportar al endpoint /api/internal/audit-event del erp-flask
+          curl -s -X POST "https://erp.livskin.site/api/internal/audit-event" \
+            -H "X-Internal-Token: $AUDIT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"action\":\"infra.deploy_completed\",\"metadata\":{\"vps\":\"vps2\",\"sha\":\"$SHA\",\"actor\":\"$ACTOR\",\"outcome\":\"$OUTCOME\"}}" \
+            || echo "WARNING: audit endpoint no respondio (no critico)"

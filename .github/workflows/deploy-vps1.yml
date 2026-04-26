@@ -1,0 +1,142 @@
+name: Deploy to VPS 1 (livskin-wp)
+
+# VPS 1 hosts: WordPress (nginx host + php-fpm + MariaDB).
+# Versionable: nginx config + mu-plugins.
+# NO versionable: WP core + plugins instalados por UI + DB (backups).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/docker/vps1-wp/**'
+      - '.github/workflows/deploy-vps1.yml'
+      - '.github/scripts/**'
+  workflow_dispatch:
+    inputs:
+      skip_snapshot:
+        description: 'Skip pre-deploy snapshot DO'
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-vps1-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Snapshot + rsync + reload VPS 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        run: bash .github/scripts/install-doctl.sh
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS1_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS1_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          [ ! -s ~/.ssh/known_hosts ] && { echo "ERROR: ssh-keyscan vacio"; exit 1; }
+
+      - name: DO API auth
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+        run: doctl auth init --access-token "$DO_API_TOKEN"
+
+      - name: Pre-deploy snapshot
+        if: ${{ inputs.skip_snapshot != true }}
+        id: snapshot
+        run: |
+          SNAP_ID=$(bash .github/scripts/do-snapshot.sh create Livskin-WP-01 pre-deploy)
+          echo "snapshot_id=$SNAP_ID" >> "$GITHUB_OUTPUT"
+
+      # rsync de configs + mu-plugins
+      - name: Deploy nginx config + mu-plugins
+        env:
+          RAW_HOST: ${{ secrets.VPS1_HOST }}
+          RAW_USER: ${{ secrets.VPS1_USER }}
+        run: |
+          TARGET_HOST=$(printf '%s' "$RAW_HOST" | tr -d '[:space:]')
+          TARGET_USER=$(printf '%s' "$RAW_USER" | tr -d '[:space:]')
+
+          # Nginx config (validar primero)
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key -o BatchMode=yes" \
+            infra/docker/vps1-wp/nginx/livskin.conf \
+            "${TARGET_USER}@${TARGET_HOST}:/tmp/livskin.conf.new"
+
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" 'bash -s' <<'ENDSSH'
+          set -e
+          echo "=== Validando nginx config nuevo ==="
+          sudo cp /tmp/livskin.conf.new /etc/nginx/sites-available/livskin.new
+          # Test config con archivo nuevo (link temporal)
+          sudo nginx -t -c /etc/nginx/nginx.conf || { echo "FAIL: nginx -t"; exit 1; }
+          # Promover si pasa
+          sudo mv /etc/nginx/sites-available/livskin.new /etc/nginx/sites-available/livskin
+          rm /tmp/livskin.conf.new
+          echo "=== Reload nginx ==="
+          sudo systemctl reload nginx
+          ENDSSH
+
+          # mu-plugins (rsync incremental)
+          rsync -avz --delete -e "ssh -i ~/.ssh/deploy_key -o BatchMode=yes" \
+            infra/docker/vps1-wp/wp-mu-plugins/ \
+            "${TARGET_USER}@${TARGET_HOST}:/var/www/livskin/wp-content/mu-plugins/"
+
+          # Permissions
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" \
+            "sudo chown -R www-data:www-data /var/www/livskin/wp-content/mu-plugins"
+
+      - name: Verify livskin.site responds
+        run: |
+          sleep 5
+          for attempt in 1 2 3; do
+            CODE=$(curl -sI --max-time 10 https://livskin.site -o /dev/null -w "%{http_code}")
+            if [ "$CODE" = "200" ] || [ "$CODE" = "301" ] || [ "$CODE" = "302" ]; then
+              echo "OK: https://livskin.site → $CODE (intento $attempt)"
+              exit 0
+            fi
+            echo "Intento $attempt fallo (got $CODE), retry en 5s..."
+            sleep 5
+          done
+          echo "FAIL: https://livskin.site no responde tras 3 intentos"
+          exit 1
+
+      - name: Rollback on failure
+        if: ${{ failure() && steps.snapshot.outputs.snapshot_id != '' }}
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+          SNAPSHOT_ID: ${{ steps.snapshot.outputs.snapshot_id }}
+        run: |
+          echo "=== ROLLBACK AUTOMATICO VPS 1 ==="
+          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/do-snapshot.sh restore Livskin-WP-01 "$SNAPSHOT_ID"
+
+      - name: Cleanup old snapshots
+        if: success()
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+        run: |
+          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/do-snapshot.sh cleanup Livskin-WP-01 pre-deploy
+
+      - name: Audit deploy event
+        if: always()
+        env:
+          AUDIT_TOKEN: ${{ secrets.AUDIT_INTERNAL_TOKEN }}
+          OUTCOME: ${{ job.status }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          curl -s -X POST "https://erp.livskin.site/api/internal/audit-event" \
+            -H "X-Internal-Token: $AUDIT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"action\":\"infra.deploy_completed\",\"metadata\":{\"vps\":\"vps1\",\"sha\":\"$SHA\",\"actor\":\"$ACTOR\",\"outcome\":\"$OUTCOME\"}}" \
+            || echo "WARNING: audit endpoint no respondio"

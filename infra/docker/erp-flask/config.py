@@ -25,6 +25,10 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
+    # Cross-VPS: shared secret para endpoints internos (CI/CD, sensors, cron).
+    # Pre-Bloque-0 default insecure — rotar en producción a valor random.
+    audit_internal_token: str = "change-me-in-production"
+
     @property
     def database_url(self) -> str:
         return (

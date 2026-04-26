@@ -1,15 +1,32 @@
 name: Deploy to VPS 3 (livskin-vps-erp)
 
-# Se dispara cuando cambian archivos de infra o el propio workflow.
-# Tambien puede dispararse manualmente (workflow_dispatch) desde la UI
-# de GitHub Actions para re-deploy sin cambios.
+# VPS 3 hosts: ERP refactorizado + Postgres + pgvector (brain) + embeddings + nginx
+# Path: /srv/livskin-revops/infra/docker/<servicio>/ (paths legacy — ver
+# infra/docker/README.md sobre asimetria intencional con vps2-ops/)
+
 on:
   push:
     branches: [main]
     paths:
-      - 'infra/docker/**'
+      - 'infra/docker/erp-flask/**'
+      - 'infra/docker/postgres-data/**'
+      - 'infra/docker/embeddings-service/**'
+      - 'infra/docker/nginx-vps3/**'
+      - 'infra/docker/alembic-erp/**'
+      - 'infra/docker/alembic-brain/**'
+      - 'infra/docker/brain-tools/**'
       - '.github/workflows/deploy-vps3.yml'
+      - '.github/scripts/**'
   workflow_dispatch:
+    inputs:
+      skip_snapshot:
+        description: 'Skip pre-deploy snapshot DO (USE CON CUIDADO)'
+        type: boolean
+        default: false
+      skip_tests:
+        description: 'Skip pytest post-deploy'
+        type: boolean
+        default: false
 
 # Evita 2 deploys simultaneos del mismo branch
 concurrency:
@@ -18,19 +35,17 @@ concurrency:
 
 jobs:
   deploy:
-    name: Pull + compose up en VPS 3
+    name: Snapshot + Pull + Compose + Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
 
     steps:
-      # Paso 1: descargar el repo en el runner de GitHub (necesario
-      # para que Actions sepa que commit se esta deploying)
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Paso 2: preparar SSH key desde secret + anadir host a known_hosts
-      # Nota: usamos VPS_HOST (no HOST) para evitar conflictos con env
-      # estandar del runner.
+      - name: Install doctl
+        run: bash .github/scripts/install-doctl.sh
+
       - name: Setup SSH
         env:
           SSH_KEY: ${{ secrets.VPS3_SSH_KEY }}
@@ -40,20 +55,27 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keygen -l -f ~/.ssh/deploy_key
-          # Populate known_hosts con la huella ssh del VPS 3
           ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts 2>/dev/null
-          # Verificar que el archivo no este vacio
           if [ ! -s ~/.ssh/known_hosts ]; then
-            echo "ERROR: ssh-keyscan no produjo entradas - VPS inaccesible?"
+            echo "ERROR: ssh-keyscan no produjo entradas"
             exit 1
           fi
-          echo "known_hosts entries: $(wc -l < ~/.ssh/known_hosts)"
 
-      # Paso 3: SSH al VPS 3 -> git pull -> docker compose up -d
-      # Strip defensivo de whitespace (los secrets pueden tener \n extras
-      # si se pegaron con Enter al final). tr -d '[:space:]' quita todo.
-      # <<'ENDSSH' con comilla simple previene expansion local;
-      # el bash remoto del VPS 3 hace la expansion de $svc, etc.
+      - name: DO API auth
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+        run: |
+          doctl auth init --access-token "$DO_API_TOKEN"
+          doctl account get | head -3
+
+      - name: Pre-deploy snapshot
+        if: ${{ inputs.skip_snapshot != true }}
+        id: snapshot
+        run: |
+          SNAP_ID=$(bash .github/scripts/do-snapshot.sh create livskin-vps-erp pre-deploy)
+          echo "snapshot_id=$SNAP_ID" >> "$GITHUB_OUTPUT"
+          echo "Snapshot pre-deploy creado: $SNAP_ID"
+
       - name: Deploy to VPS 3
         env:
           RAW_HOST: ${{ secrets.VPS3_HOST }}
@@ -117,9 +139,6 @@ jobs:
           docker ps --format "table {{.Names}}\t{{.Status}}"
           ENDSSH
 
-      # Paso 4: verificar URLs publicas
-      # Sleep generoso (20s) porque el rebuild de erp-flask puede tomar
-      # tiempo. Retry hasta 3 veces antes de marcar fallo.
       - name: Verify public endpoints
         run: |
           sleep 20
@@ -132,7 +151,7 @@ jobs:
                 success=true
                 break
               fi
-              echo "Intento $attempt falló, reintentando en 5s..."
+              echo "Intento $attempt fallo, reintentando en 5s..."
               sleep 5
             done
             if [ "$success" = "false" ]; then
@@ -143,13 +162,8 @@ jobs:
           echo
           echo "Deploy completo y verificado."
 
-      # Paso 5: correr tests pytest dentro del container ya deployado.
-      # La DB livskin_erp_test debe existir en postgres-data (creada manualmente
-      # una vez; el workflow asume ya esta presente).
-      # Si los tests fallan, el workflow se marca como failed y notifica.
-      # Skipea tests si los archivos modificados son solo nginx/docker/docs
-      # (no tocan codigo Python del erp-flask).
       - name: Run pytest in deployed container
+        if: ${{ inputs.skip_tests != true }}
         env:
           RAW_HOST: ${{ secrets.VPS3_HOST }}
           RAW_USER: ${{ secrets.VPS3_USER }}
@@ -157,15 +171,46 @@ jobs:
           TARGET_HOST=$(printf '%s' "$RAW_HOST" | tr -d '[:space:]')
           TARGET_USER=$(printf '%s' "$RAW_USER" | tr -d '[:space:]')
 
-          # Asegurar DB de tests existe (idempotente: CREATE IF NOT EXISTS via
-          # psql DO block — IF NOT EXISTS no aplica directo a CREATE DATABASE).
+          # Asegurar DB de tests existe
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" \
             "docker exec -i postgres-data psql -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='livskin_erp_test'\" | grep -q 1 || \
              docker exec -i postgres-data psql -U postgres -c 'CREATE DATABASE livskin_erp_test;'"
 
-          # Correr suite con coverage. Si falla, el comando exit code != 0
-          # y este step (con default behavior) falla el job entero.
+          # Correr suite con coverage
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" \
             "docker exec erp-flask pytest /app/tests/ --tb=short"
 
-          echo "Tests pasaron — coverage >=75% verificado por --cov-fail-under en pyproject.toml"
+          echo "Tests pasaron — coverage >=75% verificado por fail_under en pyproject.toml"
+
+      # Rollback automatico si verify o tests fallan
+      - name: Rollback on failure
+        if: ${{ failure() && steps.snapshot.outputs.snapshot_id != '' }}
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+          SNAPSHOT_ID: ${{ steps.snapshot.outputs.snapshot_id }}
+        run: |
+          echo "=== ROLLBACK AUTOMATICO VPS 3 ==="
+          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/do-snapshot.sh restore livskin-vps-erp "$SNAPSHOT_ID"
+
+      - name: Cleanup old snapshots
+        if: success()
+        env:
+          DO_API_TOKEN: ${{ secrets.DO_API_TOKEN }}
+        run: |
+          doctl auth init --access-token "$DO_API_TOKEN"
+          bash .github/scripts/do-snapshot.sh cleanup livskin-vps-erp pre-deploy
+
+      - name: Audit deploy event
+        if: always()
+        env:
+          AUDIT_TOKEN: ${{ secrets.AUDIT_INTERNAL_TOKEN }}
+          OUTCOME: ${{ job.status }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          curl -s -X POST "https://erp.livskin.site/api/internal/audit-event" \
+            -H "X-Internal-Token: $AUDIT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"action\":\"infra.deploy_completed\",\"metadata\":{\"vps\":\"vps3\",\"sha\":\"$SHA\",\"actor\":\"$ACTOR\",\"outcome\":\"$OUTCOME\"}}" \
+            || echo "WARNING: audit endpoint no respondio"
