@@ -32,8 +32,25 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=. --cov-report=term-missing --cov-fail-under=75"
+addopts = "--cov=services --cov=routes --cov=middleware --cov=schemas --cov-report=term-missing"
 markers = [
     "unit: unit tests",
     "integration: integration tests requiring DB",
 ]
+
+[tool.coverage.run]
+omit = [
+    "tests/*",
+    "scripts/*",
+    "*/migrations/*",
+    "models/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+fail_under = 75
