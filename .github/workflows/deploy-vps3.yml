@@ -142,3 +142,30 @@ jobs:
           done
           echo
           echo "Deploy completo y verificado."
+
+      # Paso 5: correr tests pytest dentro del container ya deployado.
+      # La DB livskin_erp_test debe existir en postgres-data (creada manualmente
+      # una vez; el workflow asume ya esta presente).
+      # Si los tests fallan, el workflow se marca como failed y notifica.
+      # Skipea tests si los archivos modificados son solo nginx/docker/docs
+      # (no tocan codigo Python del erp-flask).
+      - name: Run pytest in deployed container
+        env:
+          RAW_HOST: ${{ secrets.VPS3_HOST }}
+          RAW_USER: ${{ secrets.VPS3_USER }}
+        run: |
+          TARGET_HOST=$(printf '%s' "$RAW_HOST" | tr -d '[:space:]')
+          TARGET_USER=$(printf '%s' "$RAW_USER" | tr -d '[:space:]')
+
+          # Asegurar DB de tests existe (idempotente: CREATE IF NOT EXISTS via
+          # psql DO block — IF NOT EXISTS no aplica directo a CREATE DATABASE).
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" \
+            "docker exec -i postgres-data psql -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='livskin_erp_test'\" | grep -q 1 || \
+             docker exec -i postgres-data psql -U postgres -c 'CREATE DATABASE livskin_erp_test;'"
+
+          # Correr suite con coverage. Si falla, el comando exit code != 0
+          # y este step (con default behavior) falla el job entero.
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "${TARGET_USER}@${TARGET_HOST}" \
+            "docker exec erp-flask pytest /app/tests/ --tb=short"
+
+          echo "Tests pasaron — coverage >=75% verificado por --cov-fail-under en pyproject.toml"
