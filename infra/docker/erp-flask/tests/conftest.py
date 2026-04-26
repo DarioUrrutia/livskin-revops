@@ -15,9 +15,11 @@ Uso:
 import os
 import sys
 
-# Apuntar Settings a test DB ANTES de importar config
-os.environ.setdefault("ERP_DB_NAME", "livskin_erp_test")
-os.environ.setdefault("FLASK_ENV", "testing")
+# Apuntar Settings a test DB ANTES de importar config.
+# Forzamos override (no setdefault) porque el container ya tiene
+# ERP_DB_NAME=livskin_erp del docker-compose.
+os.environ["ERP_DB_NAME"] = "livskin_erp_test"
+os.environ["FLASK_ENV"] = "testing"
 
 sys.path.insert(0, "/app")
 
