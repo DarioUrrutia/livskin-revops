@@ -123,7 +123,7 @@ jobs:
       - name: Verify public endpoints
         run: |
           sleep 20
-          for url in https://erp.livskin.site https://erp-staging.livskin.site; do
+          for url in https://erp.livskin.site; do
             success=false
             for attempt in 1 2 3; do
               if curl -sfI --max-time 10 "$url" > /dev/null; then
