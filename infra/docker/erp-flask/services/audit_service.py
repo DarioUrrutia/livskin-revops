@@ -205,17 +205,29 @@ def query_audit(
 
 
 def list_distinct_values(db: Session) -> dict[str, list[str]]:
-    """Lista valores únicos para los filtros del dropdown del dashboard."""
-    actions = [
+    """Lista valores para los filtros del dropdown del dashboard.
+
+    actions/categories: combina las canónicas (KNOWN_ACTIONS del ADR-0027) con
+    cualquier valor existente en DB que no esté en la lista canónica. Garantiza
+    que el dropdown siempre muestre las opciones esperadas, aunque aún no haya
+    entries de esa acción/categoría.
+
+    users: solo viene de DB (no hay set canónico).
+    """
+    db_actions = {
         r[0] for r in db.execute(
-            select(AuditLog.action).distinct().order_by(AuditLog.action)
-        ).all()
-    ]
-    categories = [
+            select(AuditLog.action).distinct()
+        ).all() if r[0]
+    }
+    db_categories = {
         r[0] for r in db.execute(
-            select(AuditLog.category).distinct().order_by(AuditLog.category)
-        ).all()
-    ]
+            select(AuditLog.category).distinct()
+        ).all() if r[0]
+    }
+    canonical_categories = {a.split(".", 1)[0] for a in KNOWN_ACTIONS if "." in a}
+
+    actions = sorted(KNOWN_ACTIONS | db_actions)
+    categories = sorted(canonical_categories | db_categories)
     users = [
         r[0] for r in db.execute(
             select(AuditLog.user_username)
