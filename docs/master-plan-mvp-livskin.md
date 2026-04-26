@@ -658,28 +658,106 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 - 11 cerrados sistemáticamente (bloques A-F de commits)
 - 2 diferidos no críticos: métodos pago primera fila (cosmético), multi-currency por item
 
-### 11.5 Fase 3 — Tracking + observabilidad (Semana 5)
+### 11.5 Fase 3 — Tracking + observabilidad (Semana 5) — REVISADA 2026-04-26
 
-**Objetivo:** cada visita y click trazable hasta el revenue; observabilidad lista para agentes.
+**Estado real al 2026-04-26 (post-audit):** el stack tracking en VPS 1 NO es greenfield — ya existe GTM `GTM-P55KXDL6` LIVE, GA4 `G-9CNPWS3NRX` capturando datos, Pixel `4410809639201712` configurado en PixelYourSite + GTM (doble disparo causa "Diagnóstico (1)" en Meta). Pixel viejo `670708374433840` a archivar. LatePoint a desactivar (servicios demo). Form Render no enlazado desde livskin.site. Vtiger 0 leads/contacts. n8n 0 workflows. Detalle: [docs/audits/estado-real-cross-vps-2026-04-26.md](../audits/estado-real-cross-vps-2026-04-26.md).
 
-**Entregables:**
-- **Dossiers aprobados:** 0017 (consent), 0021 (UTMs persistence)
-- PixelYourSite configurado: Meta Pixel + GA4 + GTM (sin Pinterest/Bing/Reddit)
-- GTM container creado con eventos: `page_view`, `view_content`, `lead_submit`, `whatsapp_click`, `purchase` (server-side)
-- **Meta Conversion API** configurada en n8n (server-side events con fbclid)
-- **GA4 Measurement Protocol** en n8n (server-side events)
-- SureForms webhook payload: UTMs + fbclid + gclid + consent + landing + referer
-- Script custom de UTM persistence en WP (localStorage)
-- Complianz en modo reject-or-accept, ajustado
-- **Langfuse desplegado** en VPS 2 (container adicional)
-- **Cost tracking Claude API** activado (tabla `analytics.llm_costs`)
-- Dashboards Metabase iniciales: "Leads por fuente", "Conversión por etapa"
+**Pre-requisito Fase 3:** sesión "Setup acceso programático + audit definitivo" (Google service account + Meta System User → audit cross-stack vía APIs en lugar de screenshots).
+
+**Arquitectura tracking 2-capas (decisión 2026-04-26):**
+- **Capa 1 client-side single source = GTM** (no plugin PixelYourSite — se desactiva).
+- **Capa 2 server-side CAPI emitida desde ERP VPS 3** (no desde WordPress) — porque eventos reales del funnel (cita agendada, asistida, venta) viven en ERP.
+
+**Objetivo:** cada visita y click trazable hasta el revenue; observabilidad lista para agentes; un solo client-side source + un solo server-side CAPI.
+
+**Entregables (mini-bloques ejecutables):**
+
+**Mini-bloque 3.1 — Limpieza VPS 1**
+- Desactivar plugin PixelYourSite (redundante con GTM)
+- Desactivar plugin LatePoint (no se usa)
+- Archivar Pixel viejo `670708374433840` en Meta
+- Resolver Diagnóstico (1) del Pixel `4410809639201712`
+- Reparar link WhatsApp CTA del home (hoy `?phone=` vacío)
+
+**Mini-bloque 3.2 — GTM event tagging + UTM persistence**
+- Tag GTM: `form_submit` (SureForms 1569) → GA4 + Pixel
+- Tag GTM: `whatsapp_click` → GA4 + Pixel
+- Tag GTM: `scroll_75pct` + engagement events
+- UTM persistence: cookie de primera visita + hidden fields auto-poblados en SureForms
+- Click ID capture: `fbclid`, `gclid`, `ttclid` en hidden fields
+- Publicar nueva versión del container GTM
+- ADR-0021 (UTMs persistence) cerrado
+
+**Mini-bloque 3.3 — Form → ERP webhook**
+- Endpoint nuevo en ERP: `POST /api/leads/intake` (idempotente, valida + INSERT en `leads` table)
+- Webhook desde SureForms 1569 → ERP intake
+- Push secundario a Vtiger (marketing automation)
+- Tests pytest (mantener coverage ≥80%)
+- Audit log: nuevo evento `lead.created`
+
+**Mini-bloque 3.4 — CAPI server-side desde ERP**
+- Módulo `services/tracking_emitter.py` en ERP Flask
+- Listener del audit_log: cuando se inserta evento canónico → POST a Meta CAPI + GA4 Measurement Protocol
+- Eventos: `Lead` (lead created), `Schedule` (appointment created — Bloque puente), `Purchase` (venta closed)
+- Mismo `event_id` y `external_id` cliente+server para deduplicación
+- Test: enviar evento de prueba → verificar match quality "Good" en Events Manager
+- ADR-0019 (tracking architecture) cerrado en versión full
+
+**Mini-bloque 3.5 — Observabilidad**
+- Langfuse desplegado en VPS 2 (container adicional)
+- Dashboards Metabase: "Leads por fuente", "Conversión por etapa", "Cost LLM diario" (Bloque 0.10)
+- Postgres-analytics ETL: poblar `events`, `leads`, `opportunities` desde ERP + Vtiger
+- ADR-0017 (consent) cerrado
 
 **Exit criteria:**
-- Lleno formulario con link UTM en navegador privado → evento aparece en Metabase con atribución correcta
-- Meta Events Manager muestra el server-side event con match quality "Good"
-- Langfuse captura primer request de prueba
-- Cost tracker muestra $0.00 (aún no hay agentes)
+- Lleno formulario con link UTM en navegador privado → evento aparece en GA4 + Pixel con UTMs + match quality "Good"
+- Mismo lead aparece en `leads` table del ERP con UTMs persistidos
+- Meta Events Manager muestra eventos client + server con event_id coincidente (deduplicados)
+- Diagnóstico Pixel = 0 issues
+- Langfuse captura primer request de prueba (cuando arranque Fase 4)
+
+### 11.5a Bloque puente — Módulo Agenda Mínima en ERP (entre Fase 3 y Fase 4)
+
+**Objetivo:** llenar el agujero del funnel actual (lead → ??? → venta). Hoy no existe sistema que registre que una cita fue agendada, asistida o no-show. Sin esto, server-side CAPI no puede emitir `Schedule` ni `CompleteRegistration`, y métricas reales del funnel son imposibles.
+
+**Decisión arquitectónica (2026-04-26):** ERP es SoT operativo único (Opción B). Vtiger queda para marketing automation, no como sistema de citas.
+
+**Por qué aquí y no antes o después:**
+- **No antes (en Fase 3):** Fase 3 es captura. Agenda es procesamiento post-captura.
+- **No después (en Fase 4):** Fase 4 (Conversation Agent) necesita escribir en `appointments` automáticamente. Sin la tabla, el bot no tiene dónde agendar.
+- **Aquí:** plumbing tracking listo + antes de que el bot necesite la tabla.
+
+**Duración estimada:** 3-4 sesiones (~6-12h totales).
+
+**Protocolo "precisión quirúrgica" (requisito explícito Dario 2026-04-26):**
+1. ADR-00XX (módulo Agenda ERP) redactado, aprobado por Dario antes de cualquier código
+2. Tests pytest primero — definen comportamiento esperado
+3. Endpoints aislados — nuevo blueprint Flask `routes/agenda.py`, NO toca rutas existentes
+4. Feature flag — UI detrás de `settings.agenda_enabled = True/False`
+5. Migración Alembic 0005 100% reversible (`upgrade()` + `downgrade()` simétricos)
+6. Validación con doctora — 5 citas de prueba antes de quitar feature flag
+7. Documentación viva en `docs/runbooks/agenda-mantenimiento.md`
+8. Audit log integration — cada cambio en `appointments` queda en audit_log
+
+**Entregables:**
+- **Schema** `appointments` (11 campos: lead_id, cliente_id, treatment, scheduled_for, duration_min, status, channel, notes, created_by, attended_at, timestamps). Status enum: `scheduled, confirmed, attended, no_show, cancelled, rescheduled`.
+- **Endpoints REST**: GET/POST/PUT en `/api/appointments`, GET listas (hoy/semana), POST cambio status
+- **3 vistas UI mínimas** en ERP:
+  - "Agenda hoy" — lista de citas del día con botones [Confirmar] [Asistió] [No asistió] [Reagendar]
+  - "Agenda semana" — calendario simple
+  - "Cita detalle" — vista edit + link al lead origen + link al cliente si convirtió
+- **Tracking integration**: emisión automática de eventos `Schedule` (al INSERT) + `CompleteRegistration` (al status='attended') vía `tracking_emitter` (Mini-bloque 3.4)
+- **Tests pytest** ≥85% coverage del módulo nuevo
+- **Runbook** `agenda-mantenimiento.md`
+
+**Exit criteria:**
+- Doctora marca asistencia de 5 citas reales sin reportar fricción
+- Cada `appointments.create` emite evento `Schedule` a Meta + GA4 con match quality "Good"
+- Cada `attended` emite `CompleteRegistration`
+- 0 regresiones en endpoints ERP existentes (verificado por tests + manual)
+- Feature flag puede revertirse sin pérdida de data
+
+
 
 ### 11.5b Interludio estratégico — Definición de estrategia, segmentos y plan de negocio (entre Fase 3 y Fase 4)
 

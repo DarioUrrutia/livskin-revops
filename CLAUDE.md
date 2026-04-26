@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-04-26 (v2.0 — Bloque 0 cimientos cross-VPS state-of-the-art completo)
+> Última actualización: 2026-04-26 v2.1 (audit cross-VPS real + arquitectura tracking + decisión módulo Agenda)
 
 ---
 
@@ -165,9 +165,11 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 | 1 | ✅ Completada (2026-04-20) |
 | 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage al 2026-04-26) |
 | **0 v2 (Bloque foundation cross-VPS)** | ✅ **Completado 2026-04-26** — versionado VPS 1+2 + CI/CD multi-VPS + system-map + sensors + backups + runbooks + DR drill + skills + MCP scaffold |
-| 3 | ⏳ Próxima — tracking + observabilidad (Meta Pixel + GA4 + GTM + Langfuse + UTMs) |
-| 4 | ⏳ Conversation Agent (WhatsApp test number) |
-| 5 | ⏳ Content + Acquisition Agents |
+| **Setup acceso programático** | ⏳ Próxima sesión inmediata — Google service account + Meta System User + audit programático definitivo (resuelve doble disparo Pixel + UTMs end-to-end) |
+| 3 | ⏳ Tracking + observabilidad (limpieza VPS 1 + GTM tagging + form→ERP webhook + CAPI server-side desde ERP) |
+| **Bloque puente Agenda Mínima ERP** | ⏳ Entre Fase 3 y Fase 4 — módulo `appointments` con precisión quirúrgica (ADR + tests + feature flag + validación doctora) |
+| 4 | ⏳ Conversation Agent (WhatsApp test number agenda en `appointments` automáticamente) |
+| 5 | ⏳ Brand Orchestrator + Acquisition Agents (precedida de sesión estratégica organizacional) |
 | 6 | ⏳ Growth + cutover ERP real + 5to agente Infra+Security |
 
 **Ver [docs/master-plan-mvp-livskin.md § 11](docs/master-plan-mvp-livskin.md#11-roadmap-10-semanas-con-6-workstreams) para detalle.**
@@ -213,11 +215,7 @@ Ver [memoria persistente vps_access](~/.claude/projects/.../memory/vps_access.md
 
 **Arranque (mío, 2 min):** leo CLAUDE.md + `docs/backlog.md` + `notes/compartido/` + última sesión + memoria, te digo en 3 líneas dónde quedamos, qué hay en backlog relevante, y qué propongo hacer.
 
-**Cierre (mío, 2 min):** 
-- Genero `docs/sesiones/YYYY-MM-DD-titulo.md` con qué se hizo, qué quedó pendiente, próximo paso
-- Muevo items de backlog a "Hecho" si corresponde
-- Actualizo CLAUDE.md, master plan, memoria si hubo cambios estructurales
-- Si surgió idea nueva no-urgente → la agrego a `docs/backlog.md` con tu aprobación
+**Cierre (mío, 5-15 min):** ejecuto runbook estandarizado [docs/runbooks/cierre-sesion.md](docs/runbooks/cierre-sesion.md). 11 pasos: session log + ADRs + CLAUDE.md + master plan + backlog + memoria + capacidades agentes + git commit/push. Incluye filosofía + checklist + cuándo NO ejecutar completo. Es runbook vivo, evoluciona con cada sesión que descubra fricción nueva.
 
 **Antes de cambios riesgosos:** plan explícito + tu aprobación. Nunca ejecuto destructivas sin check.
 
@@ -262,7 +260,28 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-04-26 (Bloque foundation completo + Fase 2 ~99%)
+## 📝 Estado al 2026-04-26 (post-audit cross-VPS real + decisiones arquitectónicas)
+
+### Sesión 2026-04-26 (segunda mitad — audit + arquitectura)
+
+Tras cerrar Bloque 0 v2 + tag `v0.foundation`, sesión profundizó en estado real cross-VPS y cerró 8 decisiones estratégicas. Ver [session log completo](docs/sesiones/2026-04-26-audit-real-y-arquitectura-tracking.md).
+
+**Audit cross-VPS real ejecutado** ([docs/audits/estado-real-cross-vps-2026-04-26.md](docs/audits/estado-real-cross-vps-2026-04-26.md)):
+- VPS 1 ya tiene GTM + GA4 + Pixel funcionando (no greenfield) — **doble disparo de Pixel detectado** (plugin PixelYourSite + GTM custom HTML).
+- VPS 2 provisionado pero virgen: 0 workflows n8n, 0 leads/contacts/opps Vtiger, 0 filas analytics.
+- VPS 3 sólido con 134 clientes / 88 ventas / 84 pagos reales + audit pipeline operativo.
+- 2 Pixels en Meta (uno viejo a archivar). Diagnóstico (1) = duplicación.
+- LatePoint con servicios demo → desactivar. Form Render no enlazado desde livskin.site.
+
+**Decisiones arquitectónicas cerradas:**
+1. **Tracking 2-capas single-source**: client-side = GTM única fuente; server-side CAPI = emitida desde ERP VPS 3 (no desde WordPress).
+2. **Pixel `670708374433840` se archiva**, único activo `4410809639201712`.
+3. **Módulo Agenda vive en ERP** (Opción B), no Vtiger. Doctora marca asistencia. ADR pendiente.
+4. **Vtiger redefinido**: master del journey de marketing del lead. ERP gana el journey operativo (lead→cita→asistido→cliente→venta→pago).
+5. **Precisión quirúrgica al ampliar ERP**: ADR aprobado + tests primero + endpoints aislados + feature flag + Alembic reversible + validación con doctora.
+6. **Setup acceso programático completo en próxima sesión** (Google service account + Meta System User + Cloudflare token) → audit programático real reemplaza audit por screenshots.
+7. **Cierre de sesión estandarizado** como runbook vivo: [docs/runbooks/cierre-sesion.md](docs/runbooks/cierre-sesion.md).
+8. **Gobernanza de agentes reiterada**: procesos antes de libertad, deterministic > LLM, hard limits no soft, eval suite continua, humano al mando.
 
 ### Bloque 0 v2 — Cimientos cross-VPS state-of-the-art (cierre 2026-04-26)
 

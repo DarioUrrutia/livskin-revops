@@ -25,6 +25,100 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 Setup acceso programático a Google + Meta (próxima sesión inmediata)
+**Pre-requisito de Fase 3.** Audit por screenshots tiene techo. Para resolver definitivamente fricciones cross-stack, Claude necesita acceso vía API.
+
+**Setup 1 — Google service account:**
+- Google Cloud Console → proyecto "livskin-claude-audit"
+- Service account `claude-readonly@…`
+- JSON key → `keys/google-claude.json` (gitignored)
+- Grants read-only: GA4 (Viewer en property Livskin), GTM (Read en container `GTM-P55KXDL6`), Google Ads (Read-only en cuenta `216-312-4950`)
+
+**Setup 2 — Meta System User:**
+- Meta Business Settings → System Users → crear "claude-livskin-readonly"
+- Token con scopes read-only: `ads_read`, `business_management`, `pages_read_engagement`
+- Acceso a Pixel `4410809639201712` + Business `444099014574638` + Ad accounts `2885433191763149`
+- Token a `keys/.env.integrations`
+
+**Setup 3 — Cloudflare API token (diferido a Fase 3):**
+- API Tokens → custom token con permisos read en zone livskin.site
+- Token a `keys/.env.integrations`
+
+**Output post-setup:**
+- `docs/audits/audit-tracking-stack-real-2026-04-XX.md` — audit programático real
+- ADR-00XX — arquitectura tracking client-server cerrada con datos reales
+- Plan ejecutable de Fase 3 mini-bloques con orden y tiempos
+
+**Fase sugerida:** próxima sesión (post 2026-04-26)
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🔴 ADR-00XX — Módulo Agenda Mínima en ERP (entre Fase 3 y Fase 4)
+**Decisión arquitectónica cerrada 2026-04-26 (Opción B):** ERP gana módulo Agenda con tabla `appointments`. Vtiger queda para marketing automation, no para citas.
+
+**Requisito Dario:** "precisión quirúrgica" — el ERP ya tiene 134 clientes / 88 ventas / 84 pagos productivos, no se puede romper nada.
+
+**Protocolo (8 pasos):**
+1. ADR redactado y aprobado antes de cualquier código
+2. Tests pytest primero (TDD)
+3. Endpoints aislados (nuevo blueprint, no toca existentes)
+4. Feature flag `settings.agenda_enabled`
+5. Migración Alembic 0005 100% reversible
+6. Validación con doctora (5 citas de prueba)
+7. Runbook `agenda-mantenimiento.md`
+8. Audit log integration (cada cambio en `appointments` → audit_log)
+
+**Schema preliminar:**
+- `appointments`: id, lead_id, cliente_id, treatment, scheduled_for, duration_min, status, channel, notes, created_by, attended_at, timestamps
+- Status enum: `scheduled, confirmed, attended, no_show, cancelled, rescheduled`
+
+**Output:**
+- Migración Alembic 0005
+- Endpoints `/api/appointments` (CRUD)
+- 3 vistas UI: agenda hoy / semana / cita detalle
+- Integración con `tracking_emitter` (emite `Schedule` + `CompleteRegistration` automáticamente)
+- Tests ≥85% coverage del módulo nuevo
+
+**Fase sugerida:** entre Fase 3 y Fase 4 (3-4 sesiones)
+**Referencia:** [docs/sesiones/2026-04-26-audit-real-y-arquitectura-tracking.md](sesiones/2026-04-26-audit-real-y-arquitectura-tracking.md)
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🟡 ADR-00XX — Arquitectura tracking 2-capas single-source
+**Decisión 2026-04-26:**
+- Capa client-side: GTM como única fuente. Plugin PixelYourSite se desactiva.
+- Capa server-side CAPI: emitida desde ERP VPS 3 (no desde WordPress).
+- Pixel viejo `670708374433840` se archiva. Único activo: `4410809639201712`.
+
+**Por qué desde ERP no desde WP:**
+- ERP tiene eventos reales del funnel (cita, venta) que WP no ve
+- ERP tiene email/teléfono real → match quality superior
+
+**Output esperado:**
+- `docs/decisiones/00XX-arquitectura-tracking-client-server.md` cerrado
+- Implementación en mini-bloques 3.1–3.5 de Fase 3 revisada
+
+**Fase sugerida:** Fase 3 (Mini-bloque 3.4 lo requiere)
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
+### 🟡 Refinamiento rol Vtiger en arquitectura
+**Decisión 2026-04-26:** Vtiger NO es SoT operativo (eso es ERP). Vtiger es **motor de marketing automation**:
+- Lead → campañas drip
+- Scoring + nurture flows
+- Segmentación
+- LEE del ERP (vía Postgres FDW o API), no escribe
+
+**Acción:** actualizar `docs/decisiones/0014-...` (gobierno datos) o crear ADR específico que documente el refinamiento. Actualizar memoria `project_vtiger_erp_sot.md` ya hecho en cierre 2026-04-26.
+
+**Fase sugerida:** cuando se cierre ADR-00XX módulo Agenda
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
 ### 🟡 Sesión estratégica — Estructura organizacional de agentes IA
 **Antes de Fase 5 (Brand Orchestrator).** Dario pidió pensar el sistema como organización empresarial: él CEO, agentes con rangos + funciones + subagentes + skills.
 
@@ -253,6 +347,18 @@ Condiciona si necesitamos módulo PDF/impresión en ERP.
 ## Hecho (historial)
 
 <!-- Los items completados se mueven aquí para mantener historial. No se borran. -->
+
+### ✅ Audit cross-VPS real ejecutado (2026-04-26)
+Audit exhaustivo SSH-based de los 3 VPS + verificación stack Google/Meta vía screenshots. Hallazgos clave: VPS 1 ya tiene GTM + GA4 + Pixel funcionando con doble disparo; VPS 2 vacío (0 workflows, 0 leads); VPS 3 sólido con 134 clientes productivos. Doc: [docs/audits/estado-real-cross-vps-2026-04-26.md](audits/estado-real-cross-vps-2026-04-26.md).
+
+### ✅ Decisión arquitectónica módulo Agenda en ERP (2026-04-26)
+Tras evaluar 3 opciones (Vtiger / ERP / WhatsApp inferred), cerrada Opción B: ERP gana módulo Agenda con tabla `appointments`. Doctora marca asistencia. Vtiger redefinido a marketing automation. Detalle en session log.
+
+### ✅ Decisión arquitectura tracking 2-capas single-source (2026-04-26)
+Capa client = GTM única fuente; capa server-CAPI desde ERP. Pixel viejo a archivar. Plan migración en mini-bloques de Fase 3.
+
+### ✅ Runbook estandarizado de cierre de sesión (2026-04-26)
+[docs/runbooks/cierre-sesion.md](runbooks/cierre-sesion.md) — 11 pasos + filosofía + checklist + cuándo NO ejecutar. Evolutivo. Resuelve fricción de re-pensar el cierre cada sesión.
 
 ### ✅ Fase 0 — Repo reorganizado + 3 dossiers + master plan
 Completada 2026-04-18. Ver session log correspondiente.
