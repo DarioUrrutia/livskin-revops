@@ -126,15 +126,16 @@ def upgrade() -> None:
         ),
     )
 
-    # Seed defaults MVP (revisar tras Fase 4 con data real)
+    # Seed defaults MVP-light ($134/mes total — decision Dario 2026-04-26)
+    # Subir budgets cuando los agentes generen ROI claro (esperar Fase 5+ data real).
     op.execute("""
         INSERT INTO agent_budgets (agent_name, daily_usd_limit, monthly_usd_limit, alert_threshold_pct, hard_block_at_limit, active, notes)
         VALUES
-            ('conversation', 3.00, 60.00, 80, true, true, 'MVP defaults — revisar tras Fase 4'),
-            ('content', 5.00, 100.00, 80, true, true, 'MVP defaults — revisar tras Fase 5'),
-            ('acquisition', 1.00, 20.00, 80, true, true, 'MVP defaults — revisar tras Fase 5'),
-            ('growth', 0.50, 10.00, 80, true, true, 'MVP defaults — revisar tras Fase 6'),
-            ('infra-security', 0.20, 5.00, 80, true, true, 'MVP defaults — 5to agente post-Fase 6');
+            ('conversation', 1.50, 45.00, 80, true, true, 'MVP-light: subir cuando volumen real lo justifique'),
+            ('content', 2.00, 60.00, 80, true, true, 'MVP-light: Brand Orchestrator director creativo (Fase 5)'),
+            ('acquisition', 0.50, 15.00, 80, true, true, 'MVP-light: Meta + Google ads optimization'),
+            ('growth', 0.30, 9.00, 80, true, true, 'MVP-light: weekly digest analitico'),
+            ('infra-security', 0.20, 5.00, 80, true, true, 'MVP-light: 5to agente post-Fase 6');
     """)
 
     # ============================================================

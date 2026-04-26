@@ -25,6 +25,29 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🟡 Sesión estratégica — Estructura organizacional de agentes IA
+**Antes de Fase 5 (Brand Orchestrator).** Dario pidió pensar el sistema como organización empresarial: él CEO, agentes con rangos + funciones + subagentes + skills.
+
+**Output esperado:**
+- ADR-0030 — Brand Orchestrator multi-agent architecture
+- `docs/agents/organization-chart.md` — organigrama + roles + rangos + cadencias reporting
+- Subdirs `docs/agents/<agent-name>/` con SKILL.md + prompts/ + tools.json + evals/ + cadence.md
+- Brand voice consolidado en `docs/brand/voice.md`
+- Approval flows + métricas de éxito por agente
+
+**Visión clave registrada en memoria `project_agent_org_design.md`:**
+- Brand Orchestrator (era Content Agent) expandido a director creativo end-to-end (ads + landings + copies + email + implementación)
+- Patrón: orquestador + subagentes especializados (Research, Concept, Copywriter, Visual, Implementation)
+- Skills compartidas cross-agent (research-competition usado por Brand + Acquisition + Growth)
+- Aprobación bloqueante de anuncios (NUNCA publica sin OK Dario)
+
+**Combinable con:** Interludio Estratégico (entre Fase 3 y Fase 4) — mismo bloque ~4-8h porque consume arquetipos del interludio.
+
+**Fase sugerida:** post-Fase 3, pre-Fase 4 (interludio + sesión organizacional juntos).
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
 ### 🟢 Dashboards admin secundarios — `/admin/users`, `/admin/sessions`, `/admin/system-health`
 ADR-0026 + ADR-0027 mencionan estos dashboards. Hoy solo está `/admin/audit-log`. Pendiente:
 - `/admin/users` — lista usuarios + status + last_login + reset password de otro
