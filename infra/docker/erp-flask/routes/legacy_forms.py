@@ -17,7 +17,7 @@ from sqlalchemy import select
 
 from db import session_scope
 from models.cliente import Cliente
-from services import cliente_service, gasto_service, pago_service, venta_service
+from services import audit_service, cliente_service, gasto_service, pago_service, venta_service
 
 bp = Blueprint("legacy_forms", __name__)
 
@@ -59,7 +59,7 @@ def gasto_form():  # type: ignore[no-untyped-def]
 
     try:
         with session_scope() as db:
-            gasto_service.create(
+            gasto = gasto_service.create(
                 db,
                 fecha=fecha,
                 monto=monto,
@@ -68,8 +68,25 @@ def gasto_form():  # type: ignore[no-untyped-def]
                 destinatario=request.form.get("destinatario") or None,
                 metodo_pago=request.form.get("metodo_pago_gasto") or None,
             )
+            audit_service.log(
+                db,
+                action="gasto.created",
+                entity_type="gasto",
+                entity_id=getattr(gasto, "id", None),
+                after_state={
+                    "fecha": fecha.isoformat(),
+                    "monto": str(monto),
+                    "tipo": request.form.get("tipo_gasto") or None,
+                    "destinatario": request.form.get("destinatario") or None,
+                },
+            )
         flash("Gasto guardado correctamente.")
     except Exception as e:
+        audit_service.log_isolated(
+            action="gasto.created",
+            result="failure",
+            error_detail=str(e),
+        )
         flash(f"Error al guardar: {e}")
 
     return redirect(url_for("views.index", tab="gasto"))
@@ -166,6 +183,22 @@ def venta_form():  # type: ignore[no-untyped-def]
                 credito_aplicado=credito_aplicado,
                 abonos_deudas=abonos,
             )
+            cod_items = [v.cod_item for v in result.ventas]
+            audit_service.log(
+                db,
+                action="venta.created",
+                entity_type="venta",
+                entity_id=",".join(cod_items) if cod_items else None,
+                after_state={
+                    "fecha": fecha.isoformat(),
+                    "cliente": nombre,
+                    "cod_cliente": result.ventas[0].cod_cliente if result.ventas else None,
+                    "items_count": len(result.ventas),
+                    "cod_items": cod_items,
+                    "credito_generado": str(result.excedente_credito_generado),
+                    "abonos_deudas": str(result.abonos_deudas),
+                },
+            )
         msg = f"Venta guardada ({len(result.ventas)} ítem(s))"
         if result.excedente_credito_generado > 0:
             msg += f" — Crédito generado: S/ {result.excedente_credito_generado}"
@@ -173,14 +206,44 @@ def venta_form():  # type: ignore[no-untyped-def]
             msg += f" — Abonos a deudas: S/ {result.abonos_deudas}"
         flash(msg)
     except (venta_service.ClienteNoExiste, venta_service.CreditoInsuficiente) as e:
+        audit_service.log_isolated(
+            action="venta.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
     except (venta_service.TipoItemInvalido, ValueError) as e:
+        audit_service.log_isolated(
+            action="venta.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
     except pago_service.AbonoCodItemInvalido as e:
+        audit_service.log_isolated(
+            action="venta.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
     except cliente_service.ClienteDuplicadoError as e:
+        audit_service.log_isolated(
+            action="venta.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
     except Exception as e:
+        audit_service.log_isolated(
+            action="venta.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
 
     return redirect(url_for("views.index", tab="venta"))
@@ -266,12 +329,43 @@ def pagos_form():  # type: ignore[no-untyped-def]
                 pagos_explicitos=pagos_input,
                 notas=notas,
             )
+            audit_service.log(
+                db,
+                action="pago.created",
+                entity_type="pago",
+                entity_id=cod_cliente,
+                after_state={
+                    "cod_cliente": cod_cliente,
+                    "cliente": nombre_cliente,
+                    "fecha": fecha.isoformat(),
+                    "items_count": len(pagos_input),
+                    "cod_items": [p.cod_item for p in pagos_input],
+                },
+            )
         flash(f"Pagos guardados ({len(pagos_input)} ítem(s)).")
     except pago_service.AbonoCodItemInvalido as e:
+        audit_service.log_isolated(
+            action="pago.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre_cliente, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
     except ValueError as e:
+        audit_service.log_isolated(
+            action="pago.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre_cliente, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
     except Exception as e:
+        audit_service.log_isolated(
+            action="pago.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre_cliente, "fecha": fecha.isoformat()},
+        )
         flash(f"Error al guardar: {e}")
 
     return redirect(url_for("views.index", tab="pagos"))

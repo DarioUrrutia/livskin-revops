@@ -20,7 +20,7 @@ from db import session_scope
 from middleware.auth_middleware import SESSION_COOKIE_NAME
 from models.user import User
 from schemas.auth import ChangePasswordInput, LoginInput
-from services import auth_service
+from services import audit_service, auth_service
 
 bp = Blueprint("auth", __name__)
 
@@ -68,8 +68,39 @@ def login_post():  # type: ignore[no-untyped-def]
             )
             session_token = session.session_token
             expires_at = session.expires_at
+            audit_service.log(
+                db,
+                action="auth.login_success",
+                entity_type="user",
+                entity_id=user.id,
+                user_id=user.id,
+                user_username=user.username,
+                user_role=user.rol,
+                ip=ip,
+                user_agent=ua,
+                metadata={"first_login": is_first_login},
+            )
+    except auth_service.CuentaBloqueada as e:
+        current_app.logger.info("login_failed: username=%s ip=%s reason=lockout", data.username, ip)
+        audit_service.log_isolated(
+            action="auth.lockout_triggered",
+            user_username=data.username,
+            ip=ip,
+            user_agent=ua,
+            result="failure",
+            error_detail=str(e),
+        )
+        return render_template("login.html", next_url=next_url, error=str(e)), 401
     except auth_service.AuthError as e:
         current_app.logger.info("login_failed: username=%s ip=%s reason=%s", data.username, ip, type(e).__name__)
+        audit_service.log_isolated(
+            action="auth.login_failed",
+            user_username=data.username,
+            ip=ip,
+            user_agent=ua,
+            result="failure",
+            error_detail=type(e).__name__,
+        )
         return render_template("login.html", next_url=next_url, error=str(e)), 401
 
     if is_first_login:
@@ -101,6 +132,7 @@ def logout():  # type: ignore[no-untyped-def]
         try:
             with session_scope() as db:
                 auth_service.logout(db, session_token=token, reason="logout")
+                audit_service.log(db, action="auth.logout_voluntary", entity_type="user_session")
         except Exception:
             current_app.logger.exception("error during logout")
     response = make_response(redirect(url_for("auth.login_get")))
@@ -143,6 +175,12 @@ def change_password_post():  # type: ignore[no-untyped-def]
                 current_password=data.current_password,
                 new_password=data.new_password,
                 confirm_password=data.confirm_password,
+            )
+            audit_service.log(
+                db,
+                action="auth.password_changed",
+                entity_type="user",
+                entity_id=user_db.id,
             )
     except auth_service.AuthError as e:
         return render_template("change_password.html", error=str(e), success=None, forced=False), 400

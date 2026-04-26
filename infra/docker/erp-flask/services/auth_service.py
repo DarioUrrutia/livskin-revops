@@ -155,6 +155,14 @@ def check_session(db: Session, *, session_token: str) -> Optional[tuple[User, Us
         session.revoked_at = now
         session.revoked_reason = "expired"
         db.flush()
+        from services import audit_service  # local import: evita ciclo
+        audit_service.log(
+            db,
+            action="auth.logout_expired",
+            entity_type="user_session",
+            entity_id=session.id,
+            user_id=session.user_id,
+        )
         return None
 
     inactivity_limit = timedelta(hours=settings.session_inactivity_hours)
@@ -163,6 +171,14 @@ def check_session(db: Session, *, session_token: str) -> Optional[tuple[User, Us
         session.revoked_at = now
         session.revoked_reason = "inactivity"
         db.flush()
+        from services import audit_service  # local import: evita ciclo
+        audit_service.log(
+            db,
+            action="auth.logout_inactivity",
+            entity_type="user_session",
+            entity_id=session.id,
+            user_id=session.user_id,
+        )
         return None
 
     user = db.get(User, session.user_id)
