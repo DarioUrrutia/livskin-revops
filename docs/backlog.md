@@ -25,6 +25,31 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 Re-indexing automático de brain Layer 2 (project_knowledge) — antes de Fase 4
+**Estado verificado 2026-04-26 (22:30):** `livskin_brain.project_knowledge` tiene 1,475 chunks indexados pero el último indexing fue hace ~6 días (cierre de Fase 1). Los 17+ ADRs nuevos, 10 sesiones, 16 runbooks y los 6 docs de hoy NO están en el índice vectorial. `embedding_runs` está vacía → no hay re-indexing automático corriendo.
+
+**Riesgo si no se resuelve:** cuando arranque Conversation Agent (Fase 4) y consulte la brain, no sabrá de las decisiones de la última semana (arquitectura tracking, módulo Agenda, refinamiento Vtiger, runbooks, etc.).
+
+**Acción a implementar (~1 sesión):**
+1. **Trigger primario:** webhook GitHub (`push` a main) → endpoint VPS 3 → re-index incremental de archivos cambiados desde último run
+2. **Backup:** cron diario 3am que re-indexa cualquier archivo .md modificado en las últimas 24h
+3. **Logging:** cada run registra entry en `embedding_runs` (started_at, completed_at, rows_processed, status, notes)
+4. **Idempotencia:** hash del file path + content para no re-indexar lo que no cambió
+5. **Capas adicionales pre-Fase 4:**
+   - Layer 1 (`clinic_knowledge`): poblar con 5-10 FAQs típicas + precios + tratamientos validados por la doctora (ya existe item ❓ "Definir las 5-10 FAQs típicas")
+   - Layer 4 (`conversations`): schema activo, se llena automáticamente cuando arranca el bot
+
+**Exit criteria:**
+- Push a main → 30s después, los archivos nuevos están en `project_knowledge`
+- `embedding_runs` registra el run con timestamp y rows
+- Query semántica de prueba: "¿cuál es la arquitectura de tracking?" → devuelve chunks de los docs de 2026-04-26
+
+**Fase sugerida:** entre setup acceso programático (próxima sesión) y arranque Fase 4. NO opcional — es bloqueador del Conversation Agent útil.
+**Referencia:** docs/sesiones/2026-04-26-audit-real-y-arquitectura-tracking.md (issue detectado en cierre)
+**Agregado por:** Claude Code · 2026-04-26
+
+---
+
 ### 🔴 Setup acceso programático a Google + Meta (próxima sesión inmediata)
 **Pre-requisito de Fase 3.** Audit por screenshots tiene techo. Para resolver definitivamente fricciones cross-stack, Claude necesita acceso vía API.
 
