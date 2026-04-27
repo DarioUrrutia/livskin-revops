@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-04-26 v2.1 (audit cross-VPS real + arquitectura tracking + decisión módulo Agenda)
+> Última actualización: 2026-04-27 v2.2 (acceso programático Google + audit definitivo + Meta parcial pendiente)
 
 ---
 
@@ -260,7 +260,31 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-04-26 (post-audit cross-VPS real + decisiones arquitectónicas)
+## 📝 Estado al 2026-04-27 (acceso programático Google + audit definitivo)
+
+### Sesión 2026-04-27 (Google completado + Meta parcial)
+
+Setup acceso programático Google **completado al 100%** + audit definitivo via APIs ejecutado. Meta llegó a ~80% (System User + assets + app creados) pero **token generation bloqueado** por cambios de UI/políticas Meta. Dario decidió cortar Meta hoy y cerrar con lo logrado. Detalle: [session log](docs/sesiones/2026-04-27-acceso-programatico-google-y-audit.md) + [audit Google](docs/audits/audit-google-stack-2026-04-27.md).
+
+**Lo que se cerró hoy:**
+- ✅ OAuth Google con refresh token persistente (`keys/google-oauth-token.json`, gitignored)
+- ✅ Scripts `scripts/google_oauth_setup.py` + `scripts/google_audit.py` reusables
+- ✅ Audit programático Google: 5 GA4 accounts detectadas, código exacto de tags GTM extraído, **doble disparo Pixel CONFIRMADO con código real** (no hipótesis)
+- ✅ GA4 events últimas 48h pulleados — 1 form_submit detectado SIN entry en DB → **bot scraping confirmado** (form sin reCAPTCHA/Turnstile)
+- ✅ 2da property GA4 "LivskinDEF" → livskinperu.com detectada (legacy a archivar)
+- ✅ Meta System User "Claude Audit" + Claude Audit App creados (persistente para próxima sesión)
+
+**Lo que quedó parcial:**
+- ⏸️ Token Meta generation bloqueado — UI/políticas cambiaron, Marketing API ahora requiere App Review formal (1-3 semanas)
+- ⏸️ Audit programático Meta diferido — los datos Google ya validan 100% las decisiones arquitectónicas
+
+**Decisiones tomadas:**
+1. **Acceso Google = OAuth user flow** (no service account) — Google sin Workspace no acepta service accounts en GA4/GTM admin UI
+2. **Cloudflare Turnstile en SureForms 1569 = urgente Fase 3** — bot scraping confirmado
+3. **Consolidación 3 Business Managers Meta = mini-proyecto pendiente** — desorden de fase de aprendizaje
+4. **Honrar compromisos a Dario** — cuando se promete "5 min máx" no extender. Aprendizaje incorporado a memoria de gobernanza.
+
+**Próxima sesión:** decisión en frío — (a) reintentar Meta con enfoque distinto, (b) saltar Meta y arrancar Fase 3 directo con datos Google (suficientes), (c) otra. Dario decide.
 
 ### Sesión 2026-04-26 (segunda mitad — audit + arquitectura)
 

@@ -25,6 +25,104 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 Cloudflare Turnstile en SureForms 1569 — URGENTE pre-Fase 3
+**Detectado 2026-04-27:** GA4 capturó 1 `form_submit` últimas 48h pero `wp_srfm_entries` tiene 0 entries en DB. Dario NO recuerda haber probado el form. Sin reCAPTCHA/Turnstile (`_srfm_form_recaptcha = none`), form público en home → **bot scraping confirmado**.
+
+**Riesgo si no se resuelve antes de conectar webhook a ERP:**
+- Falsos eventos GA4 que degradan métricas reales
+- Spam que llenará la tabla `leads` del ERP cuando se conecte (Mini-bloque 3.3 Fase 3)
+- Costos de procesamiento backend
+- Falsos disparos de Meta CAPI cuando se conecte (Mini-bloque 3.4)
+
+**Acción:**
+1. Configurar Cloudflare Turnstile en dashboard CF
+2. Plugin SureForms tiene integración nativa con reCAPTCHA — investigar si soporta Turnstile o requiere snippet custom
+3. Si no soporta Turnstile nativo: usar reCAPTCHA v3 (libre + invisible)
+4. Activar en form 1569 antes de cualquier integración con backend
+
+**Fase sugerida:** primer paso Fase 3 (mini-bloque 3.1 limpieza VPS 1)
+**Agregado por:** Claude Code · 2026-04-27
+
+---
+
+### 🔴 Decisión Meta — App Review formal vs saltar audit Meta
+**Estado 2026-04-27:** Setup Meta llegó al 80% (System User + Claude Audit App + Pixel + Ad Account assets) pero token generation bloqueado por cambios Meta:
+- Marketing API y Conversions API standalone ya no son "casos de uso" seleccionables
+- Para `ads_read` real se requiere **App Review formal** (Business Verification + Standard Access tier review = 1-3 semanas)
+- Graph API Explorer no permitió agregar permisos en UI actual
+
+**Configuración persistente que se queda esperando:**
+- Business Manager `Livskin Perú` (444099014574638) — owner del Pixel
+- System User `Claude Audit` (61560721390798) con Pixel 2026 + Ad Account assets
+- App `Claude Audit App` (941702218481777) en Business
+- App con Claude Audit asignado como admin
+
+**Decisión pendiente próxima sesión:**
+- **Opción A:** Iniciar App Review formal (1-3 semanas espera, pero permanente y correcto)
+- **Opción B:** Saltar Meta del audit por ahora — los datos Google ya validan 100% las decisiones arquitectónicas (doble disparo confirmado, eventos GA4 visibles)
+- **Opción C:** Investigar si hay método actual Meta para read-only audit del propio Business sin review
+
+**Recomendación Claude:** Opción B + agendar App Review en paralelo a Fase 3 (no bloqueante). Audit Meta detallado da nuance pero no cambia decisión arquitectónica que ya está validada con Google data.
+
+**Fase sugerida:** decidir próxima sesión (2026-04-28)
+**Referencia:** [docs/sesiones/2026-04-27-acceso-programatico-google-y-audit.md](sesiones/2026-04-27-acceso-programatico-google-y-audit.md)
+**Agregado por:** Claude Code · 2026-04-27
+
+---
+
+### 🟡 Consolidación 3 Business Managers Meta
+**Detectado 2026-04-27:** Dario tiene 3 Business Managers Meta (desorden de fase de aprendizaje):
+1. **Livskin Perú** (1 activo, owns Pixel 2026 — el que usamos)
+2. **Livskin Perú Comercial** (0 activos, contiene app `agent n8n` legacy)
+3. **Dario Urrutia Martinez** (1 activo, personal)
+
+**Acción:**
+- Decidir BM canónico (probablemente Livskin Perú)
+- Auditar qué hay en cada BM: apps, pixels viejos, ad accounts, pages, asset groups, system users
+- Transferir/eliminar contenido de "Livskin Perú Comercial" (vacío hoy salvo agent n8n)
+- Decidir si BM "Dario Urrutia Martinez" tiene assets que migrar o archivar
+- Documentar BM canónico en CLAUDE.md / project memory
+
+**Fase sugerida:** 1 sesión dedicada (~60 min), antes de Fase 5 (Acquisition Agent productivo)
+**Agregado por:** Claude Code · 2026-04-27
+
+---
+
+### 🟡 Crear System User dedicado para Acquisition Agent en Fase 5
+**Decisión 2026-04-27 (registrada cuando se discutió en sesión):** Cuando se construya Acquisition Agent productivo (Fase 5), crear System User Meta dedicado distinto a `Claude Audit` con scopes write (`ads_management`, `ads_read`, etc.). Razones:
+- Principio de menor privilegio (separar identidades audit vs producción)
+- Trazabilidad (audit log Meta diferencia "Acquisition Agent" vs "Claude Audit")
+- Revocación granular (revocar uno sin tocar el otro)
+- Rotación independiente (write tokens rotan más seguido)
+
+Esto requiere App Review formal (a iniciar antes de Fase 5).
+
+**Fase sugerida:** Fase 5 setup
+**Referencia:** memoria `feedback_agent_governance.md` (procesos antes de libertad)
+**Agregado por:** Claude Code · 2026-04-27
+
+---
+
+### 🟡 Archivar GA4 property "LivskinDEF" (livskinperu.com)
+**Detectado 2026-04-27 vía audit programmatico:** existe property GA4 "LivskinDEF" (`G-YJ4CCLJFSK`) apuntando a `livskinperu.com`. Es del dominio anterior antes de migrar a `livskin.site`. **No se está usando**, riesgo: confusión + datos fragmentados si algún ad/campaña vieja sigue apuntando ahí.
+
+**Acción:** archivar property en GA4 (no eliminar — preservar datos históricos por si alguna vez se necesitan).
+
+**Fase sugerida:** Mini-bloque 3.1 (limpieza Fase 3)
+**Agregado por:** Claude Code · 2026-04-27
+
+---
+
+### 🟢 Anuncio Meta activo €2/día — revisar en Fase 3
+**Detectado 2026-04-27:** anuncio "Cada perfil es único" activo en Meta Ads (€2/día, 433-1.4k impresiones, 2 respuestas). NO estaba en mi radar (yesterday's audit dijo "0 active campaigns" pero eso era Google Ads, no Meta).
+
+**Acción:** revisar en Fase 3 — ¿pausarlo durante setup tracking? ¿mantenerlo? ¿optimizarlo? Decidir cuando lleguemos.
+
+**Fase sugerida:** Fase 3 mini-bloque 3.1 (limpieza)
+**Agregado por:** Claude Code · 2026-04-27
+
+---
+
 ### 🔴 Re-indexing automático de brain Layer 2 (project_knowledge) — antes de Fase 4
 **Estado verificado 2026-04-26 (22:30):** `livskin_brain.project_knowledge` tiene 1,475 chunks indexados pero el último indexing fue hace ~6 días (cierre de Fase 1). Los 17+ ADRs nuevos, 10 sesiones, 16 runbooks y los 6 docs de hoy NO están en el índice vectorial. `embedding_runs` está vacía → no hay re-indexing automático corriendo.
 
@@ -372,6 +470,12 @@ Condiciona si necesitamos módulo PDF/impresión en ERP.
 ## Hecho (historial)
 
 <!-- Los items completados se mueven aquí para mantener historial. No se borran. -->
+
+### ✅ Audit programmatico Google ejecutado (2026-04-27)
+OAuth user flow setup + scripts reusables (`scripts/google_oauth_setup.py` + `scripts/google_audit.py`) + audit completo: 5 GA4 accounts detectadas, código exacto del tag GTM `Pixel Meta - Config` extraído, **doble disparo Pixel CONFIRMADO con código real** (no hipótesis), GA4 events últimas 48h visibles. Bot scraping detectado en form. Doc: [docs/audits/audit-google-stack-2026-04-27.md](audits/audit-google-stack-2026-04-27.md).
+
+### ✅ Setup OAuth Google con refresh token persistente (2026-04-27)
+Pivot de service account a OAuth user flow tras GA4/GTM admin UIs rechazaran service account email (limitación cuentas sin Workspace). Refresh token en `keys/google-oauth-token.json`. Scopes: analytics.readonly + tagmanager.readonly. Validado funcionando.
 
 ### ✅ Audit cross-VPS real ejecutado (2026-04-26)
 Audit exhaustivo SSH-based de los 3 VPS + verificación stack Google/Meta vía screenshots. Hallazgos clave: VPS 1 ya tiene GTM + GA4 + Pixel funcionando con doble disparo; VPS 2 vacío (0 workflows, 0 leads); VPS 3 sólido con 134 clientes productivos. Doc: [docs/audits/estado-real-cross-vps-2026-04-26.md](audits/estado-real-cross-vps-2026-04-26.md).
