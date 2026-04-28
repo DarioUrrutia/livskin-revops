@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-04-27 v2.2 (acceso programático Google + audit definitivo + Meta parcial pendiente)
+> Última actualización: 2026-04-28 v2.3 (Fase 3 mini-bloques 3.1 + 3.2 ejecutados y validados end-to-end)
 
 ---
 
@@ -166,7 +166,7 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 | 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage al 2026-04-26) |
 | **0 v2 (Bloque foundation cross-VPS)** | ✅ **Completado 2026-04-26** — versionado VPS 1+2 + CI/CD multi-VPS + system-map + sensors + backups + runbooks + DR drill + skills + MCP scaffold |
 | **Setup acceso programático** | ⏳ Próxima sesión inmediata — Google service account + Meta System User + audit programático definitivo (resuelve doble disparo Pixel + UTMs end-to-end) |
-| 3 | ⏳ Tracking + observabilidad (limpieza VPS 1 + GTM tagging + form→ERP webhook + CAPI server-side desde ERP) |
+| 3 | 🚧 **40% en progreso** — Mini-bloque 3.1 (cleanup VPS 1) ✅ + 3.2 (GTM Tracking Engine) ✅; pendientes 3.3 (form→ERP webhook), 3.4 (CAPI server-side), 3.5 (observabilidad) |
 | **Bloque puente Agenda Mínima ERP** | ⏳ Entre Fase 3 y Fase 4 — módulo `appointments` con precisión quirúrgica (ADR + tests + feature flag + validación doctora) |
 | 4 | ⏳ Conversation Agent (WhatsApp test number agenda en `appointments` automáticamente) |
 | 5 | ⏳ Brand Orchestrator + Acquisition Agents (precedida de sesión estratégica organizacional) |
@@ -260,7 +260,37 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-04-27 (acceso programático Google + audit definitivo)
+## 📝 Estado al 2026-04-28 (Fase 3 mini-bloques 3.1 + 3.2 ejecutados)
+
+### Sesión 2026-04-28 (Fase 3 arrancada con 2 mini-bloques completos)
+
+Fase 3 progress: 0% → **40% en una sesión** (2 de 5 mini-bloques completos). Ejecutado **100% programáticamente** vía wp-cli + GTM API + scripts Python — sin tanteos UI. Detalle: [session log](docs/sesiones/2026-04-28-mini-bloques-3-1-y-3-2-fase3.md).
+
+**Mini-bloque 3.1 — Limpieza VPS 1 ✅** ([audit](docs/audits/mini-bloque-3-1-cleanup-vps1-2026-04-28.md)):
+- LatePoint + PixelYourSite desactivados (resuelve doble disparo Pixel)
+- Cloudflare Turnstile en SureForms 1569 (native) + plugin para login form (bot scraping bloqueado)
+- 3 social links arreglados: WhatsApp `+51982732978` + Instagram + Facebook
+- Pixel legacy `670708374433840` saltado (Meta no permite archivar desde UI)
+
+**Mini-bloque 3.2 — GTM Tracking Engine + UTM persistence ✅** ([audit](docs/audits/mini-bloque-3-2-tracking-engine-2026-04-28.md) + [ADR-0021](docs/decisiones/0021-utms-persistence-y-tracking-engine-client-side.md)):
+- Pre-flight: revertido cambio destructivo en workspace draft (trigger Pixel hubiera quedado sin disparar)
+- OAuth ampliado a 5 scopes (analytics.readonly + tagmanager.readonly + tagmanager.edit.containers + tagmanager.edit.containerversions + tagmanager.publish)
+- 17 variables (11 cookies + 6 DLV) + 3 triggers + 6 tags nuevos creados via GTM API
+- Tracking Engine JS de 95 líneas (UTM persistence + form submit listener + WhatsApp click listener + auto-populator hidden fields + event_id único para CAPI dedup)
+- GTM v18 PUBLISHED LIVE (8 tags + 3 triggers + 17 variables)
+
+**Validación browser-side end-to-end con Dario** (post hard refresh para CDN edge cache):
+- ✅ Cookies `lvk_utm_*` persistidas
+- ✅ `whatsapp_click` event con event_id + UTMs en dataLayer
+- ✅ `gtm.scrollDepth` 75% disparado por nuestro trigger
+- ✅ Sistema 100% operativo
+
+**Aprendizajes consolidados:**
+- Memoria `feedback_iteration_pattern_site`: protocolo de iteración del site (hipótesis + métricas before/after + lección)
+- Memoria `feedback_programmatic_setup_pattern`: scripts API > UI tanteos (3-6x más rápido + reusable)
+- Patrón de 3 scripts por dominio (inspect + build + validate) ya implementado para GTM
+
+**Próxima sesión:** Mini-bloque 3.3 — Form → ERP webhook (90-120 min, el más denso técnicamente).
 
 ### Sesión 2026-04-27 (Google completado + Meta parcial)
 

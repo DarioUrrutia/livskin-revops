@@ -25,7 +25,31 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🔴 Cloudflare Turnstile en SureForms 1569 — URGENTE pre-Fase 3
+### 🔴 Mini-bloque 3.3 Fase 3 — Form → ERP webhook (próxima sesión)
+**Estado 2026-04-28:** Mini-bloques 3.1 + 3.2 completados. El Tracking Engine en GTM ya inyecta `event_id` único al submit del form. Ahora toca el plumbing al backend:
+
+**Acciones:**
+1. ADR breve sobre arquitectura webhook (idempotencia, dedup por event_id, retry policy)
+2. Endpoint Flask nuevo `POST /api/leads/intake` en ERP VPS 3
+   - Schema validation Pydantic (Nombres, Email, Teléfono, Tratamiento, UTMs, click_ids, event_id, landing_url)
+   - INSERT en `leads` table con full context
+   - Audit log entry `lead.created`
+   - Push secundario a Vtiger via REST API (best-effort, no blocking)
+3. SureForms 1569: agregar 10-11 hidden fields via post_content blocks (`srfm/hidden`)
+4. SureForms webhook config → POST a `/api/leads/intake`
+5. Test con lead manual (Dario + alguien real)
+6. Tests pytest del nuevo endpoint (mantener coverage ≥80%)
+
+**Estimado:** 90-120 min.
+
+**Después de 3.3:** los leads dejan de ser "anonymous form_submit en GA4" y se convierten en "row en `leads` table del ERP con full context (UTMs + click_ids + landing + event_id)". Primer paso real hacia atribución por canal.
+
+**Fase sugerida:** próxima sesión inmediata
+**Agregado por:** Claude Code · 2026-04-28
+
+---
+
+### ~~🔴 Cloudflare Turnstile en SureForms 1569 — URGENTE pre-Fase 3~~ ✅ COMPLETADO 2026-04-28
 **Detectado 2026-04-27:** GA4 capturó 1 `form_submit` últimas 48h pero `wp_srfm_entries` tiene 0 entries en DB. Dario NO recuerda haber probado el form. Sin reCAPTCHA/Turnstile (`_srfm_form_recaptcha = none`), form público en home → **bot scraping confirmado**.
 
 **Riesgo si no se resuelve antes de conectar webhook a ERP:**
@@ -470,6 +494,12 @@ Condiciona si necesitamos módulo PDF/impresión en ERP.
 ## Hecho (historial)
 
 <!-- Los items completados se mueven aquí para mantener historial. No se borran. -->
+
+### ✅ Fase 3 Mini-bloque 3.2 — GTM Tracking Engine + UTM persistence + dedup events (2026-04-28)
+GTM v18 LIVE con 8 tags + 3 triggers + 17 variables. Tracking Engine JS de 95 líneas hace UTM persistence + form submit listener + WhatsApp click listener + event_id único para CAPI dedup. Validated end-to-end con Dario en DevTools (cookies persistidas, whatsapp_click con event_id + UTMs en dataLayer, scroll_75 disparado). ADR-0021 cerrada. Commit `f31cd93`. Doc: [docs/audits/mini-bloque-3-2-tracking-engine-2026-04-28.md](audits/mini-bloque-3-2-tracking-engine-2026-04-28.md).
+
+### ✅ Fase 3 Mini-bloque 3.1 — Limpieza VPS 1 (2026-04-28)
+LatePoint + PixelYourSite desactivados (resuelve doble disparo Pixel). Cloudflare Turnstile en SureForms 1569 (native) + plugin para login form (bot bloqueado). 3 social links arreglados (WhatsApp +51982732978 + Instagram + Facebook). Pixel legacy 670708374433840 saltado (Meta no permite archivar UI). 75 min. Commit `dbf5819`. Doc: [docs/audits/mini-bloque-3-1-cleanup-vps1-2026-04-28.md](audits/mini-bloque-3-1-cleanup-vps1-2026-04-28.md).
 
 ### ✅ Audit programmatico Google ejecutado (2026-04-27)
 OAuth user flow setup + scripts reusables (`scripts/google_oauth_setup.py` + `scripts/google_audit.py`) + audit completo: 5 GA4 accounts detectadas, código exacto del tag GTM `Pixel Meta - Config` extraído, **doble disparo Pixel CONFIRMADO con código real** (no hipótesis), GA4 events últimas 48h visibles. Bot scraping detectado en form. Doc: [docs/audits/audit-google-stack-2026-04-27.md](audits/audit-google-stack-2026-04-27.md).
