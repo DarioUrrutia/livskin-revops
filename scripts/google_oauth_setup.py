@@ -20,6 +20,10 @@ TOKEN_OUT = "keys/google-oauth-token.json"
 SCOPES = [
     "https://www.googleapis.com/auth/analytics.readonly",
     "https://www.googleapis.com/auth/tagmanager.readonly",
+    # Write scopes para setup de Fase 3 mini-bloque 3.2 (variables/triggers/tags)
+    "https://www.googleapis.com/auth/tagmanager.edit.containers",
+    "https://www.googleapis.com/auth/tagmanager.edit.containerversions",
+    "https://www.googleapis.com/auth/tagmanager.publish",
 ]
 
 
