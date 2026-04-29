@@ -70,6 +70,9 @@ logs/
 .obsidian/
 *.obsidian
 *.obsidian-cache
+# Obsidian canvas vacios accidentales (New > Canvas sin renombrar)
+Senza nome*.canvas
+Untitled*.canvas
 
 # --- Notas privadas del usuario (por máquina, no se comparten) ---
 notes/privado/*

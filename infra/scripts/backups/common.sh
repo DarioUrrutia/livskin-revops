@@ -14,7 +14,9 @@ LOG_FILE="${LOG_FILE:-/var/log/livskin-backup.log}"
 
 log() {
     local msg="[$(date -u +%H:%M:%SZ)] $*"
-    echo "$msg" | tee -a "$LOG_FILE"
+    # tee con redirect a stderr (>&2): evita que log lines contaminen
+    # el stdout que el caller usa para capturar output (ej. ERP_FILE=$(pg_backup ...)).
+    echo "$msg" | tee -a "$LOG_FILE" >&2
 }
 
 fail() {
@@ -92,7 +94,9 @@ cross_vps_transfer() {
     local remote_user="$2"
     local remote_host="$3"
     local remote_path="$4"
-    local ssh_key="${5:-/root/.ssh/backup-target}"
+    # SSH key default: ~/.ssh/backup-target del user que ejecuta (livskin via cron).
+    # Se eligió este path (no /root/.ssh/) para que livskin pueda leerla sin sudo.
+    local ssh_key="${5:-${HOME}/.ssh/backup-target}"
 
     log "rsync $local_file → ${remote_user}@${remote_host}:${remote_path}"
     rsync -az --partial --inplace \
