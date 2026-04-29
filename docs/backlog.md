@@ -113,9 +113,14 @@
 
 **Recomendación Claude:** Opción B + agendar App Review en paralelo a Fase 3 (no bloqueante). Audit Meta detallado da nuance pero no cambia decisión arquitectónica que ya está validada con Google data.
 
-**Fase sugerida:** decidir próxima sesión (2026-04-28)
+**Trigger explícito para decidir (actualizado 2026-04-29):** **al iniciar Mini-bloque 3.4 (CAPI server-side desde ERP)**. Razones:
+- Mini-bloque 3.4 envía conversiones server-side al Pixel; antes de empezar es el momento natural de definir si se hará App Review formal o se sigue con audit programático que ya tenemos
+- Si para 3.4 ya pasaron >7 días desde 2026-04-27, los assets (System User, Pixel attached, Ad Account assigned) siguen sirviendo aunque no haya token con `ads_read`
+- Dario debe responder UNA pregunta antes del primer commit de 3.4: "¿iniciamos App Review en paralelo o saltamos definitivamente Meta del audit programático?"
+
+**Fase sugerida:** Mini-bloque 3.4 (CAPI) — primera decisión del bloque
 **Referencia:** [docs/sesiones/2026-04-27-acceso-programatico-google-y-audit.md](sesiones/2026-04-27-acceso-programatico-google-y-audit.md)
-**Agregado por:** Claude Code · 2026-04-27
+**Agregado por:** Claude Code · 2026-04-27 · trigger clarificado 2026-04-29
 
 ---
 
@@ -162,20 +167,26 @@ Esto requiere App Review formal (a iniciar antes de Fase 5).
 
 ---
 
-### 🟢 Anuncio Meta activo €2/día — revisar en Fase 3
+### 🟢 Anuncio Meta activo €2/día — revisar al iniciar Mini-bloque 3.4
 **Detectado 2026-04-27:** anuncio "Cada perfil es único" activo en Meta Ads (€2/día, 433-1.4k impresiones, 2 respuestas). NO estaba en mi radar (yesterday's audit dijo "0 active campaigns" pero eso era Google Ads, no Meta).
 
-**Acción:** revisar en Fase 3 — ¿pausarlo durante setup tracking? ¿mantenerlo? ¿optimizarlo? Decidir cuando lleguemos.
+**Acción:** revisar — ¿pausarlo durante setup tracking? ¿mantenerlo? ¿optimizarlo? Decidir cuando lleguemos.
 
-**Fase sugerida:** Fase 3 mini-bloque 3.1 (limpieza)
-**Agregado por:** Claude Code · 2026-04-27
+**Trigger explícito (clarificado 2026-04-29):** **al iniciar Mini-bloque 3.4 (CAPI server-side)**. Razones:
+- Si está activo cuando se conecte CAPI, los eventos server-side y client-side van a deduplicar correctamente solo si el `event_id` está alineado — hay que decidir si se mantiene o pausa para evitar disparos durante validación
+- Si para 3.4 el anuncio ya generó conversiones reales (lead/cita), es un caso de prueba útil para validar el match quality del CAPI
+- Combinarlo con la decisión Meta App Review (item arriba) — ambos se resuelven al inicio de 3.4
+
+**Decisión a tomar:** pausar mientras se setea CAPI, optimizar (ajustar audiencia/copy basado en datos GTM), o mantener as-is durante el setup
+**Fase sugerida:** Mini-bloque 3.4 (CAPI) — junto con decisión Meta App Review
+**Agregado por:** Claude Code · 2026-04-27 · trigger clarificado 2026-04-29
 
 ---
 
-### 🔴 Re-indexing automático de brain Layer 2 (project_knowledge) — antes de Fase 4
-**Estado verificado 2026-04-26 (22:30):** `livskin_brain.project_knowledge` tiene 1,475 chunks indexados pero el último indexing fue hace ~6 días (cierre de Fase 1). Los 17+ ADRs nuevos, 10 sesiones, 16 runbooks y los 6 docs de hoy NO están en el índice vectorial. `embedding_runs` está vacía → no hay re-indexing automático corriendo.
+### 🟡 Re-indexing automático de brain Layer 2 (project_knowledge) — antes de Fase 4
+**Estado actualizado 2026-04-29:** re-index manual ejecutado hoy (1,765 chunks actualizados con docs de la última semana — runbooks, ADRs, sesiones, mini-bloques 3.1+3.2). La urgencia bajó de 🔴 a 🟡 porque la brain está al día. Pero la **automatización sigue pendiente**: si en próximas sesiones se generan nuevos docs y nadie corre `brain-index.sh` manualmente, volveremos a desincronizar.
 
-**Riesgo si no se resuelve:** cuando arranque Conversation Agent (Fase 4) y consulte la brain, no sabrá de las decisiones de la última semana (arquitectura tracking, módulo Agenda, refinamiento Vtiger, runbooks, etc.).
+**Riesgo restante:** cuando arranque Conversation Agent (Fase 4) y consulte la brain semanas después de la última re-indexación manual, no sabrá de decisiones recientes.
 
 **Acción a implementar (~1 sesión):**
 1. **Trigger primario:** webhook GitHub (`push` a main) → endpoint VPS 3 → re-index incremental de archivos cambiados desde último run
@@ -191,9 +202,11 @@ Esto requiere App Review formal (a iniciar antes de Fase 5).
 - `embedding_runs` registra el run con timestamp y rows
 - Query semántica de prueba: "¿cuál es la arquitectura de tracking?" → devuelve chunks de los docs de 2026-04-26
 
-**Fase sugerida:** entre setup acceso programático (próxima sesión) y arranque Fase 4. NO opcional — es bloqueador del Conversation Agent útil.
+**Trigger más explícito para arrancar:** cuando se vaya a planear Mini-bloque 3.5 (Observabilidad) — combinable porque ambos requieren tocar VPS 3 + audit log integration. O si pasan >2 semanas sin tocarlo y la brain queda stale otra vez.
+
+**Fase sugerida:** Mini-bloque 3.5 (Observabilidad) o pre-Fase 4
 **Referencia:** docs/sesiones/2026-04-26-audit-real-y-arquitectura-tracking.md (issue detectado en cierre)
-**Agregado por:** Claude Code · 2026-04-26
+**Agregado por:** Claude Code · 2026-04-26 · actualizado 2026-04-29
 
 ---
 
@@ -519,6 +532,12 @@ Condiciona si necesitamos módulo PDF/impresión en ERP.
 ## Hecho (historial)
 
 <!-- Los items completados se mueven aquí para mantener historial. No se borran. -->
+
+### ✅ Audit minucioso VPS + integridad + flujos + items diferidos (2026-04-29)
+Audit comprehensive post-cleanup del Mini-bloque 3.3 fallido. Verificado: VPS 1/2/3 healthy (uptime, disk, memory, services). Mini-bloques 3.1+3.2 intactos (curl + GTM API + GA4 events últimas 48h). Backups daily working post-instalación cron. Audit log immutable trigger funcional. Brain pgvector 1,765 chunks indexados. 3 issues menores deferidos a Mini-bloque 3.5 (sensor VPS 2 unhealthy flag, sensor VPS 1 Docker WARNING, system-map staleness por cron recolector cross-VPS no instalado). Output: [docs/audits/2026-04-29-audit-vps-integridad-flujos-deferred.md](audits/2026-04-29-audit-vps-integridad-flujos-deferred.md). 2026-04-29.
+
+### ✅ Cleanup de organización + ADR-0030 file naming conventions + memorias reorganizadas (2026-04-29)
+Tras Mini-bloque 3.3 fallido (Form→ERP directo), se ejecutó: (a) reversión completa del experimento (2 commits + mu-plugin VPS 1 + leads test ERP DB); (b) reorganización memorias por criticidad con header anti-overload; (c) 2 nuevas memorias 🔥 críticas (`project_n8n_orchestration_layer`, `feedback_must_re_read_adrs_before_coding`); (d) runbook `preflight-cross-system.md` cross-linked desde cierre-sesion; (e) ADR-0030 file naming conventions; (f) `infra/docker/_legacy/` con README + período de gracia; (g) `.gitignore` actualizado con `Senza nome*.canvas`. Backups cron VPS 3 instalado y verificado funcional. 2026-04-29.
 
 ### ✅ Fase 3 Mini-bloque 3.2 — GTM Tracking Engine + UTM persistence + dedup events (2026-04-28)
 GTM v18 LIVE con 8 tags + 3 triggers + 17 variables. Tracking Engine JS de 95 líneas hace UTM persistence + form submit listener + WhatsApp click listener + event_id único para CAPI dedup. Validated end-to-end con Dario en DevTools (cookies persistidas, whatsapp_click con event_id + UTMs en dataLayer, scroll_75 disparado). ADR-0021 cerrada. Commit `f31cd93`. Doc: [docs/audits/mini-bloque-3-2-tracking-engine-2026-04-28.md](audits/mini-bloque-3-2-tracking-engine-2026-04-28.md).
