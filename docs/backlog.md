@@ -25,7 +25,32 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🔴 Mini-bloque 3.3 Fase 3 — Form → ERP webhook (próxima sesión)
+### 🔴 Mini-bloque 3.3 REWRITE — Form → n8n → Vtiger → ERP espejo (próxima sesión)
+**Estado 2026-04-29:** intento incorrecto del 2026-04-29 (Form → ERP directo) **REVERTIDO completo**. El flujo correcto documentado en ADR-0011 v1.1 + ADR-0015 + memoria `project_acquisition_flow` requiere n8n + Vtiger en el medio. **Aplicar runbook OBLIGATORIO `docs/runbooks/preflight-cross-system.md` antes de empezar.**
+
+**Componentes a construir:**
+
+1. **Vtiger setup** (módulo Leads activo, custom fields para UTMs/click_ids/event_id, REST API auth, webhook on-change config)
+2. **n8n workflow `/webhook/form-submit`** (recibe POST de mu-plugin, dedup v2 por phone, INSERT Vtiger Lead, envía WA template)
+3. **n8n workflow `Vtiger → ERP espejo`** (recibe webhook on-change Vtiger, sync a `livskin_erp.leads` table)
+4. **mu-plugin WordPress refactor** (POST a n8n webhook, no a ERP)
+5. **Endpoint Flask renombrado** (de `/api/leads/intake` a `/api/leads/sync-from-n8n` — receptor del workflow de espejo, NO entrada principal)
+6. **Tests pytest + validación end-to-end** (lead manual real → flujo completo)
+
+**Estimado:** 2-3 sesiones (más complejo que el intento de hoy porque integra 3 sistemas + setup Vtiger desde virgen).
+
+**Pre-requisitos antes de empezar (preflight obligatorio):**
+- [ ] Releer 🔥 CRÍTICAS: `project_vtiger_erp_sot`, `project_acquisition_flow`, `project_n8n_orchestration_layer`, `feedback_must_re_read_adrs_before_coding`, `feedback_surgical_precision_erp`
+- [ ] Query brain pgvector con keywords: "flujo lead form vtiger n8n erp"
+- [ ] Citar ADR-0011 v1.1 + ADR-0015 en plan inicial
+- [ ] Plan citado aprobado por Dario antes de tocar código
+
+**Fase sugerida:** próxima sesión inmediata
+**Agregado por:** Claude Code · 2026-04-29
+
+---
+
+### ~~🔴 Mini-bloque 3.3 Fase 3 — Form → ERP webhook~~ ❌ INVALIDADO 2026-04-29 (arquitectura incorrecta, ver item arriba)
 **Estado 2026-04-28:** Mini-bloques 3.1 + 3.2 completados. El Tracking Engine en GTM ya inyecta `event_id` único al submit del form. Ahora toca el plumbing al backend:
 
 **Acciones:**

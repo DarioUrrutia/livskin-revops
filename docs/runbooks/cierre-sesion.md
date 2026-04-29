@@ -27,6 +27,8 @@ related_skills:
 
 ---
 
+> **Runbook complementario:** [preflight-cross-system.md](preflight-cross-system.md) — protocolo OBLIGATORIO antes de empezar mini-bloques que toquen ≥2 sistemas. Aplicarlo evita el tipo de error del 2026-04-29 (mini-bloque 3.3 inventado, 4h perdidas, commits revertidos).
+
 ## Filosofía
 
 El cierre de sesión NO es paperwork. Es la operación que convierte trabajo individual en **organización persistente**. Cada cierre debe dejar al proyecto en un estado donde:

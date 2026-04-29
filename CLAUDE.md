@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-04-28 v2.3 (Fase 3 mini-bloques 3.1 + 3.2 ejecutados y validados end-to-end)
+> Última actualización: 2026-04-29 v2.4 (mini-bloque 3.3 REVERTIDO por error arquitectónico + reorganización sistema memoria + brain re-indexado + runbook preflight nuevo)
 
 ---
 
@@ -260,7 +260,39 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-04-28 (Fase 3 mini-bloques 3.1 + 3.2 ejecutados)
+## 📝 Estado al 2026-04-29 (mini-bloque 3.3 REVERTIDO + reorganización sistema memoria)
+
+### Sesión 2026-04-29 (error arquitectónico + cleanup completo + reorganización)
+
+**Lo que pasó:** implementé mini-bloque 3.3 (Form → ERP webhook) ignorando arquitectura cerrada hace una semana. El flujo correcto documentado en ADR-0011 v1.1 + ADR-0015 + memoria `project_acquisition_flow` es: **Form → n8n → Vtiger → ERP espejo**, no Form → ERP directo. Dario detectó el error al preguntar dónde encajaba Vtiger.
+
+**Cleanup ejecutado completo (sistema vuelto al estado del cierre 2026-04-28):**
+- `git revert` de los 2 commits del backend Flask (`ee0ddd2` + `0f9187d`) → push → CI redeploy → endpoint `/api/leads/intake` retorna 404 en producción
+- `mu-plugin livskin-lead-webhook.php` eliminado de VPS 1 (otros plugins intactos)
+- 2 leads test (LIVLEAD0001, LIVLEAD0002) + 2 touchpoints borrados de ERP DB
+- Audit doc del 3.3 incorrecto borrado (no commiteado)
+
+**Reorganización del sistema de memoria (token-efficient):**
+- MEMORY.md reorganizado por criticidad: 5 categorías (🔥 CRÍTICAS, 📐 Arquitectura, 🚦 Gobernanza, 🛠 Patrones, 📋 Estado)
+- 2 memorias 🔥 CRÍTICAS nuevas: `project_n8n_orchestration_layer.md` (n8n como capa visual orquestadora cross-system) + `feedback_must_re_read_adrs_before_coding.md` (protocolo obligatorio pre-flight)
+- Brain pgvector Layer 2 re-indexado: 1.475 → **1.765 chunks** (94 archivos, todos los docs recientes incluidos)
+- Runbook nuevo `preflight-cross-system.md` con protocolo 5-pasos obligatorio antes de tareas cross-system
+- Cross-link en `cierre-sesion.md` para descoverability
+
+**Filosofía operativa nueva:** NO releer todas las memorias por sesión. MEMORY.md compacto auto-carga + queries semánticas al brain pgvector bajo demanda (~2K tokens vs 25K leyendo 5 ADRs) + pre-flight checklist OBLIGATORIO antes de mini-bloques cross-system.
+
+**Estado Fase 3:**
+| Mini-bloque | Estado |
+|---|---|
+| 3.1 Limpieza VPS 1 | ✅ válido |
+| 3.2 GTM Tracking Engine + UTM persistence | ✅ válido |
+| **3.3 Form → ERP webhook** | ❌ **NO existe** (revertido) — REWRITE pendiente con flujo correcto Form→n8n→Vtiger→ERP |
+| 3.4 CAPI server-side desde ERP | ⏳ pendiente |
+| 3.5 Observabilidad | ⏳ pendiente |
+
+**Fase 3 progress:** 2 de 5 mini-bloques (40%) — vuelve al estado del cierre de ayer.
+
+**Próxima sesión:** Mini-bloque 3.3 REWRITE — Setup Vtiger + n8n + flow correcto. Aplicar runbook `preflight-cross-system.md` obligatorio antes de empezar.
 
 ### Sesión 2026-04-28 (Fase 3 arrancada con 2 mini-bloques completos)
 
