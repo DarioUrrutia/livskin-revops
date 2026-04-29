@@ -5,6 +5,10 @@
 #
 # Volumen: ./data/ contiene database.sqlite + workflows + credentials.
 # Backup: tarball nightly de ./data/ (cross-VPS).
+#
+# Env vars secretas (Vtiger API, ERP audit, etc.): vienen de ./.env
+# (gitignored — copiar desde keys/.env.integrations en setup inicial).
+# Ver infra/n8n/conventions.md § 9 para política de credenciales.
 
 services:
   n8n:
@@ -12,7 +16,13 @@ services:
     container_name: n8n
     restart: always
 
+    # env_file: secretos sensibles (Vtiger access key, ERP audit token, etc.)
+    # Estructura del archivo en .env.example
+    env_file:
+      - .env
+
     environment:
+      # n8n-specific (con defaults)
       - N8N_HOST=${N8N_HOST:-flow.livskin.site}
       - N8N_PORT=5678
       - N8N_PROTOCOL=http

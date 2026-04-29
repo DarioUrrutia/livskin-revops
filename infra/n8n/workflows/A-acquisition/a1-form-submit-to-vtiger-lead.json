@@ -1,0 +1,532 @@
+{
+  "name": "[A1] Capturar Form Submit → Vtiger Lead",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "acquisition/form-submit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-trigger",
+      "name": "Webhook Form Submit",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "a1-form-submit"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [A1] paso 2: Validate & Normalize Phone to E.164 (default Peru +51)\n// Input: webhook body con campo `phone` (cualquier formato)\n// Output: mismo body + `phone_e164` o `_phone_invalid: true`\n\nconst body = $input.first().json.body || $input.first().json;\nconst phoneRaw = (body.phone || '').toString().trim();\n\nif (!phoneRaw) {\n  return [{ json: { ...body, _phone_invalid: true, _phone_error: 'empty' } }];\n}\n\n// Strip everything except digits and leading +\nlet cleaned = phoneRaw.replace(/[^\\d+]/g, '');\n\nlet phone_e164 = null;\n\nif (cleaned.startsWith('+')) {\n  const digits = cleaned.slice(1);\n  if (digits.length < 8 || digits.length > 15) {\n    return [{ json: { ...body, _phone_invalid: true, _phone_error: 'length_out_of_range' } }];\n  }\n  phone_e164 = '+' + digits;\n} else if (cleaned.startsWith('51') && cleaned.length >= 11 && cleaned.length <= 12) {\n  phone_e164 = '+' + cleaned;\n} else if (cleaned.length === 9 && cleaned.startsWith('9')) {\n  phone_e164 = '+51' + cleaned;\n} else if (cleaned.length === 11 && cleaned.startsWith('519')) {\n  phone_e164 = '+' + cleaned;\n} else {\n  return [{ json: { ...body, _phone_invalid: true, _phone_error: 'unknown_format' } }];\n}\n\nreturn [{ json: { ...body, phone_e164, _phone_invalid: false } }];"
+      },
+      "id": "node-normalize-phone",
+      "name": "Validate Phone",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "phone-invalid-check",
+              "leftValue": "={{ $json._phone_invalid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-phone-invalid",
+      "name": "IF Phone Invalid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: 'phone_invalid', detail: $json._phone_error, phone_raw: $json.phone } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "node-respond-400",
+      "name": "Respond 400 Phone Invalid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.VTIGER_URL }}/webservice.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "operation",
+              "value": "getchallenge"
+            },
+            {
+              "name": "username",
+              "value": "={{ $env.VTIGER_API_USER }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-vtiger-getchallenge",
+      "name": "Vtiger getchallenge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [A1] paso 4: Compute MD5(token + accesskey) for Vtiger login\nconst crypto = require('crypto');\n\nconst challengeResponse = $input.first().json;\nif (!challengeResponse.success) {\n  throw new Error('Vtiger getchallenge failed: ' + JSON.stringify(challengeResponse));\n}\n\nconst token = challengeResponse.result.token;\nconst accesskey = $env.VTIGER_API_ACCESSKEY;\nconst hash = crypto.createHash('md5').update(token + accesskey).digest('hex');\n\n// Pasamos al siguiente nodo el hash + el lead body original (preservar a traves de la chain)\nconst formBody = $('Validate Phone').first().json;\n\nreturn [{ json: { ...formBody, _vtiger_access_hash: hash } }];"
+      },
+      "id": "node-md5-hash",
+      "name": "Compute MD5 Hash",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VTIGER_URL }}/webservice.php",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "operation",
+              "value": "login"
+            },
+            {
+              "name": "username",
+              "value": "={{ $env.VTIGER_API_USER }}"
+            },
+            {
+              "name": "accessKey",
+              "value": "={{ $json._vtiger_access_hash }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-vtiger-login",
+      "name": "Vtiger Login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [A1] paso 5b: Capturar sessionName y propagar form data\nconst loginResponse = $input.first().json;\nif (!loginResponse.success) {\n  throw new Error('Vtiger login failed: ' + JSON.stringify(loginResponse));\n}\n\nconst sessionName = loginResponse.result.sessionName;\nconst formBody = $('Validate Phone').first().json;\n\nreturn [{ json: { ...formBody, _vtiger_session: sessionName } }];"
+      },
+      "id": "node-capture-session",
+      "name": "Capture Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.VTIGER_URL }}/webservice.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "operation",
+              "value": "query"
+            },
+            {
+              "name": "sessionName",
+              "value": "={{ $json._vtiger_session }}"
+            },
+            {
+              "name": "query",
+              "value": "=SELECT id FROM Leads WHERE phone='{{ $json.phone_e164 }}' LIMIT 1;"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-vtiger-query-dedup",
+      "name": "Vtiger Query Dedup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [A1] paso 7: Decidir create vs existing lead match\n// Si existe: retornar lead_id y is_new=false (sin update en v1.0)\n// Si no existe: forward para CREATE\n\nconst queryResponse = $input.first().json;\nif (!queryResponse.success) {\n  throw new Error('Vtiger query failed: ' + JSON.stringify(queryResponse));\n}\n\nconst formBody = $('Validate Phone').first().json;\nconst session = $('Capture Session').first().json._vtiger_session;\nconst results = queryResponse.result || [];\n\nif (results.length > 0) {\n  // Lead existe — dedup match\n  return [{ json: {\n    ...formBody,\n    _vtiger_session: session,\n    _lead_exists: true,\n    _existing_lead_id: results[0].id,\n  } }];\n} else {\n  // Lead nuevo — CREATE flow\n  return [{ json: {\n    ...formBody,\n    _vtiger_session: session,\n    _lead_exists: false,\n  } }];\n}"
+      },
+      "id": "node-decide-create-or-skip",
+      "name": "Decide Create or Existing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "lead-exists-check",
+              "leftValue": "={{ $json._lead_exists }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-exists",
+      "name": "IF Lead Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [A1] paso 8b: Build CREATE payload con los 12 cf_NNN + nativos\n// Mapping cf_NNN segun integrations/vtiger/fields-mapping.md\n\nconst body = $input.first().json;\n\n// Split nombre en first/last\nconst nombreParts = (body.nombre || '').trim().split(/\\s+/);\nconst firstname = nombreParts[0] || '(sin nombre)';\nconst lastname = nombreParts.slice(1).join(' ') || '(sin apellido)';\n\nconst element = {\n  // Nativos\n  firstname,\n  lastname,\n  phone: body.phone_e164,\n  email: (body.email || '').toLowerCase().trim(),\n  leadstatus: 'New',\n  leadsource: 'Web Site',\n  description: '',\n\n  // Custom fields (cf_NNN — ver fields-mapping.md)\n  cf_853: body.utm_source || '',\n  cf_855: body.utm_medium || '',\n  cf_857: body.utm_campaign || '',\n  cf_859: body.utm_content || '',\n  cf_861: body.utm_term || '',\n  cf_863: body.fbclid || '',\n  cf_865: body.gclid || '',\n  cf_867: body.fbc || '',\n  cf_869: body.ga || '',\n  cf_871: body.event_id || '',\n  cf_873: body.landing_url || '',\n  cf_875: body.tratamiento_interes || 'Otro / No especificado',\n};\n\n// assigned_user_id es required en Vtiger — asignar al admin (id 1)\nelement.assigned_user_id = '19x1';\n\nreturn [{ json: {\n  _vtiger_session: body._vtiger_session,\n  _element_json: JSON.stringify(element),\n} }];"
+      },
+      "id": "node-build-create-payload",
+      "name": "Build Create Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VTIGER_URL }}/webservice.php",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "operation",
+              "value": "create"
+            },
+            {
+              "name": "sessionName",
+              "value": "={{ $json._vtiger_session }}"
+            },
+            {
+              "name": "elementType",
+              "value": "Leads"
+            },
+            {
+              "name": "element",
+              "value": "={{ $json._element_json }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "node-vtiger-create",
+      "name": "Vtiger Create Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2660,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [A1] paso 10: Build response payload — caso CREATE exitoso\n\nconst createResponse = $input.first().json;\nif (!createResponse.success) {\n  throw new Error('Vtiger create failed: ' + JSON.stringify(createResponse));\n}\n\nconst formBody = $('Validate Phone').first().json;\n\nreturn [{ json: {\n  ok: true,\n  vtiger_lead_id: createResponse.result.id,\n  is_new: true,\n  event_id: formBody.event_id || null,\n} }];"
+      },
+      "id": "node-build-response-created",
+      "name": "Build Response (Created)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [A1] paso 8a: Build response — caso lead ya existe (dedup match, no UPDATE en v1.0)\n\nconst body = $input.first().json;\n\nreturn [{ json: {\n  ok: true,\n  vtiger_lead_id: body._existing_lead_id,\n  is_new: false,\n  event_id: body.event_id || null,\n} }];"
+      },
+      "id": "node-build-response-existing",
+      "name": "Build Response (Existing)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node-respond-200",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3100,
+        540
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Form Submit": {
+      "main": [
+        [
+          {
+            "node": "Validate Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Phone": {
+      "main": [
+        [
+          {
+            "node": "IF Phone Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Phone Invalid": {
+      "main": [
+        [
+          {
+            "node": "Respond 400 Phone Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Vtiger getchallenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vtiger getchallenge": {
+      "main": [
+        [
+          {
+            "node": "Compute MD5 Hash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute MD5 Hash": {
+      "main": [
+        [
+          {
+            "node": "Vtiger Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vtiger Login": {
+      "main": [
+        [
+          {
+            "node": "Capture Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Session": {
+      "main": [
+        [
+          {
+            "node": "Vtiger Query Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vtiger Query Dedup": {
+      "main": [
+        [
+          {
+            "node": "Decide Create or Existing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide Create or Existing": {
+      "main": [
+        [
+          {
+            "node": "IF Lead Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Lead Exists": {
+      "main": [
+        [
+          {
+            "node": "Build Response (Existing)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Create Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Create Payload": {
+      "main": [
+        [
+          {
+            "node": "Vtiger Create Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vtiger Create Lead": {
+      "main": [
+        [
+          {
+            "node": "Build Response (Created)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response (Created)": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response (Existing)": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "id": "a1-form-submit-vtiger-lead"
+}
