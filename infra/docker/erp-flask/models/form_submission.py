@@ -35,6 +35,9 @@ class FormSubmission(Base):
     utm_term: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     fbclid: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     gclid: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    fbc: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ga: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    event_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     consent_marketing: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     ip: Mapped[Optional[str]] = mapped_column(INET, nullable=True)
@@ -55,4 +58,5 @@ class FormSubmission(Base):
 
     __table_args__ = (
         Index("idx_form_submissions_fecha_status", "fecha", "status"),
+        Index("idx_form_submissions_event_id", "event_id"),
     )

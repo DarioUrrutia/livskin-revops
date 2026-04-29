@@ -31,6 +31,9 @@ class LeadTouchpoint(Base):
     utm_term: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     fbclid: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     gclid: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    fbc: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ga: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    event_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     primer_mensaje: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     form_data_json: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
@@ -51,4 +54,5 @@ class LeadTouchpoint(Base):
         Index("idx_lead_touchpoints_lead_fecha", "lead_id", "fecha_contacto"),
         Index("idx_lead_touchpoints_fecha", "fecha_contacto"),
         Index("idx_lead_touchpoints_utm_campaign", "utm_campaign"),
+        Index("idx_lead_touchpoints_event_id", "event_id"),
     )

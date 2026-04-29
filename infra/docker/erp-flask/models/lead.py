@@ -35,6 +35,9 @@ class Lead(Base, TimestampMixin):
     utm_term_at_capture: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     fbclid_at_capture: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     gclid_at_capture: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    fbc_at_capture: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    ga_at_capture: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    event_id_at_capture: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     tratamiento_interes: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     consent_marketing: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -70,4 +73,5 @@ class Lead(Base, TimestampMixin):
         Index("idx_leads_email_lower", "email_lower"),
         Index("idx_leads_estado_score", "estado_lead", "score"),
         Index("idx_leads_vtiger_id", "vtiger_id"),
+        Index("idx_leads_event_id_at_capture", "event_id_at_capture"),
     )
