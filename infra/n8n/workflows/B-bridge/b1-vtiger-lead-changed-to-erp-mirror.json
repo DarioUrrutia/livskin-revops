@@ -1,0 +1,426 @@
+{
+  "id": "b1-vtiger-lead-changed-erp-mirror",
+  "name": "[B1] Espejar Vtiger Lead Changed \u2192 ERP Mirror",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bridge/vtiger-lead-changed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-trigger",
+      "name": "Webhook Vtiger Changed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "b1-vtiger-lead-changed"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [B1] paso 2: Extract vtiger_id\nconst body = $input.first().json.body || $input.first().json;\nconst vtigerId = body.id || body.vtiger_id || '';\n\nif (!vtigerId) {\n  return [{ json: { _id_missing: true, _raw: body } }];\n}\n\nreturn [{ json: { vtiger_id: vtigerId, _id_missing: false } }];"
+      },
+      "id": "node-extract-id",
+      "name": "Extract Vtiger ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "id-missing-check",
+              "leftValue": "={{ $json._id_missing }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-id-missing",
+      "name": "IF ID Missing",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: 'id_missing' } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "node-respond-400",
+      "name": "Respond 400 ID Missing",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.VTIGER_URL }}/webservice.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "operation",
+              "value": "getchallenge"
+            },
+            {
+              "name": "username",
+              "value": "={{ $env.VTIGER_API_USER }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-vtiger-getchallenge",
+      "name": "Vtiger getchallenge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [B1] paso 4: Compute MD5(token + accesskey)\nconst crypto = require('crypto');\n\nconst challengeResponse = $input.first().json;\nif (!challengeResponse.success) {\n  throw new Error('Vtiger getchallenge failed: ' + JSON.stringify(challengeResponse));\n}\n\nconst token = challengeResponse.result.token;\nconst accesskey = $env.VTIGER_API_ACCESSKEY;\nconst hash = crypto.createHash('md5').update(token + accesskey).digest('hex');\n\nconst extracted = $('Extract Vtiger ID').first().json;\nreturn [{ json: { vtiger_id: extracted.vtiger_id, _vtiger_access_hash: hash } }];"
+      },
+      "id": "node-md5-hash",
+      "name": "Compute MD5 Hash",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VTIGER_URL }}/webservice.php",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "operation",
+              "value": "login"
+            },
+            {
+              "name": "username",
+              "value": "={{ $env.VTIGER_API_USER }}"
+            },
+            {
+              "name": "accessKey",
+              "value": "={{ $json._vtiger_access_hash }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-vtiger-login",
+      "name": "Vtiger Login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [B1] paso 5b: Capturar sessionName + propagar vtiger_id\nconst loginResponse = $input.first().json;\nif (!loginResponse.success) {\n  throw new Error('Vtiger login failed: ' + JSON.stringify(loginResponse));\n}\n\nconst extracted = $('Extract Vtiger ID').first().json;\nreturn [{ json: {\n  vtiger_id: extracted.vtiger_id,\n  _vtiger_session: loginResponse.result.sessionName,\n} }];"
+      },
+      "id": "node-capture-session",
+      "name": "Capture Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.VTIGER_URL }}/webservice.php",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "operation",
+              "value": "retrieve"
+            },
+            {
+              "name": "sessionName",
+              "value": "={{ $json._vtiger_session }}"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.vtiger_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-vtiger-retrieve",
+      "name": "Vtiger Retrieve Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [B1] paso 7: Map Vtiger fields cf_NNN -> ERP schema (ver fields-mapping.md)\nconst retrieveResponse = $input.first().json;\nif (!retrieveResponse.success) {\n  throw new Error('Vtiger retrieve failed: ' + JSON.stringify(retrieveResponse));\n}\n\nconst v = retrieveResponse.result;\nconst nombre = ((v.firstname || '') + ' ' + (v.lastname || '')).trim() || '(sin nombre)';\n\nconst erpPayload = {\n  vtiger_id: v.id,\n  nombre,\n  phone_e164: v.phone || '',\n  email: v.email || '',\n  leadstatus: v.leadstatus || '',\n  leadsource: v.leadsource || '',\n  // cf_NNN -> ERP (12 custom fields)\n  utm_source: v.cf_853 || '',\n  utm_medium: v.cf_855 || '',\n  utm_campaign: v.cf_857 || '',\n  utm_content: v.cf_859 || '',\n  utm_term: v.cf_861 || '',\n  fbclid: v.cf_863 || '',\n  gclid: v.cf_865 || '',\n  fbc: v.cf_867 || '',\n  ga: v.cf_869 || '',\n  event_id: v.cf_871 || '',\n  landing_url: v.cf_873 || '',\n  tratamiento_interes: v.cf_875 || '',\n  consent_marketing: false, // Vtiger no captura este field nativo \u2014 default false\n};\n\nreturn [{ json: erpPayload }];"
+      },
+      "id": "node-map-to-erp",
+      "name": "Map Vtiger to ERP Schema",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ERP_SYNC_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Internal-Token",
+              "value": "={{ $env.AUDIT_INTERNAL_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "node-erp-post",
+      "name": "POST ERP sync-from-vtiger",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [B1] paso 9: Build response payload\nconst erpResponse = $input.first().json;\nconst extracted = $('Extract Vtiger ID').first().json;\n\nreturn [{ json: {\n  ok: true,\n  vtiger_id: extracted.vtiger_id,\n  erp_response: erpResponse,\n} }];"
+      },
+      "id": "node-build-response",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node-respond-200",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2660,
+        540
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Vtiger Changed": {
+      "main": [
+        [
+          {
+            "node": "Extract Vtiger ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Vtiger ID": {
+      "main": [
+        [
+          {
+            "node": "IF ID Missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ID Missing": {
+      "main": [
+        [
+          {
+            "node": "Respond 400 ID Missing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Vtiger getchallenge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vtiger getchallenge": {
+      "main": [
+        [
+          {
+            "node": "Compute MD5 Hash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute MD5 Hash": {
+      "main": [
+        [
+          {
+            "node": "Vtiger Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vtiger Login": {
+      "main": [
+        [
+          {
+            "node": "Capture Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Session": {
+      "main": [
+        [
+          {
+            "node": "Vtiger Retrieve Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vtiger Retrieve Lead": {
+      "main": [
+        [
+          {
+            "node": "Map Vtiger to ERP Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Vtiger to ERP Schema": {
+      "main": [
+        [
+          {
+            "node": "POST ERP sync-from-vtiger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST ERP sync-from-vtiger": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
