@@ -40,8 +40,9 @@ KNOWN_ACTIONS = {
     "cliente.created",
     "cliente.updated",
     "cliente.merged",
-    # Lead (5)
+    # Lead (6)
     "lead.created",
+    "lead.synced_from_vtiger",
     "lead.score_updated",
     "lead.handoff_to_doctora",
     "lead.converted",
