@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     # Pre-Bloque-0 default insecure — rotar en producción a valor random.
     audit_internal_token: str = "change-me-in-production"
 
+    # Fase 3 mini-bloque 3.3: lead intake endpoint /api/leads/intake
+    # Turnstile siteverify para anti-spam (sincroniza con widget en SureForms 1569)
+    cf_turnstile_secret_key: str = ""
+    lead_intake_require_turnstile: bool = False  # toggle on cuando SureForms ya envia el token
+
+    # Fallback shared secret para fuentes que no son SureForms (ej. import manual desde Sheets backfill).
+    # SureForms usa Turnstile (no este token).
+    lead_intake_shared_secret: str = "change-me-in-production"
+
     @property
     def database_url(self) -> str:
         return (

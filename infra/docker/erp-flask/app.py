@@ -12,6 +12,8 @@ from routes.api_cliente import bp as cliente_bp
 from routes.api_config import bp as config_bp
 from routes.api_dashboard import bp as dashboard_bp
 from routes.api_gasto import bp as gasto_bp
+from routes.api_leads import bp as api_leads_bp
+from routes.api_leads import register_public_endpoints as _register_leads_public
 from routes.api_libro import bp as libro_bp
 from routes.api_pagos import bp as pagos_bp
 from routes.api_venta import bp as venta_bp
@@ -39,6 +41,8 @@ def create_app() -> Flask:
     flask_app.register_blueprint(libro_bp)
     flask_app.register_blueprint(pagos_bp)
     flask_app.register_blueprint(venta_bp)
+    flask_app.register_blueprint(api_leads_bp)
+    _register_leads_public()  # marcar /api/leads/intake como publico (Turnstile-protected)
 
     @flask_app.route("/ping")
     def ping() -> str:
