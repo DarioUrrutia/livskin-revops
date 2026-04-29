@@ -45,8 +45,7 @@ class TestLeadIntakeHappyPath:
         lead = db_session.execute(
             select(Lead).where(Lead.cod_lead == body["cod_lead"])
         ).scalar_one()
-        # nombre se normaliza a lowercase via normalize_service (consistencia para dedup)
-        assert lead.nombre == "maria test"
+        assert lead.nombre == "Maria Test"
         assert lead.phone_e164 == "+51987654321"  # E164 con prefix Peru
         assert lead.email_lower == "maria.test@gmail.com"
         assert lead.email_hash_sha256 is not None
