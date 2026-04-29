@@ -25,17 +25,76 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 Decisión a reabrir en Mini-bloque 3.4 — CAPI emitter ERP vs n8n
+**Decisión 2026-04-26 (revisable):** CAPI emitido directamente desde ERP. **Decisión refinada conversación 2026-04-29:** la lógica original justificaba que el ORIGEN del evento es ERP (match quality), pero no que el EMISOR a Meta sea ERP. Patrón propuesto:
+
+```
+ERP (cita/venta) → POST a n8n /webhook/capi-event con payload completo
+n8n recibe + valida + emite a Meta CAPI
+ERP loggea audit_log "capi.event_emitted"
+```
+
+**Beneficios:** visualidad n8n + centralización outbound a Meta + match quality alta (PII viene de ERP) + ERP audit log preservado + edit nodo n8n si Meta cambia API.
+
+**Costo:** un n8n workflow más + endpoint POST en ERP que va a n8n en vez de Meta directo.
+
+**Trigger:** primera decisión al abrir Mini-bloque 3.4 (junto con Meta App Review + anuncio €2/día).
+**Output:** ADR-0019 versión full con la decisión final.
+**Agregado por:** Claude Code · 2026-04-29
+
+---
+
+### 🟡 Subir 134 clientes existentes a Meta como Custom Audience (Mini-bloque 3.4)
+**Insight 2026-04-29:** los 134 clientes históricos del ERP son **word-of-mouth** (no vinieron de ads). No tienen `fbclid`/`gclid` para attribution histórica → Meta no los puede atribuir a ningún anuncio. **PERO** son el dataset de mejor calidad que tenemos para alimentar el algoritmo de Meta:
+- **Custom Audience** ("Customer File"): subir hashed email + phone de los 134 → Meta los identifica en su universo de usuarios
+- **Lookalike Audience (LAL) 1-3%**: Meta busca personas SIMILARES en Perú a tus mejores pacientes → audiencia inicial para campañas
+
+**Acción:**
+1. Export de los 134 clientes con email + phone (script Python desde ERP DB)
+2. Hashing SHA-256 de email/phone normalizados
+3. Subir CSV a Meta Ads Manager → Audiences → Custom Audience → Customer List
+4. Crear LAL 1-3% Perú basado en esa Custom Audience
+5. Documentar en runbook `audiences-meta.md` cómo refrescar la audience cada N meses (cada nuevo cliente real → re-upload incremental)
+
+**Por qué esto importa:** es la primera vez que Meta ve "datos de pacientes pagos reales de Livskin", no proxies (form leads, page views). El algoritmo afina mucho mejor con conversiones reales.
+
+**Trigger:** Mini-bloque 3.4 (CAPI), primer outbound a Meta — coherente con el bloque que cerrará la decisión Meta App Review.
+**Pre-requisito:** decisión Meta App Review (necesario tener `ads_management` o subir manual desde UI).
+**Estimado:** 30-45 min (script + upload + LAL).
+**Agregado por:** Claude Code · 2026-04-29
+
+---
+
+### 🟡 Schema `clientes` ERP — heredar `first_touch_attribution` del lead al convertir
+**Decisión 2026-04-29:** cuando un lead se convierte en cliente (primera cita pagada), el ERP debe **preservar el contexto de adquisición original** en `clientes`. Hoy `clientes` no tiene esa columna.
+
+**Acción:**
+1. Migration Alembic 0007 (post Mini-bloque 3.3): agregar columna `first_touch_attribution` JSONB a `clientes`
+2. Estructura: `{fbclid, gclid, fbc, ga, utm_source, utm_campaign, utm_medium, utm_term, utm_content, lead_id, lead_created_at, conversion_date}`
+3. Hook en lógica de conversión lead→cliente: copiar atribución del `leads` row al `clientes` row al crearlo
+4. Endpoint `/api/clientes/<id>/attribution` para query (útil para dashboard analítico)
+
+**Por qué importa:** cuando se haga un Purchase 60 días después del primer click, CAPI puede mandar el `fbclid` original aunque ya no esté en cookie del paciente. Cierra el ciclo de attribution end-to-end.
+
+**Trigger:** post Mini-bloque 3.3 REWRITE, cuando ya esté el flujo lead→cliente completo. O directamente en bloque puente Agenda (que toca schema clientes igual).
+**Estimado:** 30 min (migration simple + hook).
+**Agregado por:** Claude Code · 2026-04-29
+
+---
+
 ### 🔴 Mini-bloque 3.3 REWRITE — Form → n8n → Vtiger → ERP espejo (próxima sesión)
 **Estado 2026-04-29:** intento incorrecto del 2026-04-29 (Form → ERP directo) **REVERTIDO completo**. El flujo correcto documentado en ADR-0011 v1.1 + ADR-0015 + memoria `project_acquisition_flow` requiere n8n + Vtiger en el medio. **Aplicar runbook OBLIGATORIO `docs/runbooks/preflight-cross-system.md` antes de empezar.**
 
 **Componentes a construir:**
 
 1. **Vtiger setup** (módulo Leads activo, custom fields para UTMs/click_ids/event_id, REST API auth, webhook on-change config)
-2. **n8n workflow `/webhook/form-submit`** (recibe POST de mu-plugin, dedup v2 por phone, INSERT Vtiger Lead, envía WA template)
+   - Custom fields requeridos: `cf_fbclid`, `cf_gclid`, `cf_fbc`, `cf_ga`, `cf_utm_source`, `cf_utm_campaign`, `cf_utm_medium`, `cf_utm_term`, `cf_utm_content`, `cf_event_id`, `cf_landing_url`
+2. **n8n workflow `/webhook/form-submit`** (recibe POST de mu-plugin, dedup v2 por phone, INSERT Vtiger Lead con TODOS los identifiers, envía WA template)
 3. **n8n workflow `Vtiger → ERP espejo`** (recibe webhook on-change Vtiger, sync a `livskin_erp.leads` table)
-4. **mu-plugin WordPress refactor** (POST a n8n webhook, no a ERP)
+4. **mu-plugin WordPress refactor** (POST a n8n webhook con 11 hidden fields: 4 click_ids/cookies + 5 UTMs + event_id + landing_url)
 5. **Endpoint Flask renombrado** (de `/api/leads/intake` a `/api/leads/sync-from-n8n` — receptor del workflow de espejo, NO entrada principal)
-6. **Tests pytest + validación end-to-end** (lead manual real → flujo completo)
+6. **Migration Alembic 0006** — extender schema `leads` con columnas: `fbclid`, `gclid`, `fbc`, `ga`, `utm_source`, `utm_campaign`, `utm_medium`, `utm_term`, `utm_content`, `event_id`, `ip_at_submit`, `ua_at_submit`, `landing_url`
+7. **Tests pytest + validación end-to-end** (lead manual real → flujo completo, verificar que click_ids viajan y persisten en `leads`)
 
 **Estimado:** 2-3 sesiones (más complejo que el intento de hoy porque integra 3 sistemas + setup Vtiger desde virgen).
 
