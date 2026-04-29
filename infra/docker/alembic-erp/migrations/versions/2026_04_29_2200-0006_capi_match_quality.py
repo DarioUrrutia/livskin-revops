@@ -1,6 +1,6 @@
-"""0006 capi match quality identifiers — fbc/ga/event_id en leads + touchpoints + form_submissions
+"""0006 capi match quality — fbc/ga/event_id en leads + touchpoints + form_submissions
 
-Revision ID: 0006_capi_match_quality_identifiers
+Revision ID: 0006_capi_match_quality
 Revises: 0005_agent_resource_tracking
 Create Date: 2026-04-29 22:00:00.000000+00:00
 
@@ -25,7 +25,7 @@ from typing import Union
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "0006_capi_match_quality_identifiers"
+revision: str = "0006_capi_match_quality"
 down_revision: Union[str, None] = "0005_agent_resource_tracking"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
