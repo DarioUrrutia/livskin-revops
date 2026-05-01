@@ -96,27 +96,6 @@ jobs:
         # Subir manualmente cuando convenga, validando contra Node version del setup-node arriba.
         run: npm install -g wrangler@4.87.0
 
-      - name: Verify CF token format
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::error::CLOUDFLARE_API_TOKEN secret esta vacio o no existe"
-            exit 1
-          fi
-          LEN=${#CLOUDFLARE_API_TOKEN}
-          PREFIX="${CLOUDFLARE_API_TOKEN:0:5}"
-          echo "token length: $LEN chars"
-          echo "token prefix: ${PREFIX}***"
-          if [ "$LEN" -lt 40 ]; then
-            echo "::error::Token demasiado corto ($LEN chars). Tokens validos CF tienen 40+ chars. Posible que se haya pegado el account_id (32 chars hex) por error."
-            exit 1
-          fi
-          if [ "$PREFIX" = "5c8c8" ]; then
-            echo "::error::Token empieza con '5c8c8' — eso es el ACCOUNT_ID, no el TOKEN. Verificar GH secret CLOUDFLARE_API_TOKEN."
-            exit 1
-          fi
-
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
