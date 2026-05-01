@@ -25,6 +25,42 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 HOTFIX n8n [B3] — race condition cron procesando solo 1 de N leads
+**Bug detectado 2026-05-02 en smoke comprehensivo:** workflow [B3] cron pull (cada 2 min con lookback 3 min) procesó SOLO 1 de 3 form leads creados en la misma ventana. Los 4 leads test (10x12, 10x13, 10x14, 10x15) tenían modifiedtime dentro del window del cron en 21:36:37, pero solo 10x12 hizo POST a ERP. Las leads 10x13 y 10x14 quedaron orphan (sin sync ERP), 10x15 correctamente filtrada por Op B (es wa-click).
+
+**Hipótesis a investigar:**
+1. n8n batch processing serial detenido en error silencioso del primer item
+2. Split items con race en Vtiger query response (multiple items no devuelven en order esperado)
+3. continueOnFail no seteado en algún nodo HTTP (Vtiger Retrieve o POST ERP)
+4. Vtiger query devuelve solo el último modificado por orden default
+
+**Severidad:** media. En producción sin smoke, leads quedan sin attribution en ERP por algunos minutos hasta próximo cron — pero como B3 sólo busca leads con modifiedtime > now-3min, **leads que pasan ese window quedan orphan permanentemente**.
+
+**Tiempo estimado:** 15-30 min (investigar execution_data del run problemático en n8n DB + agregar continueOnFail + verificar query order).
+
+**Bloqueante para:** primera campaña paga real con tráfico múltiple simultáneo. Smoke single-lead pasa OK; el problema solo se ve con leads concurrentes.
+
+**Agregado por:** Claude Code · 2026-05-02
+
+---
+
+### ✅ Mini-bloque 3.6.10 — smoke comprehensivo journey "anuncio → paga" (RESUELTO 2026-05-02)
+**16 tests con condiciones explícitas ejecutados:** 14 PASS + 1 gap diseñado (consent persist) + 1 hallazgo (B3 race, separado arriba). Cobertura: Meta+Google ad clicks, organic, JS asset, CORS, form happy path, phone normalization, dedup, WA-click post-patch, payload corrupto, attribution preservation, ERP sync + Op B filter.
+
+**Decisión arquitectónica clave:** Op B (WA-click leads viven solo en Vtiger) confirmada como correcta. El `event_id` UUID es el primary correlation key end-to-end (anuncio → Pixel Lead → Vtiger cf_871 → chatbot Fase 4 → ERP cliente → CAPI Purchase). Memoria nueva `project_attribution_chain_event_id.md`.
+
+---
+
+### ✅ HOTFIX sensor collector cron VPS3 (RESUELTO 2026-05-02)
+**Pendiente Bloque 0 v2** identificado en smoke previo (sensors deployed pero collector cron nunca instalado). Resuelto: cron `*/5 * * * *` collect + `23 3 * * *` cleanup en VPS3. Verificación: 3 VPS reportando samples fresh en `infra_snapshots`.
+
+---
+
+### ✅ HOTFIX n8n [B3] — Op B (WA leads filtrados de ERP sync) (RESUELTO 2026-05-02)
+Patch B3_SKIP_WA_CLICK_v1 aplicado live: workflow [B3] retorna `[]` cuando `leadsource === "WA Direct Click"`. Verificado E2E. Lead WA 10x15 NO sincronizó a ERP (correcto). Lead form 10x12 SÍ sincronizó.
+
+---
+
 ### ✅ HOTFIX n8n [A1] — WA_CLICK_PATCH_v1_1 (RESUELTO 2026-05-01)
 **Bug detectado y resuelto en sesión 2026-05-01:** workflow [A1] rechazaba `_source: "wa-click"` con `400 phone_invalid` por phone vacío. Patch aplicado:
 - `Validate Phone`: acepta phone vacío si `_source === "wa-click"`

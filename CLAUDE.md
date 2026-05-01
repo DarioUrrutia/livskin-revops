@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-05-01 v2.6 (Mini-bloque 3.4 ✅ COMPLETO CAPI via n8n + ADR-0019 cerrado + Mini-bloque 3.6 Landings PLANEADO con ADR-0031)
+> Última actualización: 2026-05-02 v2.7 (Mini-bloque 3.6 ✅ COMPLETO landings dedicadas + smoke comprehensivo 16 tests + Op B atribución vía event_id end-to-end)
 
 ---
 
@@ -166,7 +166,7 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 | 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage al 2026-04-26) |
 | **0 v2 (Bloque foundation cross-VPS)** | ✅ **Completado 2026-04-26** — versionado VPS 1+2 + CI/CD multi-VPS + system-map + sensors + backups + runbooks + DR drill + skills + MCP scaffold |
 | **Setup acceso programático** | ⏳ Próxima sesión inmediata — Google service account + Meta System User + audit programático definitivo (resuelve doble disparo Pixel + UTMs end-to-end) |
-| 3 | 🚧 **80% en progreso** — 3.1 ✅ + 3.2 ✅ + 3.3 REWRITE ✅ + 3.4 CAPI ✅; **PIVOT** orden: pendientes 3.6 Landings (NUEVO inserto), después 3.5 Observabilidad + Metabase |
+| 3 | 🚧 **95% en progreso** — 3.1 ✅ + 3.2 ✅ + 3.3 REWRITE ✅ + 3.4 CAPI ✅ + 3.6 Landings ✅; pendiente 3.5 Observabilidad + Metabase para cerrar Fase 3 |
 | **Bloque puente Agenda Mínima ERP** | ⏳ Entre Fase 3 y Fase 4 — módulo `appointments` con precisión quirúrgica (ADR + tests + feature flag + validación doctora) |
 | 4 | ⏳ Conversation Agent (WhatsApp test number agenda en `appointments` automáticamente) |
 | 5 | ⏳ Brand Orchestrator + Acquisition Agents (precedida de sesión estratégica organizacional) |
@@ -260,7 +260,42 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-05-01 cierre (Mini-bloque 3.4 ✅ + PIVOT 3.6 Landings antes de 3.5 Metabase)
+## 📝 Estado al 2026-05-02 cierre (Mini-bloque 3.6 ✅ + smoke comprehensivo + Op B atribución)
+
+### Sesión 2026-05-01/02 — Mini-bloque 3.6 completo + arquitectura atribución end-to-end
+
+**Logros del día:**
+
+1. **Mini-bloque 3.6 ✅ COMPLETO** — Landings dedicadas Cloudflare Pages live (`campanas.livskin.site/botox-mvp/`)
+   - Sistema convenciones HTML (`_shared/conventions.md` v1.0) + JS standalone (`livskin-tracking.js`) + JSON Schema validator
+   - Modal consent v2 (centrado, GDPR-compliant) + WA tracking auto-detect en `PinkCTA`
+   - GH Actions auto-deploy live (Node 22 + wrangler@4.87 pinned)
+   - 5 commits: `ef431a7`, `cff7a0a`, `a5419c8`, `3138577`, `98f4327`
+
+2. **n8n A1 WA_CLICK_PATCH_v1_1** — workflow patched live para aceptar `_source: "wa-click"` con phone vacío. Lead test creado en Vtiger validando E2E.
+
+3. **n8n B3 BR3_SKIP_WA_CLICK_v1** — Op B implementada: WA-click leads filtrados del sync ERP (no son operacionales sin phone, viven solo en Vtiger para attribution marketing).
+
+4. **Sensor cron instalado en VPS3** — `*/5 * * * *` collect + cleanup daily. Cierre de pendiente Bloque 0 v2.
+
+5. **Smoke comprehensivo 16 tests** del journey "anuncio → paga": 14 PASS + 1 gap diseñado (consent persist) + 1 hallazgo (B3 race condition).
+
+6. **Decisión arquitectónica clave**: el `event_id` UUID es el hilo conductor de atribución end-to-end. Anuncio → Pixel Lead → Vtiger cf_871 → (Fase 4) chatbot enriquece phone → ERP cliente → CAPI Purchase con MISMO event_id → Meta dedup full-funnel CERRADA. Op B funciona porque event_id (no phone) es primary correlation key.
+
+**Memorias nuevas:**
+- `project_attribution_chain_event_id.md` — modelo full-funnel
+- `feedback_n8n_workflow_history_loads.md` — n8n 2.x carga desde workflow_history
+- `feedback_n8n_db_modification_safety.md` — alpine sidecar in-place, NUNCA copy fuera del volumen
+
+**Hallazgos pendientes:**
+- **B3 race condition** (severidad media) — cron procesa solo 1 de N leads del mismo ciclo. HOTFIX próxima sesión 15-30 min.
+- **WhatsApp Business API approve** — bloqueante Fase 4 Conversation Agent.
+
+**Estado Fase 3:** 95% (4 de 5 mini-bloques completos). Solo falta 3.5 Observabilidad + Metabase.
+
+**Próxima sesión propuesta:** HOTFIX B3 race (15-30 min) + Mini-bloque 3.5 Observabilidad + Metabase dashboards (4-6h).
+
+---
 
 ### Sesión 2026-05-01 cierre — Mini-bloque 3.4 + plan 3.6
 
