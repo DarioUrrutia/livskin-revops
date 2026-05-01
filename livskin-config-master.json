@@ -1,0 +1,206 @@
+{
+  "_meta": {
+    "purpose": "Single source of truth para datos canónicos del negocio Livskin. Cualquier cosa que cambie acá se propaga via build process a mu-plugin (WP), livskin-tracking.js (landings), n8n env vars, ERP config, docs legales.",
+    "version": "1.0",
+    "last_updated": "2026-05-01",
+    "owner": "Dario Urrutia (admin sistema)",
+    "do_not_edit_without_review": true
+  },
+
+  "business": {
+    "name": "Livskin",
+    "legal_name": "Livskin",
+    "type": "Clínica de medicina estética",
+    "country": "PE",
+    "country_full": "Perú",
+    "city": "Cusco",
+    "address_full": "Cusco, Perú",
+    "ruc": "<RUC pendiente — agregar cuando esté disponible>",
+    "established_year": 2026,
+    "industry": "health.medical_aesthetics"
+  },
+
+  "contacts": {
+    "admin": {
+      "name": "Dario Urrutia",
+      "role": "Administrador del sistema (DPO + responsable RevOps)",
+      "phone_e164": "+51982732978",
+      "phone_display": "+51 982 732 978",
+      "phone_purpose": "interno/admin — NO exponer en formularios públicos",
+      "emails": [
+        "daizurma@gmail.com",
+        "daizurma2@gmail.com"
+      ],
+      "primary_email": "daizurma@gmail.com",
+      "dpo_email": "daizurma@gmail.com",
+      "location_current": "Milano, Italia (manejando remotamente)"
+    },
+    "doctora": {
+      "name": "<Nombre doctora — pendiente>",
+      "role": "Médica estética que atiende formularios y consultas comerciales",
+      "phone_e164": "+51980727888",
+      "phone_display": "+51 980 727 888",
+      "phone_purpose": "PÚBLICO — usar en forms + WhatsApp buttons + landings",
+      "emails": []
+    },
+    "general": {
+      "email_general": "info@livskin.site",
+      "_note_email_general": "Pendiente setup MX records para activar este email (post-Fase 6)"
+    }
+  },
+
+  "domains": {
+    "primary": "livskin.site",
+    "www": "www.livskin.site",
+    "subdomains": {
+      "campanas": "campanas.livskin.site",
+      "_campanas_purpose": "Landings dedicadas para campañas pagas (Cloudflare Pages, Mini-bloque 3.6)",
+      "crm": "crm.livskin.site",
+      "_crm_purpose": "Vtiger CRM admin (interno)",
+      "dash": "dash.livskin.site",
+      "_dash_purpose": "Metabase dashboards (interno)",
+      "flow": "flow.livskin.site",
+      "_flow_purpose": "n8n workflows (interno)",
+      "erp": "erp.livskin.site",
+      "_erp_purpose": "ERP Flask app (interno)"
+    },
+    "cookie_scope_root": ".livskin.site",
+    "_cookie_scope_note": "Cookies con domain=.livskin.site (con punto inicial) se comparten entre todos los subdominios — necesario para attribution cross-subdomain"
+  },
+
+  "tracking": {
+    "pixel_meta": {
+      "active_id": "4410809639201712",
+      "active_name": "Livksin Pixel 2026",
+      "legacy_id": "670708374433840",
+      "legacy_name": "Livksin Pixel",
+      "legacy_action": "archivar (pendiente — backlog)",
+      "business_manager_id": "444099014574638",
+      "business_manager_name": "Livskin Perú"
+    },
+    "ga4": {
+      "primary_property_id": "<a confirmar>",
+      "to_archive_property": "G-YJ4CCLJFSK (livskinperu.com legacy — backlog archivar)"
+    },
+    "gtm": {
+      "container_id": "GTM-P55KXDL6",
+      "version_published": "v18 (2026-04-28)"
+    },
+    "ad_account_meta": "2885433191763149"
+  },
+
+  "treatments": [
+    {"slug": "botox", "label": "Botox", "vtiger_picklist_value": "Botox", "form_dropdown_value": "Botox"},
+    {"slug": "acido-hialuronico", "label": "Ácido Hialurónico", "vtiger_picklist_value": "Ácido Hialurónico", "form_dropdown_value": "Acido Hialuronico"},
+    {"slug": "rinomodelacion", "label": "Rinomodelación con Ác. Hialurónico", "vtiger_picklist_value": "Rinomodelación", "form_dropdown_value": "Rinomodelacion con Ac. Hialuronico"},
+    {"slug": "armonizacion-facial", "label": "Armonización Facial", "vtiger_picklist_value": "Armonizacion Facial", "form_dropdown_value": "Armonizacion Facial"},
+    {"slug": "exosomas", "label": "Exosomas", "vtiger_picklist_value": "Exosomas", "form_dropdown_value": "Exosomas"},
+    {"slug": "bioestimuladores", "label": "Bioestimuladores", "vtiger_picklist_value": "Bioestimuladores", "form_dropdown_value": "Bioestimuladores"},
+    {"slug": "prp", "label": "Plasma Rico en Plaquetas (PRP)", "vtiger_picklist_value": "PRP", "form_dropdown_value": "Plasma Rico en Plaquetas"},
+    {"slug": "hilos", "label": "Hilos Tensores", "vtiger_picklist_value": "Hilos", "form_dropdown_value": "Hilos"},
+    {"slug": "limpieza-facial", "label": "Limpieza Facial", "vtiger_picklist_value": "Limpieza Facial", "form_dropdown_value": "Limpieza Facial"},
+    {"slug": "esperma-salmon-vtech", "label": "Esperma de Salmón / Vtech", "vtiger_picklist_value": "Esperma de Salmón / Vtech", "form_dropdown_value": "Esperma de Salmón / Vtech"},
+    {"slug": "otro", "label": "Otro / No especificado", "vtiger_picklist_value": "Otro / No especificado", "form_dropdown_value": "Otros"}
+  ],
+  "_treatments_note": "Mismatch entre vtiger_picklist_value y form_dropdown_value es deuda técnica (backlog Mini-bloque 3.6.x — alinear). Hasta entonces, n8n [A1] mapea entre ambos.",
+
+  "compliance": {
+    "data_protection_law": "Ley N° 29733 (Perú) + estándares LGPD Brasil + GDPR EU",
+    "complianz_region_configured": "br",
+    "_complianz_note": "Brasil seleccionado porque Complianz no tiene Perú nativo (decisión Dario 2026-05-01). LGPD cubre substancialmente Ley 29733.",
+    "data_retention_years": 5,
+    "consent_required_for_marketing_cookies": true,
+    "privacy_policy_url": "https://livskin.site/privacidad",
+    "terms_url": "https://livskin.site/terminos",
+    "cookie_policy_url": "https://livskin.site/cookies",
+    "dpo_email": "daizurma@gmail.com",
+    "supervising_authority": "Autoridad Nacional de Protección de Datos Personales (ANPDP), Ministerio de Justicia y Derechos Humanos del Perú"
+  },
+
+  "infrastructure": {
+    "vps_count": 3,
+    "vps": {
+      "vps1_wordpress": {
+        "alias": "livskin-wp",
+        "ip_public": "46.101.97.246",
+        "ip_private_vpc": "10.114.0.3",
+        "role": "WordPress + form 1569 + Complianz"
+      },
+      "vps2_ops": {
+        "alias": "livskin-ops",
+        "ip_public": "167.172.97.197",
+        "ip_private_vpc": "10.114.0.2",
+        "role": "n8n + Vtiger + Metabase + Postgres analytics"
+      },
+      "vps3_erp": {
+        "alias": "livskin-erp",
+        "ip_public": "139.59.214.7",
+        "ip_private_vpc": "10.114.0.4",
+        "role": "ERP Flask + Postgres ERP + brain pgvector + embeddings"
+      }
+    },
+    "vpc_cidr": "10.114.0.0/20",
+    "region_do": "Frankfurt (FRA)"
+  },
+
+  "integrations": {
+    "n8n_webhook_acquisition_form_submit": "https://flow.livskin.site/webhook/acquisition/form-submit",
+    "n8n_webhook_capi_emit": "https://flow.livskin.site/webhook/growth/capi-emit",
+    "n8n_webhook_bridge_vtiger_changed": "https://flow.livskin.site/webhook/bridge/vtiger-lead-changed",
+    "erp_internal_audit_event": "https://erp.livskin.site/api/internal/audit-event",
+    "erp_internal_leads_sync": "https://erp.livskin.site/api/leads/sync-from-vtiger",
+    "vtiger_url": "https://crm.livskin.site"
+  },
+
+  "currencies": {
+    "primary": "PEN",
+    "label": "Soles peruanos (S/.)",
+    "secondary": "USD"
+  },
+
+  "languages": {
+    "primary": "es",
+    "primary_full": "Español (Perú)",
+    "secondary_planned": []
+  },
+
+  "build_consumers": {
+    "_purpose": "Lista de qué procesos LEEN este config y propagan los valores",
+    "consumers": [
+      {
+        "consumer": "infra/wordpress/mu-plugins/livskin-form-to-n8n.php",
+        "fields_used": ["contacts.doctora.phone_e164", "treatments[].form_dropdown_value", "tracking.pixel_meta.active_id"],
+        "method": "manual edit on changes (no auto-build yet)"
+      },
+      {
+        "consumer": "infra/landing-pages/_shared/livskin-tracking.js",
+        "fields_used": ["contacts.doctora.phone_e164", "tracking.pixel_meta.active_id", "domains.cookie_scope_root", "compliance.consent_required_for_marketing_cookies"],
+        "method": "GitHub Actions build process (Mini-bloque 3.6.5)"
+      },
+      {
+        "consumer": "n8n env vars (.env on VPS 2)",
+        "fields_used": ["tracking.pixel_meta.active_id", "tracking.pixel_meta.business_manager_id"],
+        "method": "manual sync (consider n8n config fetch endpoint en F5+)"
+      },
+      {
+        "consumer": "ERP Flask config",
+        "fields_used": ["integrations.n8n_webhook_capi_emit", "compliance.data_retention_years"],
+        "method": "Pydantic Settings env vars (futuro: read from this JSON)"
+      },
+      {
+        "consumer": "docs/legal/*.md",
+        "fields_used": ["business.*", "contacts.*", "compliance.*", "domains.*"],
+        "method": "manual edit on changes"
+      }
+    ]
+  },
+
+  "_change_log": [
+    {
+      "date": "2026-05-01",
+      "version": "1.0",
+      "author": "Claude Code + Dario",
+      "changes": "Creado durante Mini-bloque 3.6 (Landings dedicadas). Consolida datos canónicos previamente dispersos en CLAUDE.md, mu-plugin, landing mockup, Complianz config, .env files."
+    }
+  ]
+}
