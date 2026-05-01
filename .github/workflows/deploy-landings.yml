@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"  # wrangler@latest requiere >=22 desde 2026-05
 
       - name: Validate JS syntax (livskin-tracking.js)
         run: |
@@ -92,7 +92,9 @@ jobs:
           du -sh _build/
 
       - name: Install Wrangler
-        run: npm install -g wrangler@latest
+        # Pinned (no @latest) para evitar breaks por bumps de Node-version requirement.
+        # Subir manualmente cuando convenga, validando contra Node version del setup-node arriba.
+        run: npm install -g wrangler@4.87.0
 
       - name: Deploy to Cloudflare Pages
         env:
