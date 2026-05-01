@@ -25,7 +25,19 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🔴 Mini-bloque 3.6 — Landings dedicadas Cloudflare Pages (próxima sesión inmediata)
+### ✅ HOTFIX n8n [A1] — WA_CLICK_PATCH_v1_1 (RESUELTO 2026-05-01)
+**Bug detectado y resuelto en sesión 2026-05-01:** workflow [A1] rechazaba `_source: "wa-click"` con `400 phone_invalid` por phone vacío. Patch aplicado:
+- `Validate Phone`: acepta phone vacío si `_source === "wa-click"`
+- `Decide Create or Existing`: short-circuit ANTES de validar query Vtiger (la query con phone='' devuelve INTERNAL_SERVER_ERROR de Vtiger)
+- `Build CREATE payload`: phone='', leadsource='WA Direct Click', descripción distintiva
+
+**Validación E2E:** Lead test `10x9` creado en Vtiger correctamente con todos los UTMs persistidos (cf_853, cf_857, cf_871). Lead borrado post-validación.
+
+**Aprendizaje** (memoria nueva `feedback_n8n_workflow_history_loads.md`): n8n 2.x carga workflows desde `workflow_history.nodes`, NO desde `workflow_entity.nodes`. Patches via SQL deben actualizar AMBAS tablas + restart.
+
+---
+
+### ✅ Mini-bloque 3.6 — Landings dedicadas Cloudflare Pages (COMPLETO 2026-05-01)
 **Decisión 2026-05-01 (PIVOT estratégico):** las landings dedicadas son requisito previo de campañas pagas Meta/Google. Sin landings, sin campañas → sin data real para Metabase. Por eso 3.6 inserta entre 3.4 y 3.5.
 
 **Detalle completo:** ver ADR-0031 — Landings dedicadas Cloudflare Pages + sistema convenciones.

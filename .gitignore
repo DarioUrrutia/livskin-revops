@@ -93,6 +93,10 @@ node_modules/
 dist/
 build/
 
+# --- Cloudflare Pages local deploy artifacts ---
+_build/
+.wrangler/
+
 # --- Coverage / testing ---
 .coverage
 htmlcov/

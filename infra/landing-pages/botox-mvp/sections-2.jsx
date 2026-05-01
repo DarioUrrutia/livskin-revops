@@ -252,7 +252,7 @@ const Footer = () => (
 );
 
 const WAFloat = () => (
-  <a href="https://wa.me/51980727888" target="_blank" rel="noreferrer" style={{ position: "fixed", right: 18, bottom: 18, zIndex: 40, width: 54, height: 54, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 14px 30px -10px rgba(37,211,102,0.5)", color: "#FFF" }}>
+  <a href="https://wa.me/51980727888" data-livskin-wa="true" target="_blank" rel="noopener noreferrer" style={{ position: "fixed", right: 18, bottom: 18, zIndex: 40, width: 54, height: 54, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 14px 30px -10px rgba(37,211,102,0.5)", color: "#FFF" }}>
     <Icon name="wa" size={24} color="#FFF" />
   </a>
 );

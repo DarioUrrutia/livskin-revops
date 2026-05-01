@@ -7,11 +7,19 @@ const PinkCTA = ({ href, children, target, rel, style = {}, size = "md" }) => {
   const [hover, setHover] = React.useState(false);
   const padding = size === "lg" ? "18px 34px" : size === "sm" ? "12px 22px" : "16px 30px";
   const fontSize = size === "lg" ? 12.5 : size === "sm" ? 11 : 12;
+
+  // Auto-detect WhatsApp links — engancha livskin-tracking.js (Mini-bloque 3.6)
+  const isWa = typeof href === "string" && /(?:wa\.me|api\.whatsapp\.com)/.test(href);
+  const livskinWa = isWa ? "true" : undefined;
+  const finalTarget = target || (isWa ? "_blank" : undefined);
+  const finalRel = rel || (isWa ? "noopener noreferrer" : undefined);
+
   return (
     <a
       href={href}
-      target={target}
-      rel={rel}
+      target={finalTarget}
+      rel={finalRel}
+      data-livskin-wa={livskinWa}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -134,6 +142,9 @@ const Nav = ({ accent }) => {
             ))}
             <a
               href="https://wa.me/51980727888"
+              data-livskin-wa="true"
+              target="_blank"
+              rel="noopener noreferrer"
               onMouseEnter={() => setWaHover(true)}
               onMouseLeave={() => setWaHover(false)}
               style={{
@@ -199,6 +210,9 @@ const Nav = ({ accent }) => {
           ))}
           <a
             href="https://wa.me/51980727888"
+            data-livskin-wa="true"
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => setMenuOpen(false)}
             style={{
               marginTop: 28,

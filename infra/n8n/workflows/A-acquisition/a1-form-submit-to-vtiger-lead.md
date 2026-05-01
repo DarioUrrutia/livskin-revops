@@ -68,7 +68,7 @@ Webhook POST en `/webhook/acquisition/form-submit`.
 
 | HTTP code | Body | Causa |
 |---|---|---|
-| 400 | `{"ok": false, "error": "phone_invalid", "phone_raw": "..."}` | Phone no se pudo normalizar a E.164 |
+| 400 | `{"ok": false, "error": "phone_invalid", "phone_raw": "..."}` | Phone no se pudo normalizar a E.164. **Excepción:** `_source: "wa-click"` permite phone vacío (WA_CLICK_PATCH_v1_1, 2026-05-01). |
 | 502 | `{"ok": false, "error": "vtiger_unreachable"}` | Vtiger getchallenge/login falló (container down o timeout) |
 | 500 | `{"ok": false, "error": "internal", "execution_id": "..."}` | Bug en workflow — revisar n8n execution log |
 
@@ -137,6 +137,12 @@ ERP_AUDIT_URL=https://erp.livskin.site/api/internal/audit-event
 2. Query Vtiger: `SELECT id FROM Leads WHERE phone='<E.164>' LIMIT 1`
 3. Si retorna 0 filas → CREATE nuevo Lead
 4. Si retorna ≥1 fila → UPDATE el primero (el más reciente típicamente)
+
+**Excepción WA_CLICK_PATCH_v1_1 (2026-05-01):** si `_source === 'wa-click'`:
+- `Validate Phone` acepta phone vacío sin marcar invalid
+- `Decide Create or Existing` short-circuits ANTES de evaluar la query Vtiger (porque la query con phone='' devuelve `INTERNAL_SERVER_ERROR` de Vtiger)
+- Siempre crea nuevo Lead (no hay dedup útil sin phone)
+- `Build CREATE payload` setea `phone=""` + `leadsource="WA Direct Click"` + descripción distintiva
 
 **Reglas de UPDATE (paso [8a]) — qué se preserva inmutable vs qué se sobreescribe:**
 

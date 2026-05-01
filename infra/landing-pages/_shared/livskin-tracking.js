@@ -147,37 +147,112 @@
       document.body.appendChild(placeholder);
     }
 
+    if (!document.getElementById('lvk-consent-styles')) {
+      var styleTag = document.createElement('style');
+      styleTag.id = 'lvk-consent-styles';
+      styleTag.textContent =
+        '@keyframes lvkBackdropFade{from{opacity:0}to{opacity:1}}' +
+        '@keyframes lvkCardIn{from{transform:scale(.94) translateY(8px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}' +
+        '.lvk-consent-backdrop{position:fixed;inset:0;background:rgba(31,26,26,0.55);' +
+        'z-index:999998;display:flex;align-items:center;justify-content:center;' +
+        'padding:20px;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;' +
+        'animation:lvkBackdropFade .35s ease .5s both}' +
+        '.lvk-consent-card{background:#FFFFFF;color:#1F1A1A;border-radius:14px;' +
+        'box-shadow:0 24px 64px rgba(31,26,26,0.35);max-width:480px;width:100%;' +
+        'position:relative;padding:36px 32px 28px;' +
+        'animation:lvkCardIn .4s cubic-bezier(.2,.8,.2,1) .6s both}' +
+        '.lvk-consent-close{position:absolute;top:14px;right:14px;background:none;border:none;' +
+        'font-size:22px;line-height:1;color:#8A847F;cursor:pointer;padding:6px 10px;' +
+        'border-radius:50%;transition:background .15s,color .15s}' +
+        '.lvk-consent-close:hover{background:#F2EDEB;color:#1F1A1A}' +
+        '.lvk-consent-logo{display:flex;align-items:center;gap:10px;margin-bottom:18px}' +
+        '.lvk-consent-logo-dots{display:flex;gap:4px}' +
+        '.lvk-consent-logo-dots span{width:7px;height:7px;border-radius:50%;display:block}' +
+        '.lvk-consent-logo-dots span:nth-child(1){background:#5BB5D6}' +
+        '.lvk-consent-logo-dots span:nth-child(2){background:#F4A6BB}' +
+        '.lvk-consent-logo-dots span:nth-child(3){background:#FCE8EC}' +
+        '.lvk-consent-logo-text{font-family:Montserrat,system-ui,sans-serif;font-weight:600;' +
+        'letter-spacing:.18em;font-size:13px;color:#1F1A1A;text-transform:uppercase}' +
+        '.lvk-consent-title{font-family:Montserrat,system-ui,sans-serif;font-weight:600;' +
+        'font-size:20px;letter-spacing:-.005em;margin:0 0 12px;color:#1F1A1A}' +
+        '.lvk-consent-body{font-size:14.5px;line-height:1.55;color:#4A4441;margin:0 0 22px}' +
+        '.lvk-consent-actions{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}' +
+        '.lvk-btn{font-family:inherit;font-size:14.5px;font-weight:600;padding:13px 22px;' +
+        'border-radius:8px;cursor:pointer;line-height:1;letter-spacing:.01em;width:100%;' +
+        'transition:transform .15s,box-shadow .15s,background .15s,border-color .15s}' +
+        '.lvk-btn:hover{transform:translateY(-1px)}' +
+        '.lvk-btn-primary{background:#F4A6BB;color:#FFF;border:none;box-shadow:0 4px 14px rgba(244,166,187,0.45)}' +
+        '.lvk-btn-primary:hover{background:#E88AA2;box-shadow:0 6px 18px rgba(244,166,187,0.6)}' +
+        '.lvk-btn-secondary{background:#FFF;color:#1F1A1A;border:1.5px solid #C9C2BF}' +
+        '.lvk-btn-secondary:hover{border-color:#1F1A1A;background:#FAF8F7}' +
+        '.lvk-consent-footer{display:flex;justify-content:center;font-size:12.5px;' +
+        'border-top:1px solid #F2EDEB;padding-top:14px;margin-top:6px}' +
+        '.lvk-consent-footer a{color:#8B1F1F;text-decoration:underline;font-weight:500}' +
+        '.lvk-consent-footer a:hover{color:#1F1A1A}' +
+        '@media (min-width:560px){' +
+        '.lvk-consent-actions{flex-direction:row;flex-wrap:wrap}' +
+        '.lvk-btn{width:auto;flex:1 1 0;min-width:120px}}' +
+        '@media (max-width:480px){' +
+        '.lvk-consent-card{padding:28px 22px 22px}' +
+        '.lvk-consent-title{font-size:18px}' +
+        '.lvk-consent-body{font-size:14px}}';
+      document.head.appendChild(styleTag);
+    }
+
     placeholder.innerHTML =
-      '<div role="dialog" aria-label="Consentimiento de cookies" ' +
-      'style="position:fixed;bottom:0;left:0;right:0;background:#1F1A1A;color:#FFF;' +
-      'padding:16px 20px;z-index:9999;display:flex;flex-direction:column;gap:12px;' +
-      'box-shadow:0 -4px 12px rgba(0,0,0,0.15);font-family:system-ui,-apple-system,sans-serif;' +
-      'font-size:14px;line-height:1.5;">' +
-      '<div>Usamos cookies para analizar tu visita y atribuir campañas. ' +
-      '<a href="' + CONFIG.cookie_policy_url + '" target="_blank" rel="noopener" ' +
-      'style="color:#F4A6BB;text-decoration:underline">Política de cookies</a>.</div>' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-      '<button id="lvk-consent-accept" type="button" ' +
-      'style="background:#F4A6BB;color:#FFF;border:none;padding:10px 20px;border-radius:4px;' +
-      'cursor:pointer;font-weight:600;font-size:14px;">Aceptar todas</button>' +
-      '<button id="lvk-consent-reject" type="button" ' +
-      'style="background:transparent;color:#FFF;border:1px solid #FFF;padding:10px 20px;' +
-      'border-radius:4px;cursor:pointer;font-size:14px;">Solo esenciales</button>' +
-      '</div></div>';
+      '<div class="lvk-consent-backdrop" role="dialog" aria-modal="true" aria-labelledby="lvk-consent-title-h" aria-describedby="lvk-consent-body-p">' +
+        '<div class="lvk-consent-card">' +
+          '<button class="lvk-consent-close" id="lvk-consent-close" type="button" aria-label="Cerrar">&times;</button>' +
+          '<div class="lvk-consent-logo">' +
+            '<div class="lvk-consent-logo-dots"><span></span><span></span><span></span></div>' +
+            '<span class="lvk-consent-logo-text">Livskin</span>' +
+          '</div>' +
+          '<h2 class="lvk-consent-title" id="lvk-consent-title-h">Gestionar cookies</h2>' +
+          '<p class="lvk-consent-body" id="lvk-consent-body-p">' +
+            'Usamos cookies para mejorar tu experiencia, analizar el tráfico y mostrarte ' +
+            'campañas relevantes. Podés aceptar todas las cookies, rechazar las opcionales ' +
+            'o configurar tus preferencias.' +
+          '</p>' +
+          '<div class="lvk-consent-actions">' +
+            '<button id="lvk-consent-reject" class="lvk-btn lvk-btn-secondary" type="button">Rechazar</button>' +
+            '<button id="lvk-consent-prefs"  class="lvk-btn lvk-btn-secondary" type="button">Preferencias</button>' +
+            '<button id="lvk-consent-accept" class="lvk-btn lvk-btn-primary"   type="button">Aceptar</button>' +
+          '</div>' +
+          '<div class="lvk-consent-footer">' +
+            '<a href="' + CONFIG.cookie_policy_url + '" target="_blank" rel="noopener">Política de privacidad</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
 
     var acceptBtn = document.getElementById('lvk-consent-accept');
     var rejectBtn = document.getElementById('lvk-consent-reject');
+    var prefsBtn  = document.getElementById('lvk-consent-prefs');
+    var closeBtn  = document.getElementById('lvk-consent-close');
+
+    function dismiss() { placeholder.innerHTML = ''; }
 
     if (acceptBtn) acceptBtn.onclick = function () {
       setConsent('accepted_all');
-      placeholder.innerHTML = '';
+      dismiss();
       loadPixel();
       firePixelEvent('PageView', {});
     };
 
     if (rejectBtn) rejectBtn.onclick = function () {
       setConsent('rejected_all');
-      placeholder.innerHTML = '';
+      dismiss();
+    };
+
+    // "Preferencias" — hoy se comporta como "rechazar opcionales" (granular UI: futuro);
+    // se setea cookie distinta para diferenciar en analytics si la gente prefiere fine-tuning.
+    if (prefsBtn) prefsBtn.onclick = function () {
+      setConsent('rejected_all');
+      dismiss();
+    };
+
+    // ✕ — cierre sin decisión: no setea cookie permanente; banner volverá a aparecer en próxima visita.
+    if (closeBtn) closeBtn.onclick = function () {
+      dismiss();
     };
   }
 
@@ -360,6 +435,10 @@
     document.querySelectorAll('a[data-livskin-wa="true"]').forEach(function (link) {
       if (link.dataset.lvkAttached === 'true') return;
       link.dataset.lvkAttached = 'true';
+
+      // Forzar nueva pestaña — no perder al visitante de la landing al click WA
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer');
 
       link.addEventListener('click', function () {
         var eventId = genUUID();
