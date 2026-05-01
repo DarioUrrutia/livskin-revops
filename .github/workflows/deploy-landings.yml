@@ -97,7 +97,9 @@ jobs:
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # account_id es identificador publico (no sensible); hardcoded para evitar
+          # dependencia de secret que ha probado ser fragil de configurar en GH UI.
+          CLOUDFLARE_ACCOUNT_ID: 5c8c8d42417a0c5c0ae4640a392ebc8f
         run: |
           wrangler pages deploy _build \
             --project-name=livskin-campanas \
