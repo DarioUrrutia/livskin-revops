@@ -106,13 +106,38 @@ Path: `C:/Users/daizu/.claude/projects/c--Users-daizu-Claude-Code-Union-VPS---Ma
 - Estado temporal (en master plan)
 - Cosas que ya están documentadas en CLAUDE.md o ADRs
 
-### 8. Capacidades de agentes — actualización viva
-Si en la sesión se identificó:
+### 8. Capacidades de agentes — actualización viva (OBLIGATORIO)
+
+**Check explícito cada cierre** — sin esto se acumula deuda invisible para la sesión estratégica organizacional pre-Fase 5.
+
+**Pregunta-test:** ¿lo construido hoy ofrece skill/capacidad que algún agente futuro va a usar?
+
+Si la respuesta es SÍ (lo cual es la regla, no la excepción), agregar fila a `memory/project_agent_skills_inventory.md` en la sección apropiada:
+- Capacidades de infra cross-VPS
+- Capacidades de tracking
+- Capacidades de leads + Vtiger + ERP
+- Capacidades de governance + tracking de agentes
+- Patrones operacionales emergentes
+- Skills compartidas cross-agent
+
+**Adicionalmente actualizar:**
 - Una **nueva habilidad** que el 5to agente (Infra+Security) necesitará → actualizar `project_infra_security_agent.md`
 - Una **nueva tarea/subagente** emergente para cualquier agente → actualizar `project_agent_org_design.md`
 - Un **patrón de gobernanza** (procesos > IA, deterministic > LLM) → memoria `feedback_agent_governance.md`
 
-Esto evita acumular deuda en el diseño organizacional. Cuando llegue la sesión estratégica de estructura de agentes (pre-Fase 5), todo está pre-mapeado.
+**Ejemplos triviales que NO requieren fila:**
+- Bugfix de typo
+- Refactor sin cambio de comportamiento
+- Update de dependencia minor
+
+**Ejemplos que SÍ requieren fila (incluso si "es solo" docs):**
+- Nuevo endpoint o webhook
+- Nuevo workflow n8n
+- Nueva tabla DB o columna que cambie semántica de un dominio
+- Nuevo runbook ejecutable (skills MCP-operable)
+- Nuevo patrón emergente (idempotencia, audit, sync) que aplica cross-agent
+
+Cuando llegue la sesión estratégica organizacional, este inventory ES el input base — no empezamos de cero.
 
 ### 9. Segundo cerebro — Obsidian / livskin_brain
 - **Obsidian local**: el repo entero ES el vault. Los nuevos .md de hoy ya están indexados al guardar.
@@ -160,7 +185,7 @@ Resumen final a Dario en una frase:
 [ ] Master plan actualizado (si hubo cambio de trayectoria)
 [ ] Backlog: nuevos items + mover completados
 [ ] Memorias: nuevas/actualizadas + MEMORY.md
-[ ] Capacidades agentes: infra_security_agent / agent_org_design (si aplica)
+[ ] Capacidades agentes: agent_skills_inventory.md (OBLIGATORIO si hubo build) + infra_security/org_design (si aplica)
 [ ] git add específico (NO -A) + commit + push origin main
 [ ] git status limpio + 1-frase de cierre a Dario
 ```

@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-04-29 v2.4 (mini-bloque 3.3 REVERTIDO por error arquitectónico + reorganización sistema memoria + brain re-indexado + runbook preflight nuevo)
+> Última actualización: 2026-05-01 v2.5 (mini-bloque 3.3 REWRITE COMPLETO — pipeline form WP→Vtiger→ERP operacional con first-touch attribution + skills inventory tracker creado)
 
 ---
 
@@ -166,7 +166,7 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 | 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage al 2026-04-26) |
 | **0 v2 (Bloque foundation cross-VPS)** | ✅ **Completado 2026-04-26** — versionado VPS 1+2 + CI/CD multi-VPS + system-map + sensors + backups + runbooks + DR drill + skills + MCP scaffold |
 | **Setup acceso programático** | ⏳ Próxima sesión inmediata — Google service account + Meta System User + audit programático definitivo (resuelve doble disparo Pixel + UTMs end-to-end) |
-| 3 | 🚧 **40% en progreso** — Mini-bloque 3.1 (cleanup VPS 1) ✅ + 3.2 (GTM Tracking Engine) ✅; pendientes 3.3 (form→ERP webhook), 3.4 (CAPI server-side), 3.5 (observabilidad) |
+| 3 | 🚧 **60% en progreso** — Mini-bloque 3.1 (cleanup VPS 1) ✅ + 3.2 (GTM Tracking Engine) ✅ + 3.3 REWRITE (Form→Vtiger→ERP pipeline) ✅; pendientes 3.4 (CAPI server-side), 3.5 (observabilidad + Metabase dashboards) |
 | **Bloque puente Agenda Mínima ERP** | ⏳ Entre Fase 3 y Fase 4 — módulo `appointments` con precisión quirúrgica (ADR + tests + feature flag + validación doctora) |
 | 4 | ⏳ Conversation Agent (WhatsApp test number agenda en `appointments` automáticamente) |
 | 5 | ⏳ Brand Orchestrator + Acquisition Agents (precedida de sesión estratégica organizacional) |
@@ -260,7 +260,51 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-04-29 (mini-bloque 3.3 REVERTIDO + reorganización sistema memoria)
+## 📝 Estado al 2026-05-01 (Mini-bloque 3.3 REWRITE COMPLETO — pipeline form→Vtiger→ERP operacional)
+
+### Sesión multi-día 2026-04-29 → 2026-05-01 — Mini-bloque 3.3 REWRITE end-to-end
+
+**Logro principal:** pipeline `form WP submit → Vtiger Lead → ERP leads` 100% operacional con first-touch attribution preservada. Validado E2E con lead real en producción.
+
+**Componentes construidos (6 commits):**
+- Migration Alembic 0006 — fbc/ga/event_id en leads + lead_touchpoints + form_submissions (CAPI match quality)
+- Vtiger 12 custom fields cf_NNN + REST API verified + docs `integrations/vtiger/`
+- n8n sistema organizacional (8 categorías + naming + URLs + tags) en `infra/n8n/`
+- n8n workflow [A1] form→Vtiger Lead (16 nodes) — 4 smoke tests pasados
+- Endpoint Flask `/api/leads/sync-from-vtiger` con 18 tests TDD — coverage 79%
+- n8n workflow [B1] Vtiger→ERP receiver (13 nodes) — para futuro Custom PHP Hook
+- n8n workflow [B3] cron pull cada 2 min (12 nodes) — reemplaza webhook on-change Vtiger 8.2 community
+- mu-plugin WordPress `livskin-form-to-n8n.php` form-id agnostic + JS injection + post_meta opt-in
+
+**Hallazgos importantes:**
+- Vtiger 8.2 community usa fieldnames numéricos (cf_853, cf_855...) para custom fields — dictionary cf_NNN ↔ ERP en `integrations/vtiger/fields-mapping.md`
+- SureForms NO tiene block "Hidden" nativo → mu-plugin inyecta hidden inputs via JS (defense-in-depth pattern)
+- GTM Tracking Engine NO popula los hidden inputs `lvk_*` → mu-plugin self-sufficient (URL params + cookies + UUID)
+- Picklist Vtiger cf_875 vs WP form dropdown desalineados → backlog item para alinear pre-F4
+- Vtiger 8.2 community sin "Send To URL" workflow task → cron pull n8n (Opción C) en lugar de realtime webhook
+
+**Memoria nueva crítica:** `project_agent_skills_inventory.md` — tracker continuo de capacidades por agente. Tabla retroactiva de TODO desde Bloque 0 v2 hasta hoy + qué agente la usará. Input pre-mapeado para sesión estratégica organizacional pre-Fase 5. Detectado por Dario como cabo suelto (yo no estaba tracking sistemáticamente).
+
+**Memoria nueva:** `feedback_commit_approval_explicit.md` — cada commit/push requiere aprobación explícita en ese momento (Dario corrigió durante sesión).
+
+**Runbook nuevo:** `wordpress-form-livskin-integration.md` — cómo activar/desactivar/debuggear forms WP nuevos.
+
+**Runbook actualizado:** `cierre-sesion.md` § 8 — check OBLIGATORIO al inventory de skills si hubo build.
+
+**Estado Fase 3:**
+| Mini-bloque | Estado |
+|---|---|
+| 3.1 Limpieza VPS 1 | ✅ |
+| 3.2 GTM Tracking Engine + UTM persistence | ✅ |
+| **3.3 REWRITE Form → Vtiger → ERP pipeline** | ✅ **COMPLETO 2026-05-01** |
+| 3.4 CAPI server-side | ⏳ próxima sesión |
+| 3.5 Observabilidad + Metabase dashboards | ⏳ después de 3.4 |
+
+**Fase 3 progress:** 60% (3 de 5 mini-bloques completos).
+
+**Próxima sesión:** Mini-bloque 3.4 — CAPI server-side desde ERP (o desde n8n — decisión a reabrir). Aplicar runbook preflight obligatorio. Pre-requisito: decidir Meta App Review (Opción A/B/C) antes del primer commit.
+
+**Optional pre-3.4:** test parcial manual end-to-end (Opción C aprobada por Dario) — convert lead manual a cliente + venta + pago para validar 60-70% del flow completo antes de tener todas las automatizaciones.
 
 ### Sesión 2026-04-29 (error arquitectónico + cleanup completo + reorganización)
 

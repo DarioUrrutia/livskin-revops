@@ -25,6 +25,75 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 Metabase dashboards de leads (Mini-bloque 3.5)
+**Insight detectado 2026-05-01:** después de validar que el pipeline form → Vtiger → ERP funciona, Dario detectó gap importante: NO hay UI analítica en ERP para ver leads y métricas. Vtiger UI cubre gestión operativa (lista, edit), pero NO permite cruzar leads con conversiones, CAC, LTV.
+
+**Dashboards a construir en Metabase (sobre `livskin_erp.leads` + joins con `clientes`/`ventas`):**
+
+1. **Leads diarios:** count por fuente, día, tratamiento (saber si Meta/Google trabajan)
+2. **Funnel conversion:** lead → contactado → agendado → asistido → venta (identificar dropoffs)
+3. **Cohort attribution:** LTV por source/campaign (dónde invertir más)
+4. **CAC por canal:** spend (de Meta/Google APIs) / clientes adquiridos (ROAS por campaña)
+
+**Trigger:** primera tarea del Mini-bloque 3.5 (Observabilidad). NO opcional — sin estos dashboards, los datos en ERP son invisibles para decisión estratégica.
+
+**Pre-requisitos:**
+- ERP `leads` table populando con leads reales (✅ — pipeline operacional desde 2026-05-01)
+- Metabase container vivo en VPS 2 (✅ verificado)
+- Read-only Postgres user `analytics_etl_reader` (✅ existe)
+
+**Estimado:** 4-6 horas (4 dashboards básicos + queries SQL guardadas).
+**Agregado por:** Claude Code · 2026-05-01
+
+---
+
+### 🟡 ERP `/admin/leads` page (Fase 4-5)
+**Hoy NO existe UI en ERP para listar leads** — Vtiger UI cubre el caso operativo. Pero será necesaria CUANDO:
+
+1. **Conversation Agent F4** muestre contexto al doctora (mensajes WA + cita + journey + transacciones cross-system) → ERP es el único lugar con full picture
+2. **Audits regulatorios** pidan reporte unificado lead+cliente+venta
+3. **Doctora** quiera ver "cómo este lead se convirtió" desde la app del ERP que ya usa diariamente
+
+**Si se construye, debe ser:**
+- READ-ONLY para leads (Vtiger sigue siendo SoT — no permitir edit desde ERP, sería data drift per ADR-0015)
+- Agregar joins con `clientes`, `ventas`, `pagos`, `appointments` para mostrar la cadena completa
+- Filtros + search por phone/email/cod_lead/vtiger_id
+
+**Estimado:** 6-8 horas (CRUD page read-only + filtros + tests).
+**Trigger:** Fase 4 al construir Conversation Agent (cuando emerja necesidad concreta). Si en MVP Dario lo encuentra crítico → adelantar a 3.5.
+**Agregado por:** Claude Code · 2026-05-01
+
+---
+
+### 🟡 Alinear picklist Vtiger `cf_875` con dropdown form WP 1569
+**Detectado 2026-05-01 en smoke test final:** las opciones del dropdown en form WP no coinciden 1:1 con el picklist Vtiger:
+
+| Form WP option | Vtiger picklist (cf_875) |
+|---|---|
+| `Armonizacion Facial` | ❌ NO existe |
+| `Botox` | ✅ `Botox` |
+| `Acido Hialuronico` | ⚠️ `Ácido Hialurónico` (con tildes — case mismatch) |
+| `Rinomodelacion con Ac. Hialuronico` | ⚠️ `Rinomodelación` (no incluye "con Ac. Hialuronico") |
+| `Exosomas` | ❌ NO existe |
+| `Bioestimuladores` | ✅ `Bioestimuladores` |
+| `Plasma Rico en Plaquetas` | ⚠️ `PRP` (Vtiger usa abreviación) |
+| `Otros` | ⚠️ `Otro / No especificado` |
+| (no en form) | `Esperma de Salmón / Vtech`, `Hilos`, `Limpieza Facial` |
+
+**Riesgo:** Vtiger almacena valor exacto del form (e.g., `Plasma Rico en Plaquetas`) en cf_875. Si filtramos en Vtiger UI o en queries SQL por valores del picklist canónico (`PRP`), no matchea. Reportes incorrectos.
+
+**Acción:**
+1. Decidir cuál es la "lista canónica" — sugiero la del form WP (más human-readable)
+2. Sincronizar picklist Vtiger cf_875 para que coincida con form WP
+3. Mapping en n8n [A1] / [B3] si hay normalización (lowercase, sin tildes para queries SQL)
+4. Decidir si forms futuros (landings específicas) usan el mismo dropdown o subsets
+
+**Trigger:** antes de Fase 4 (Conversation Agent que dependerá de tratamiento_interes para routear).
+**Estimado:** 30 min (Vtiger UI updates + script de migración valores existentes si los hubiera).
+**Agregado por:** Claude Code · 2026-05-01
+
+---
+
 ### 🔴 Decisión a reabrir en Mini-bloque 3.4 — CAPI emitter ERP vs n8n
 **Decisión 2026-04-26 (revisable):** CAPI emitido directamente desde ERP. **Decisión refinada conversación 2026-04-29:** la lógica original justificaba que el ORIGEN del evento es ERP (match quality), pero no que el EMISOR a Meta sea ERP. Patrón propuesto:
 
@@ -82,30 +151,23 @@ ERP loggea audit_log "capi.event_emitted"
 
 ---
 
-### 🔴 Mini-bloque 3.3 REWRITE — Form → n8n → Vtiger → ERP espejo (próxima sesión)
-**Estado 2026-04-29:** intento incorrecto del 2026-04-29 (Form → ERP directo) **REVERTIDO completo**. El flujo correcto documentado en ADR-0011 v1.1 + ADR-0015 + memoria `project_acquisition_flow` requiere n8n + Vtiger en el medio. **Aplicar runbook OBLIGATORIO `docs/runbooks/preflight-cross-system.md` antes de empezar.**
+### ~~🔴 Mini-bloque 3.3 REWRITE — Form → n8n → Vtiger → ERP espejo~~ ✅ COMPLETADO 2026-05-01
+**Pipeline completo operacional end-to-end.** 4 commits del 2026-04-29 al 2026-05-01:
+- Migration Alembic 0006 (CAPI match quality fields) — `00d7a60` + `1741fdc`
+- Vtiger 12 custom fields + REST API + docs `integrations/vtiger/` — `69a2d01`
+- n8n workflow [A1] form→Vtiger Lead — `69a2d01`
+- Endpoint Flask `/api/leads/sync-from-vtiger` con 18 tests TDD — `2918bb7`
+- n8n workflow [B1] Vtiger→ERP receiver — `86073c0`
+- n8n workflow [B3] cron pull cada 2 min (replaces webhook on-change) — `53fe70f`
+- mu-plugin WordPress `livskin-form-to-n8n.php` (form-id agnostic + opt-in) — pendiente commit final
 
-**Componentes a construir:**
+Validado E2E con lead real: form WP submit → Vtiger Lead 10x8 → ERP `leads` con first-touch attribution preservado.
 
-1. **Vtiger setup** (módulo Leads activo, custom fields para UTMs/click_ids/event_id, REST API auth, webhook on-change config)
-   - Custom fields requeridos: `cf_fbclid`, `cf_gclid`, `cf_fbc`, `cf_ga`, `cf_utm_source`, `cf_utm_campaign`, `cf_utm_medium`, `cf_utm_term`, `cf_utm_content`, `cf_event_id`, `cf_landing_url`
-2. **n8n workflow `/webhook/form-submit`** (recibe POST de mu-plugin, dedup v2 por phone, INSERT Vtiger Lead con TODOS los identifiers, envía WA template)
-3. **n8n workflow `Vtiger → ERP espejo`** (recibe webhook on-change Vtiger, sync a `livskin_erp.leads` table)
-4. **mu-plugin WordPress refactor** (POST a n8n webhook con 11 hidden fields: 4 click_ids/cookies + 5 UTMs + event_id + landing_url)
-5. **Endpoint Flask renombrado** (de `/api/leads/intake` a `/api/leads/sync-from-n8n` — receptor del workflow de espejo, NO entrada principal)
-6. **Migration Alembic 0006** — extender schema `leads` con columnas: `fbclid`, `gclid`, `fbc`, `ga`, `utm_source`, `utm_campaign`, `utm_medium`, `utm_term`, `utm_content`, `event_id`, `ip_at_submit`, `ua_at_submit`, `landing_url`
-7. **Tests pytest + validación end-to-end** (lead manual real → flujo completo, verificar que click_ids viajan y persisten en `leads`)
-
-**Estimado:** 2-3 sesiones (más complejo que el intento de hoy porque integra 3 sistemas + setup Vtiger desde virgen).
-
-**Pre-requisitos antes de empezar (preflight obligatorio):**
-- [ ] Releer 🔥 CRÍTICAS: `project_vtiger_erp_sot`, `project_acquisition_flow`, `project_n8n_orchestration_layer`, `feedback_must_re_read_adrs_before_coding`, `feedback_surgical_precision_erp`
-- [ ] Query brain pgvector con keywords: "flujo lead form vtiger n8n erp"
-- [ ] Citar ADR-0011 v1.1 + ADR-0015 en plan inicial
-- [ ] Plan citado aprobado por Dario antes de tocar código
-
-**Fase sugerida:** próxima sesión inmediata
-**Agregado por:** Claude Code · 2026-04-29
+Aprendizajes registrados en memorias:
+- `project_capi_match_quality` (click_ids supremos para attribution)
+- `project_agent_skills_inventory` (tracker continuo de capacidades)
+- `feedback_commit_approval_explicit` (cada commit individual requiere "OK" explícito)
+**Completado 2026-05-01.**
 
 ---
 
@@ -591,6 +653,46 @@ Condiciona si necesitamos módulo PDF/impresión en ERP.
 ## Hecho (historial)
 
 <!-- Los items completados se mueven aquí para mantener historial. No se borran. -->
+
+### ✅ Fase 3 Mini-bloque 3.3 REWRITE — Pipeline form → Vtiger → ERP completo (2026-04-29 → 2026-05-01)
+
+**Sesión multi-día completa.** Flujo end-to-end:
+
+```
+Form WP 1569 ──→ mu-plugin (livskin-form-to-n8n.php) ──→ n8n [A1] ──→ Vtiger Lead (12 cf_NNN)
+                                                                              │
+                                                                              │ cron 2 min
+                                                                              ▼
+                                                                          n8n [B3]
+                                                                              │
+                                                                              ▼
+                                                       /api/leads/sync-from-vtiger ──→ ERP `leads`
+                                                                              ▼
+                                                                  audit_log entry inmutable
+```
+
+**Componentes construidos:**
+- ✅ Migration Alembic 0006 (fbc/ga/event_id en leads + lead_touchpoints + form_submissions)
+- ✅ Vtiger setup: 12 custom fields cf_NNN + 9 picklist values + REST API verified
+- ✅ Endpoint Flask `/api/leads/sync-from-vtiger` (18 tests pasan + coverage 79%)
+- ✅ n8n workflow [A1] (16 nodes — form→Vtiger Lead con dedup + 4 smoke tests)
+- ✅ n8n workflow [B1] (13 nodes — Vtiger webhook receiver para futuro realtime)
+- ✅ n8n workflow [B3] (12 nodes — cron pull cada 2 min, reemplaza webhook on-change)
+- ✅ mu-plugin WordPress generic + JS injection + post_meta opt-in (form-id agnostic)
+- ✅ Documentación: 2 runbooks (vtiger-custom-fields + wordpress-form-livskin-integration), `integrations/vtiger/` (README + fields-mapping)
+
+**Aprendizajes nuevos en memorias:**
+- `project_capi_match_quality.md` — click_ids supremos para attribution Meta/Google
+- `project_agent_skills_inventory.md` — tracker continuo de capacidades por agente
+- `feedback_commit_approval_explicit.md` — cada commit/push requiere aprobación individual
+
+**Commits:** `00d7a60` `1741fdc` `69a2d01` `2918bb7` `86073c0` `53fe70f` + commit final cierre
+
+**Validación E2E:** lead real submit con UTMs → Vtiger Lead con 12 cf_NNN poblados → ERP `leads` con first-touch attribution preservado en <2 min via cron [B3].
+
+**Fase 3 progress:** 60% (3 de 5 mini-bloques completos: 3.1 + 3.2 + 3.3 ✅; pendientes 3.4 CAPI + 3.5 Observabilidad).
+
+---
 
 ### ✅ Audit minucioso VPS + integridad + flujos + items diferidos (2026-04-29)
 Audit comprehensive post-cleanup del Mini-bloque 3.3 fallido. Verificado: VPS 1/2/3 healthy (uptime, disk, memory, services). Mini-bloques 3.1+3.2 intactos (curl + GTM API + GA4 events últimas 48h). Backups daily working post-instalación cron. Audit log immutable trigger funcional. Brain pgvector 1,765 chunks indexados. 3 issues menores deferidos a Mini-bloque 3.5 (sensor VPS 2 unhealthy flag, sensor VPS 1 Docker WARNING, system-map staleness por cron recolector cross-VPS no instalado). Output: [docs/audits/2026-04-29-audit-vps-integridad-flujos-deferred.md](audits/2026-04-29-audit-vps-integridad-flujos-deferred.md). 2026-04-29.
