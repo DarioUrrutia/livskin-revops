@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from db import session_scope
 from schemas.lead_sync import LeadSyncRequest, LeadSyncResponse
-from services import audit_service, lead_sync_service
+from services import audit_service, capi_emitter_service, lead_sync_service
 
 bp = Blueprint("api_leads_sync", __name__, url_prefix="/api/leads")
 
@@ -77,6 +77,26 @@ def sync_from_vtiger():  # type: ignore[no-untyped-def]
                 user_role="system",
                 ip=client_ip,
             )
+
+            # Mini-bloque 3.4 — auto-emit Meta CAPI Lead event SOLO en CREATE.
+            # ADR-0019 § 6: event_id coherente con Pixel client-side firing.
+            # Non-blocking: fallo de n8n NO rompe el sync (capi_emitter loguea audit).
+            if operation == "created" and lead.event_id_at_capture:
+                capi_emitter_service.emit_event(
+                    db,
+                    event_name="Lead",
+                    event_id=lead.event_id_at_capture,
+                    event_source_url="https://livskin.site/",
+                    email=lead.email_lower,
+                    phone_e164=lead.phone_e164,
+                    fbc=lead.fbc_at_capture,
+                    external_id=lead.cod_lead,
+                    content_name=lead.tratamiento_interes,
+                    content_category="lead_acquisition",
+                    trigger_entity_type="lead",
+                    trigger_entity_id=str(lead.id),
+                )
+
             response = LeadSyncResponse(
                 operation=operation,
                 vtiger_id=payload.vtiger_id,

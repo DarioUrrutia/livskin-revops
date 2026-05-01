@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     # Pre-Bloque-0 default insecure — rotar en producción a valor random.
     audit_internal_token: str = "change-me-in-production"
 
+    # Mini-bloque 3.4 — CAPI emission via n8n.
+    # Webhook n8n que recibe events del ERP y los forwarda a Meta Graph API.
+    # Ver ADR-0019 + memoria project_n8n_orchestration_layer.
+    capi_emit_enabled: bool = True
+    n8n_capi_webhook_url: str = "https://flow.livskin.site/webhook/growth/capi-emit"
+    n8n_capi_timeout_seconds: int = 5
+
     @property
     def database_url(self) -> str:
         return (

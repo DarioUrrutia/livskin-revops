@@ -1,0 +1,148 @@
+{
+  "id": "g3-capi-emit-to-meta",
+  "name": "[G3] Despachar ERP CAPI Event \u2192 Meta Graph API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "growth/capi-emit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-trigger",
+      "name": "Webhook CAPI Emit",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "g3-capi-emit"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [G3] paso 2: Hash PII (SHA-256) + build Meta CAPI payload\nconst crypto = require('crypto');\n\nconst body = $input.first().json.body || $input.first().json;\n\nfunction sha256(str) {\n  if (!str) return '';\n  return crypto.createHash('sha256').update(str.toString()).digest('hex');\n}\n\n// Email: lowercase + trim, then hash\nfunction hashEmail(email) {\n  if (!email) return null;\n  return sha256(email.toString().toLowerCase().trim());\n}\n\n// Phone: strip non-digits (NO leading +), then hash\nfunction hashPhone(phone) {\n  if (!phone) return null;\n  const digits = phone.toString().replace(/\\D/g, '');\n  if (!digits) return null;\n  return sha256(digits);\n}\n\n// External ID: trim (preserve case), then hash\nfunction hashExternalId(extId) {\n  if (!extId) return null;\n  return sha256(extId.toString().trim());\n}\n\nconst userData = body.user_data || {};\nconst customData = body.custom_data || {};\n\nconst metaUserData = {};\nif (userData.email) metaUserData.em = [hashEmail(userData.email)];\nif (userData.phone_e164) metaUserData.ph = [hashPhone(userData.phone_e164)];\nif (userData.external_id) metaUserData.external_id = [hashExternalId(userData.external_id)];\nif (userData.fbc) metaUserData.fbc = userData.fbc;\nif (userData.fbp) metaUserData.fbp = userData.fbp;\nif (userData.client_ip_address) metaUserData.client_ip_address = userData.client_ip_address;\nif (userData.client_user_agent) metaUserData.client_user_agent = userData.client_user_agent;\n\nconst metaEvent = {\n  event_name: body.event_name,\n  event_time: body.event_time || Math.floor(Date.now() / 1000),\n  event_id: body.event_id,\n  action_source: body.action_source || 'website',\n  user_data: metaUserData,\n};\nif (body.event_source_url) metaEvent.event_source_url = body.event_source_url;\nif (Object.keys(customData).length > 0) metaEvent.custom_data = customData;\n\nconst payload = {\n  data: [metaEvent],\n};\n\n// test_event_code: solo si env var presente y non-empty\nif ($env.META_TEST_EVENT_CODE && $env.META_TEST_EVENT_CODE.trim() !== '') {\n  payload.test_event_code = $env.META_TEST_EVENT_CODE.trim();\n}\n\nreturn [{ json: { _meta_payload: payload, _event_id: body.event_id, _event_name: body.event_name } }];"
+      },
+      "id": "node-build-payload",
+      "name": "Hash PII + Build Meta Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $env.META_GRAPH_API_VERSION }}/{{ $env.META_PIXEL_ID }}/events",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $env.META_CAPI_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json._meta_payload) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "node-meta-post",
+      "name": "POST Meta Graph API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// [G3] paso 4: Build response al ERP\nconst metaResponse = $input.first().json;\nconst original = $('Hash PII + Build Meta Payload').first().json;\n\nconst eventsReceived = metaResponse.events_received || 0;\nconst fbtraceId = metaResponse.fbtrace_id || null;\nconst messages = metaResponse.messages || [];\n\nreturn [{ json: {\n  ok: eventsReceived === 1 && messages.length === 0,\n  events_received: eventsReceived,\n  fbtrace_id: fbtraceId,\n  event_id: original._event_id,\n  event_name: original._event_name,\n  meta_messages: messages,\n} }];"
+      },
+      "id": "node-build-response",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node-respond-200",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook CAPI Emit": {
+      "main": [
+        [
+          {
+            "node": "Hash PII + Build Meta Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash PII + Build Meta Payload": {
+      "main": [
+        [
+          {
+            "node": "POST Meta Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Meta Graph API": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

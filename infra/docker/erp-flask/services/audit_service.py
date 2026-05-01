@@ -80,6 +80,9 @@ KNOWN_ACTIONS = {
     "agent.api_call_completed",  # call individual a Claude API persistido
     "agent.api_call_blocked",    # llamada bloqueada por budget hard-limit
     "admin.budget_changed",      # admin modificó agent_budgets
+    # Tracking (Mini-bloque 3.4) — CAPI emission server-side via n8n
+    "tracking.capi_event_emitted",  # event Lead/Schedule/Purchase enviado a Meta via n8n exitosamente
+    "tracking.capi_event_failed",   # n8n unreachable o Meta retornó 4xx/5xx — non-blocking
 }
 
 

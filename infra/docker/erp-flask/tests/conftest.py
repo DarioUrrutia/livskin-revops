@@ -21,6 +21,10 @@ import sys
 os.environ["ERP_DB_NAME"] = "livskin_erp_test"
 os.environ["FLASK_ENV"] = "testing"
 os.environ["AUDIT_INTERNAL_TOKEN"] = "test-internal-token-do-not-use-in-prod"
+# Mini-bloque 3.4: disable CAPI emit globally en tests para evitar HTTP calls
+# reales a n8n/Meta. Service tests específicos lo monkeypatchean a True
+# cuando necesiten verificar el flujo completo.
+os.environ["CAPI_EMIT_ENABLED"] = "false"
 
 sys.path.insert(0, "/app")
 
