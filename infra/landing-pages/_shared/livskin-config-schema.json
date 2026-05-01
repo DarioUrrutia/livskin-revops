@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Livskin Landing Config",
+  "description": "Schema validador del livskin-config.json que cada landing debe tener. Ver infra/landing-pages/_shared/conventions.md para spec completo.",
+  "type": "object",
+  "required": ["slug", "treatment_canonical_label", "wa_phone_e164"],
+  "additionalProperties": false,
+  "properties": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Slug kebab-case único de esta landing (ej: 'botox-mvp', 'prp-mar2026'). Debe coincidir con el folder name."
+    },
+    "treatment_canonical_label": {
+      "type": "string",
+      "description": "Label canónico del tratamiento (debe coincidir con livskin-config-master.json → treatments[].label)",
+      "examples": ["Botox", "PRP", "Ácido Hialurónico"]
+    },
+    "wa_phone_e164": {
+      "type": "string",
+      "pattern": "^\\+[0-9]{10,15}$",
+      "description": "Teléfono WhatsApp de la doctora en formato E.164 (default: +51980727888)"
+    },
+    "wa_message_template": {
+      "type": "string",
+      "description": "Template del mensaje pre-poblado en WhatsApp link. Soporta {{treatment}} placeholder.",
+      "default": "Hola, vengo del aviso de {{treatment}} de Livskin"
+    },
+    "noindex": {
+      "type": "boolean",
+      "description": "Si true, agrega <meta name=\"robots\" content=\"noindex,nofollow\"> al deploy",
+      "default": true
+    },
+    "og": {
+      "type": "object",
+      "description": "Open Graph meta tags",
+      "required": ["title", "description"],
+      "properties": {
+        "title": { "type": "string", "maxLength": 70 },
+        "description": { "type": "string", "maxLength": 200 },
+        "image": { "type": "string", "description": "Path relativo desde root de la landing (ej: /uploads/og-image.jpg)" },
+        "type": { "type": "string", "enum": ["website", "article"], "default": "website" }
+      }
+    },
+    "lighthouse_target_mobile": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 70,
+      "description": "Score mínimo Lighthouse mobile que debe pasar el deploy (gating CI/CD)"
+    },
+    "consent_required_for_marketing_cookies": {
+      "type": "boolean",
+      "default": true,
+      "description": "Si true, banner de cookies bloquea Pixel/GA hasta consent expreso"
+    },
+    "extra_tracking": {
+      "type": "object",
+      "description": "Tracking adicional opt-in (Microsoft Clarity, GA4 alternative property, etc.)",
+      "properties": {
+        "microsoft_clarity_id": { "type": "string", "pattern": "^[a-z0-9]+$" },
+        "ga4_property_id": { "type": "string", "pattern": "^G-[A-Z0-9]+$" }
+      }
+    },
+    "_meta": {
+      "type": "object",
+      "description": "Metadata informacional (no afecta build)",
+      "properties": {
+        "created": { "type": "string", "format": "date" },
+        "campaign_period": { "type": "string", "description": "Ej: '2026-05 a 2026-08'" },
+        "owner": { "type": "string", "description": "Quién creó/mantiene esta landing (humano o agent IA)" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

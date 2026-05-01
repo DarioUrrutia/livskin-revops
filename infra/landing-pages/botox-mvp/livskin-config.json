@@ -1,0 +1,22 @@
+{
+  "slug": "botox-mvp",
+  "treatment_canonical_label": "Botox",
+  "wa_phone_e164": "+51980727888",
+  "wa_message_template": "Hola, vengo del aviso de Botox de Livskin",
+  "noindex": true,
+  "og": {
+    "title": "Botox que se ve natural | Livskin Cusco",
+    "description": "Aplicación médica de toxina botulínica. Resultados naturales en 7 días.",
+    "image": "/botox-mvp/uploads/Copia de Livskin - Natural Skink.png",
+    "type": "website"
+  },
+  "lighthouse_target_mobile": 60,
+  "consent_required_for_marketing_cookies": true,
+  "extra_tracking": {},
+  "_meta": {
+    "created": "2026-05-01",
+    "campaign_period": "MVP/Demo — primer landing del sistema convenciones",
+    "owner": "Dario Urrutia + Claude Code",
+    "notes": "Mockup creado en Claude Design + adaptado al sistema de convenciones del Mini-bloque 3.6. El form actual abre WhatsApp directo (no captura como lead estructurado). PageView Pixel + WhatsApp click tracking sí funcionan vía livskin-tracking.js. Para landings nuevas re-exportar de Claude Design siguiendo conventions.md."
+  }
+}

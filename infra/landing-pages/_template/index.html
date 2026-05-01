@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <!-- Convenciones Livskin (obligatorias) -->
+  <meta name="livskin-treatment" content="Botox" />
+  <meta name="livskin-landing-slug" content="template-example" />
+  <meta name="livskin-conventions-version" content="1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+
+  <!-- OG meta (inyectados por build process desde livskin-config.json en producción) -->
+  <meta property="og:title" content="Tratamiento Estético en Cusco | Livskin" />
+  <meta property="og:description" content="Aplicación médica profesional. Resultados naturales." />
+  <meta property="og:image" content="/uploads/og-image.jpg" />
+  <meta property="og:type" content="website" />
+
+  <title>Livskin — Template referencial</title>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1F1A1A;
+      background: #FFF;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+    h1 { font-size: 32px; margin-bottom: 16px; }
+    p { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #DDD;
+      border-radius: 4px; font-size: 14px; margin-bottom: 14px;
+    }
+    button[type="submit"] {
+      background: #F4A6BB; color: #FFF; border: none; padding: 12px 24px;
+      border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .checkbox-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 16px; }
+    .checkbox-row input { width: auto; margin: 4px 0 0 0; }
+    .checkbox-row label { font-weight: 400; font-size: 13px; line-height: 1.4; }
+    .wa-button {
+      display: inline-block; background: #25D366; color: #FFF; padding: 12px 24px;
+      border-radius: 4px; text-decoration: none; font-weight: 600; margin-top: 16px;
+    }
+    footer {
+      border-top: 1px solid #EEE; margin-top: 40px; padding-top: 20px;
+      font-size: 13px; color: #666;
+    }
+    footer nav { display: flex; gap: 16px; margin: 12px 0; }
+    footer a { color: #666; text-decoration: underline; }
+    .disclaimer { font-size: 12px; color: #999; margin-top: 12px; }
+  </style>
+
+  <!-- Config + tracking (inyectado por build process en producción) -->
+  <script>
+    window.LIVSKIN_CONFIG = {
+      pixel_id: '4410809639201712',
+      webhook_url: 'https://flow.livskin.site/webhook/acquisition/form-submit'
+    };
+  </script>
+  <script src="/livskin-tracking.js" defer></script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Template referencial Livskin</h1>
+    <p>Esta es una landing minimal funcional que demuestra las convenciones HTML para integrar con el sistema de tracking + form capture.</p>
+
+    <h2>Form de contacto</h2>
+    <form data-livskin-form="true" action="#" onsubmit="event.preventDefault(); alert('En producción esto POSTea a [A1] webhook automáticamente. En este template solo es demo.');">
+      <label for="nombre">Nombre completo *</label>
+      <input id="nombre" name="nombre" type="text" required placeholder="Tu nombre" />
+
+      <label for="phone">Teléfono *</label>
+      <input id="phone" name="phone" type="tel" required placeholder="+51 999 000 000" />
+
+      <label for="email">Email *</label>
+      <input id="email" name="email" type="email" required placeholder="tu@email.com" />
+
+      <label for="tratamiento">Tratamiento de interés</label>
+      <select id="tratamiento" name="tratamiento">
+        <option value="Botox">Botox</option>
+        <option value="PRP">PRP</option>
+        <option value="Ácido Hialurónico">Ácido Hialurónico</option>
+        <option value="Otro">Otro</option>
+      </select>
+
+      <div class="checkbox-row">
+        <input id="consent" name="consent_marketing" type="checkbox" required />
+        <label for="consent">
+          Acepto la <a href="/privacy" target="_blank">política de privacidad</a> y los
+          <a href="/terms" target="_blank">términos de uso</a>, y autorizo el tratamiento
+          de mis datos para contactarme con información de Livskin.
+        </label>
+      </div>
+
+      <button type="submit">Reservar consulta</button>
+    </form>
+
+    <p style="text-align: center; margin: 30px 0 10px;">o también</p>
+
+    <a class="wa-button"
+       data-livskin-wa="true"
+       href="https://wa.me/51980727888?text=Hola,%20vengo%20del%20aviso%20de%20Botox%20de%20Livskin"
+       target="_blank"
+       rel="noopener noreferrer">
+      💬 Chatear por WhatsApp
+    </a>
+
+    <footer>
+      <div>© 2026 Livskin · Cusco, Perú</div>
+      <nav>
+        <a href="/privacy">Política de Privacidad</a>
+        <a href="/terms">Términos de Uso</a>
+        <a href="/cookies">Política de Cookies</a>
+      </nav>
+      <p class="disclaimer">
+        Información de carácter informativo, no reemplaza consulta médica presencial.
+        Resultados varían entre pacientes.
+      </p>
+    </footer>
+  </div>
+
+  <!-- Placeholder para banner de cookies (livskin-tracking.js inyecta el contenido) -->
+  <div data-livskin-banner="true"></div>
+</body>
+</html>

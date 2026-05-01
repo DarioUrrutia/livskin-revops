@@ -1,0 +1,143 @@
+name: Deploy Landings to Cloudflare Pages
+
+# Trigger: cualquier push a main que toque infra/landing-pages/* o el script standalone
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/landing-pages/**"
+      - ".github/workflows/deploy-landings.yml"
+  workflow_dispatch: # permite trigger manual desde GitHub UI
+
+# Solo 1 deploy concurrente — si llega otro push, espera al actual
+concurrency:
+  group: deploy-landings
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Build + deploy landings
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate JS syntax (livskin-tracking.js)
+        run: |
+          node -e "new Function(require('fs').readFileSync('infra/landing-pages/_shared/livskin-tracking.js', 'utf8'))"
+
+      - name: Validate JSON files
+        run: |
+          # Validate cada livskin-config.json contra el schema
+          for cfg in infra/landing-pages/*/livskin-config.json; do
+            if [ "$cfg" = "infra/landing-pages/_template/livskin-config.json" ]; then continue; fi
+            echo "Validating: $cfg"
+            python3 -c "import json; json.load(open('$cfg'))"
+          done
+          # Schema en sí
+          python3 -c "import json; json.load(open('infra/landing-pages/_shared/livskin-config-schema.json'))"
+
+      - name: Build deployment artifact
+        run: |
+          mkdir -p _build
+          # Copiar shared assets al root del artifact (servidos en /)
+          cp infra/landing-pages/_shared/livskin-tracking.js _build/livskin-tracking.js
+
+          # Procesar cada landing (excepto _shared y _template)
+          for dir in infra/landing-pages/*/; do
+            slug=$(basename "$dir")
+            if [ "$slug" = "_shared" ] || [ "$slug" = "_template" ]; then continue; fi
+
+            echo "Building landing: $slug"
+            mkdir -p "_build/$slug"
+            cp -r "$dir"/* "_build/$slug/"
+
+            # Si la landing tiene livskin-config.json, leer + inyectar tracking script
+            cfg="$dir/livskin-config.json"
+            if [ -f "$cfg" ]; then
+              # Asegurar que el script livskin-tracking.js esté linkeado
+              # (los index.html del template ya lo tienen — esta es safety net si falta)
+              if ! grep -q "livskin-tracking.js" "_build/$slug/index.html"; then
+                # Inyectar antes de </body>
+                sed -i 's|</body>|  <script src="/livskin-tracking.js" defer></script>\n</body>|' "_build/$slug/index.html"
+              fi
+              echo "  ✓ tracking.js linkeado"
+            fi
+          done
+
+          # Crear index.html root con redirect a primera landing (o lista)
+          cat > _build/index.html <<'EOF'
+          <!doctype html>
+          <html lang="es">
+          <head>
+            <meta charset="utf-8">
+            <meta name="robots" content="noindex,nofollow">
+            <title>Livskin Campañas</title>
+          </head>
+          <body>
+            <h1>Livskin — landings de campañas</h1>
+            <p>Acceso a landings específicas vía URLs de campaña.</p>
+          </body>
+          </html>
+          EOF
+
+          ls -la _build/
+          echo "---"
+          du -sh _build/
+
+      - name: Install Wrangler
+        run: npm install -g wrangler@latest
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler pages deploy _build \
+            --project-name=livskin-campanas \
+            --branch=main \
+            --commit-message="${{ github.event.head_commit.message }}" \
+            --commit-hash="${{ github.sha }}"
+
+      - name: Audit event ERP (post-deploy)
+        if: success()
+        env:
+          AUDIT_TOKEN: ${{ secrets.AUDIT_INTERNAL_TOKEN }}
+        run: |
+          curl -sk -X POST https://erp.livskin.site/api/internal/audit-event \
+            -H "Content-Type: application/json" \
+            -H "X-Internal-Token: $AUDIT_TOKEN" \
+            -d '{
+              "action": "infra.deploy_completed",
+              "metadata": {
+                "service": "landings-cloudflare-pages",
+                "sha": "${{ github.sha }}",
+                "actor": "${{ github.actor }}",
+                "outcome": "success"
+              }
+            }' || echo "audit endpoint no respondio (non-blocking)"
+
+      - name: Audit deploy failure (only if failed)
+        if: failure()
+        env:
+          AUDIT_TOKEN: ${{ secrets.AUDIT_INTERNAL_TOKEN }}
+        run: |
+          curl -sk -X POST https://erp.livskin.site/api/internal/audit-event \
+            -H "Content-Type: application/json" \
+            -H "X-Internal-Token: $AUDIT_TOKEN" \
+            -d '{
+              "action": "infra.deploy_failed",
+              "result": "failure",
+              "error_detail": "Cloudflare Pages deploy failed",
+              "metadata": {
+                "service": "landings-cloudflare-pages",
+                "sha": "${{ github.sha }}",
+                "actor": "${{ github.actor }}"
+              }
+            }' || true

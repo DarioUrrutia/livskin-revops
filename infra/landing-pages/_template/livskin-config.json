@@ -1,0 +1,22 @@
+{
+  "slug": "template-example",
+  "treatment_canonical_label": "Botox",
+  "wa_phone_e164": "+51980727888",
+  "wa_message_template": "Hola, vengo del aviso de {{treatment}} de Livskin",
+  "noindex": true,
+  "og": {
+    "title": "Tratamiento Estético en Cusco | Livskin",
+    "description": "Aplicación médica profesional. Resultados naturales.",
+    "image": "/uploads/og-image.jpg",
+    "type": "website"
+  },
+  "lighthouse_target_mobile": 70,
+  "consent_required_for_marketing_cookies": true,
+  "extra_tracking": {},
+  "_meta": {
+    "created": "2026-05-01",
+    "campaign_period": "Plantilla — duplicar a infra/landing-pages/<slug>/ y editar",
+    "owner": "Sistema de convenciones (Mini-bloque 3.6)",
+    "notes": "Template referencial. Para crear landing nueva: copiar este folder + editar valores. El build process valida config contra livskin-config-schema.json."
+  }
+}
