@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Livskin — Botox</title>
+<style>
+  @font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/Montserrat.ttf') format('truetype-variations');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Montserrat';
+    src: url('fonts/Montserrat-Italic.ttf') format('truetype-variations');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Open Sans';
+    src: url('fonts/OpenSans.ttf') format('truetype-variations');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    /* Brand colors from logo + actual site palette */
+    --brand-red:    #8B1F1F;
+    --brand-blue:   #5BB5D6;
+    --brand-pink:   #F4A6BB;     /* hot pink — actual button/accent */
+    --brand-pink-d: #E88AA2;
+    --brand-pink-soft: #FCE8EC;  /* very pale pink wash for sections */
+
+    /* Backgrounds */
+    --bg:        #FFFFFF;
+    --bg-pink:   #FCE8EC;        /* pale pink section */
+    --bg-card:   #FFFFFF;
+    --bg-dark:   #1F1A1A;
+
+    --line:      #ECE7E5;
+    --line-soft: #F2EDEB;
+    --ink:       #1F1A1A;        /* near-black like site */
+    --ink-soft:  #4A4441;
+    --ink-mute:  #8A847F;
+
+    /* Buttons — pink pill, white text */
+    --btn-bg:    #F4A6BB;
+    --btn-fg:    #FFFFFF;
+
+    /* Vertical rhythm — single source of truth for section padding */
+    --sp-y: 88px;        /* mobile */
+    --sp-x: 20px;
+    --gap-block: 40px;   /* between header & content within a section */
+  }
+  @media (min-width: 720px) {
+    :root { --sp-y: 112px; --sp-x: 32px; --gap-block: 48px; }
+  }
+  @media (min-width: 1024px) {
+    :root { --sp-y: 128px; --sp-x: 48px; --gap-block: 56px; }
+  }
+  .sec { padding: var(--sp-y) var(--sp-x); }
+  .sec-tight { padding: calc(var(--sp-y) * 0.7) var(--sp-x); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Open Sans', system-ui, sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; text-decoration: none; }
+  .display { font-family: 'Montserrat', sans-serif; font-weight: 300; letter-spacing: 0.01em; }
+  .display-bold { font-family: 'Montserrat', sans-serif; font-weight: 600; letter-spacing: 0.02em; }
+  .eyebrow { font-family: 'Montserrat', sans-serif; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; font-size: 11px; }
+  ::selection { background: var(--brand-pink); color: var(--ink); }
+
+  /* ============== RESPONSIVE — mobile-first ============== */
+  /* Default styles assume mobile. Layout components self-collapse via classes below. */
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .stack-md {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Tablet+ */
+  @media (min-width: 720px) {
+    .container { padding-left: 32px; padding-right: 32px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; gap: 40px; }
+    .stack-md { flex-direction: row; align-items: center; }
+  }
+  /* Desktop */
+  @media (min-width: 1024px) {
+    .container { padding-left: 48px; padding-right: 48px; }
+    .grid-2 { gap: 60px; }
+  }
+
+  /* Hide desktop nav on mobile, show hamburger */
+  .nav-desktop { display: none; }
+  .nav-mobile-toggle { display: inline-flex; }
+  @media (min-width: 900px) {
+    .nav-desktop { display: flex; }
+    .nav-mobile-toggle { display: none; }
+  }
+
+  /* Section padding scales */
+  .section-pad { padding-top: 72px; padding-bottom: 72px; }
+  @media (min-width: 720px) { .section-pad { padding-top: 96px; padding-bottom: 96px; } }
+  @media (min-width: 1024px) { .section-pad { padding-top: 120px; padding-bottom: 120px; } }
+
+  /* Hero text shouldn't have fixed left padding on mobile */
+  .hero-text { padding-left: 0; }
+  @media (min-width: 1024px) { .hero-text { padding-left: 60px; } }
+
+  /* Order helpers — hero image goes BELOW text on mobile */
+  .hero-img-wrap { order: -1; }
+  @media (min-width: 720px) { .hero-img-wrap { order: 0; } }
+
+  /* Process: 2 cols on tablet+, 1 col on mobile */
+  .grid-process { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 720px) { .grid-process { grid-template-columns: 1fr 1fr; gap: 20px; } }
+
+  /* Beneficios 3-up */
+  .grid-3 { display: grid; grid-template-columns: 1fr; gap: 32px; }
+  @media (min-width: 720px) { .grid-3 { grid-template-columns: repeat(3, 1fr); gap: 40px; } }
+  @media (min-width: 1024px) { .grid-3 { gap: 48px; } }
+
+  /* Booking grid */
+  .grid-booking { display: grid; grid-template-columns: 1fr; gap: 40px; }
+  @media (min-width: 900px) { .grid-booking { grid-template-columns: 1fr 1fr; gap: 60px; } }
+
+  /* Hide on mobile / show on desktop */
+  .hide-mobile { display: none; }
+  @media (min-width: 720px) { .hide-mobile { display: block; } }
+  .show-mobile { display: block; }
+  @media (min-width: 720px) { .show-mobile { display: none; } }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="placeholders.jsx"></script>
+<script type="text/babel" src="sections.jsx"></script>
+<script type="text/babel" src="sections-2.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-05-01 v2.5 (mini-bloque 3.3 REWRITE COMPLETO — pipeline form WP→Vtiger→ERP operacional con first-touch attribution + skills inventory tracker creado)
+> Última actualización: 2026-05-01 v2.6 (Mini-bloque 3.4 ✅ COMPLETO CAPI via n8n + ADR-0019 cerrado + Mini-bloque 3.6 Landings PLANEADO con ADR-0031)
 
 ---
 
@@ -166,7 +166,7 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 | 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage al 2026-04-26) |
 | **0 v2 (Bloque foundation cross-VPS)** | ✅ **Completado 2026-04-26** — versionado VPS 1+2 + CI/CD multi-VPS + system-map + sensors + backups + runbooks + DR drill + skills + MCP scaffold |
 | **Setup acceso programático** | ⏳ Próxima sesión inmediata — Google service account + Meta System User + audit programático definitivo (resuelve doble disparo Pixel + UTMs end-to-end) |
-| 3 | 🚧 **60% en progreso** — Mini-bloque 3.1 (cleanup VPS 1) ✅ + 3.2 (GTM Tracking Engine) ✅ + 3.3 REWRITE (Form→Vtiger→ERP pipeline) ✅; pendientes 3.4 (CAPI server-side), 3.5 (observabilidad + Metabase dashboards) |
+| 3 | 🚧 **80% en progreso** — 3.1 ✅ + 3.2 ✅ + 3.3 REWRITE ✅ + 3.4 CAPI ✅; **PIVOT** orden: pendientes 3.6 Landings (NUEVO inserto), después 3.5 Observabilidad + Metabase |
 | **Bloque puente Agenda Mínima ERP** | ⏳ Entre Fase 3 y Fase 4 — módulo `appointments` con precisión quirúrgica (ADR + tests + feature flag + validación doctora) |
 | 4 | ⏳ Conversation Agent (WhatsApp test number agenda en `appointments` automáticamente) |
 | 5 | ⏳ Brand Orchestrator + Acquisition Agents (precedida de sesión estratégica organizacional) |
@@ -260,7 +260,53 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
-## 📝 Estado al 2026-05-01 (Mini-bloque 3.3 REWRITE COMPLETO — pipeline form→Vtiger→ERP operacional)
+## 📝 Estado al 2026-05-01 cierre (Mini-bloque 3.4 ✅ + PIVOT 3.6 Landings antes de 3.5 Metabase)
+
+### Sesión 2026-05-01 cierre — Mini-bloque 3.4 + plan 3.6
+
+**Logros del día (sesión multi-fase):**
+
+1. **Mini-bloque 3.4 ✅ COMPLETO** — CAPI server-side via n8n (commit `c4dd8a8`)
+   - Token CAPI generado vía Events Manager → Pixel `4410809639201712` → "Configurar integración directa con Dataset Quality API"
+   - **NO requiere App Review** (descartando preocupación inicial — confirmado vía 6 fuentes oficiales)
+   - ADR-0019 v1.0 cerrado: ERP → n8n → Meta (Opción B), descartando Meta-enabled (health restrictions) + ERP-directo (no visualidad)
+   - `services/capi_emitter_service.py` con 13 tests TDD pasan
+   - Hook auto-emit en `/api/leads/sync-from-vtiger` CREATE
+   - n8n Workflow [G3] (5 nodos) — hashing SHA-256 PII + POST Meta Graph API
+   - Validación E2E: Lead creado → audit log `tracking.capi_event_emitted` → Meta `events_received: 1`
+
+2. **PIVOT estratégico** — Mini-bloque 3.6 (Landings dedicadas) ANTES de 3.5 (Metabase)
+   - Razón: sin landings dedicadas, no hay campañas pagas; sin campañas pagas, Metabase es ejercicio académico
+   - Flow correcto: Landings (3.6) → mini campaña test → Metabase (3.5) con data real
+
+3. **ADR-0031 v1.0 cerrado** — Landings hosting Cloudflare Pages + sistema convenciones
+   - Hosting: Cloudflare Pages (free, edge global, deploy git push)
+   - Subdomain: `campanas.livskin.site`
+   - **Sistema NO un template fijo** (Dario clarificó variabilidad de cada landing) — sistema de convenciones HTML markup que cualquier landing nueva debe seguir
+   - 24 categorías de gaps documentadas (cookies cross-subdomain, bot protection, compliance médico, noindex, form retry queue, etc.)
+
+**7 decisiones tuyas pendientes (gating Mini-bloque 3.6):**
+1. Privacy policy + terms — drafts existentes?
+2. WhatsApp phone real — `+51982732978` o `+51980727888`?
+3. Microsoft Clarity OK?
+4. URLs estructura — `/botox` (UX) vs `/c/01` (Meta health-safer)?
+5. Cloudflare Turnstile en landings?
+6. Cloudflare account access para crear Pages project + DNS `campanas.livskin.site`?
+7. Pixel compliance status para health category?
+
+**Estado Fase 3:**
+| Mini-bloque | Estado |
+|---|---|
+| 3.1 Cleanup VPS 1 | ✅ |
+| 3.2 GTM Tracking Engine | ✅ |
+| 3.3 REWRITE Form→Vtiger→ERP | ✅ |
+| 3.4 CAPI server-side | ✅ |
+| **3.6 Landings dedicadas (NUEVO inserto)** | ⏳ **próxima sesión** |
+| 3.5 Observabilidad + Metabase | ⏳ después 3.6 |
+
+**Próxima sesión:** Mini-bloque 3.6 — Landings dedicadas. Aplicar runbook preflight obligatorio. Sub-paso 3.6.1 (escribir conventions.md) requiere 7 decisiones tuyas resueltas primero.
+
+### Sesión 2026-05-01 mañana — Mini-bloque 3.3 REWRITE COMPLETO
 
 ### Sesión multi-día 2026-04-29 → 2026-05-01 — Mini-bloque 3.3 REWRITE end-to-end
 

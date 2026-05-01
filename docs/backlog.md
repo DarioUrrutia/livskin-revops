@@ -25,7 +25,43 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🔴 Metabase dashboards de leads (Mini-bloque 3.5)
+### 🔴 Mini-bloque 3.6 — Landings dedicadas Cloudflare Pages (próxima sesión inmediata)
+**Decisión 2026-05-01 (PIVOT estratégico):** las landings dedicadas son requisito previo de campañas pagas Meta/Google. Sin landings, sin campañas → sin data real para Metabase. Por eso 3.6 inserta entre 3.4 y 3.5.
+
+**Detalle completo:** ver ADR-0031 — Landings dedicadas Cloudflare Pages + sistema convenciones.
+
+**7 decisiones tuyas pendientes (gating del 3.6.1):**
+1. Privacy policy + terms — ¿drafts existentes?
+2. WhatsApp phone real productivo — `+51982732978` o `+51980727888`?
+3. Microsoft Clarity OK? (free, datos EU)
+4. URLs estructura — `/botox` vs `/c/01` (trade-off UX vs Meta health policy)
+5. Cloudflare Turnstile en landings? (mismo que form 1569)
+6. Cloudflare account access para crear Pages project + DNS `campanas.livskin.site`?
+7. Pixel compliance status `4410809639201712` para health category — verificar?
+
+**Sub-pasos (~6h total):**
+- 3.6.1 Convenciones markup `_shared/conventions.md` (30 min)
+- 3.6.2 `livskin-tracking.js` defensivo + form POST [A1] + Pixel + UUID (90 min)
+- 3.6.3 Schema `livskin-config.json` + parser build (30 min)
+- 3.6.4 Cloudflare Pages setup + DNS `campanas.livskin.site` (20 min)
+- 3.6.5 GitHub Actions workflow `deploy-landings.yml` (60 min)
+- 3.6.6 CORS en [A1] webhook para `*.livskin.site` (10 min)
+- 3.6.7 Migrar `botox-mvp/` adaptando markup convenciones + integrar tracking (45 min)
+- 3.6.8 `_template/` minimal funcional referencia (30 min)
+- 3.6.9 Runbook `landing-pages-deploy.md` (30 min)
+- 3.6.10 Smoke test E2E lead via landing → Vtiger → ERP → CAPI (30 min)
+
+**Pre-flight obligatorio (preflight-cross-system.md):**
+- Releer 5 memorias 🔥 CRÍTICAS literal
+- Query brain pgvector con keywords "landing pages tracking attribution Cloudflare Pages"
+- Citar ADR-0019 + ADR-0031 + ADR-0021 en plan inicial
+
+**Fase sugerida:** próxima sesión inmediata
+**Agregado por:** Claude Code · 2026-05-01
+
+---
+
+### 🔴 Metabase dashboards de leads (Mini-bloque 3.5 — después de 3.6)
 **Insight detectado 2026-05-01:** después de validar que el pipeline form → Vtiger → ERP funciona, Dario detectó gap importante: NO hay UI analítica en ERP para ver leads y métricas. Vtiger UI cubre gestión operativa (lista, edit), pero NO permite cruzar leads con conversiones, CAC, LTV.
 
 **Dashboards a construir en Metabase (sobre `livskin_erp.leads` + joins con `clientes`/`ventas`):**
