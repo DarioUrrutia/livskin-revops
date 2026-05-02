@@ -1,6 +1,6 @@
 [
   {
-    "updatedAt": "2026-05-01T21:30:43.000Z",
+    "updatedAt": "2026-05-02T08:25:06.000Z",
     "createdAt": "2026-05-01T06:44:12.881Z",
     "id": "b3-vtiger-modified-cron-pull",
     "name": "[B3] Sync Vtiger Modified Leads → ERP Mirror",
@@ -186,7 +186,7 @@
       {
         "parameters": {
           "language": "javaScript",
-          "jsCode": "// [B3] paso 7b: Per-item, get session + propagate id\nconst session = $('Capture Session').first().json._vtiger_session;\nconst item = $input.first().json;\nreturn [{ json: { vtiger_id: item.id, _vtiger_session: session } }];"
+          "jsCode": "// [B3] paso 7b: Per-item, get session + propagate id\n// B3_BATCH_FIX_v1 (2026-05-02): procesar TODOS los items del Split, no solo el primero.\n// Bug previo: $input.first() descartaba N-1 leads del cron batch.\n\nconst session = $('Capture Session').first().json._vtiger_session;\nreturn $input.all().map(it => ({\n  json: {\n    vtiger_id: it.json.id,\n    _vtiger_session: session,\n  }\n}));"
         },
         "id": "node-prepare-retrieve",
         "name": "Prepare Retrieve",
@@ -234,7 +234,7 @@
       {
         "parameters": {
           "language": "javaScript",
-          "jsCode": "// [B3] paso 9: Map Vtiger fields cf_NNN -> ERP schema (mismo mapping que [B1])\n// B3_SKIP_WA_CLICK_v1 (2026-05-01): wa-click leads NO se sincronizan a ERP.\n// Razon arquitectonica: WA-click leads no tienen phone (visitor solo clickeo),\n// por lo que no son accionables operativamente en ERP. Viven en Vtiger para\n// marketing attribution (Pixel + CAPI client-side ya cubren la attribution Meta).\n// Cuando la doctora atiende WA y crea cliente real en ERP, se vincula manualmente\n// por phone real del visitante.\n\nconst retrieveResponse = $input.first().json;\nif (!retrieveResponse.success) {\n  throw new Error('Vtiger retrieve failed: ' + JSON.stringify(retrieveResponse));\n}\n\nconst v = retrieveResponse.result;\n\n// Skip wa-click leads: no llegan al ERP (Opcion B documentada)\nif (v.leadsource === 'WA Direct Click') {\n  return [];\n}\n\nconst nombre = ((v.firstname || '') + ' ' + (v.lastname || '')).trim() || '(sin nombre)';\n\nconst erpPayload = {\n  vtiger_id: v.id,\n  nombre,\n  phone_e164: v.phone || '',\n  email: v.email || '',\n  leadstatus: v.leadstatus || '',\n  leadsource: v.leadsource || '',\n  utm_source: v.cf_853 || '',\n  utm_medium: v.cf_855 || '',\n  utm_campaign: v.cf_857 || '',\n  utm_content: v.cf_859 || '',\n  utm_term: v.cf_861 || '',\n  fbclid: v.cf_863 || '',\n  gclid: v.cf_865 || '',\n  fbc: v.cf_867 || '',\n  ga: v.cf_869 || '',\n  event_id: v.cf_871 || '',\n  landing_url: v.cf_873 || '',\n  tratamiento_interes: v.cf_875 || '',\n  consent_marketing: false,\n};\n\nreturn [{ json: erpPayload }];"
+          "jsCode": "// [B3] paso 9: Map Vtiger fields cf_NNN -> ERP schema (mismo mapping que [B1])\n// B3_BATCH_FIX_v1 (2026-05-02): procesar TODOS los items que retornan de Vtiger Retrieve,\n// no solo el primero. Bug previo: $input.first() descartaba N-1 leads.\n// Op B preservada: filter wa-click leads del sync ERP (B3_SKIP_WA_CLICK_v1).\n\nconst out = [];\nfor (const it of $input.all()) {\n  const retrieveResponse = it.json;\n  if (!retrieveResponse.success) {\n    // Log error pero continuar con los demas items (no abort batch)\n    console.log('Vtiger retrieve failed for item, skipping:', JSON.stringify(retrieveResponse));\n    continue;\n  }\n  const v = retrieveResponse.result;\n  // Op B: skip wa-click leads (no llegan a ERP)\n  if (v.leadsource === 'WA Direct Click') {\n    continue;\n  }\n  const nombre = ((v.firstname || '') + ' ' + (v.lastname || '')).trim() || '(sin nombre)';\n  out.push({\n    json: {\n      vtiger_id: v.id,\n      nombre,\n      phone_e164: v.phone || '',\n      email: v.email || '',\n      leadstatus: v.leadstatus || '',\n      leadsource: v.leadsource || '',\n      utm_source: v.cf_853 || '',\n      utm_medium: v.cf_855 || '',\n      utm_campaign: v.cf_857 || '',\n      utm_content: v.cf_859 || '',\n      utm_term: v.cf_861 || '',\n      fbclid: v.cf_863 || '',\n      gclid: v.cf_865 || '',\n      fbc: v.cf_867 || '',\n      ga: v.cf_869 || '',\n      event_id: v.cf_871 || '',\n      landing_url: v.cf_873 || '',\n      tratamiento_interes: v.cf_875 || '',\n      consent_marketing: false,\n    }\n  });\n}\nreturn out;"
         },
         "id": "node-map-to-erp",
         "name": "Map Vtiger to ERP Schema",
@@ -276,7 +276,11 @@
         "position": [
           2660,
           400
-        ]
+        ],
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1000,
+        "maxTries": 3
       }
     ],
     "connections": {
@@ -410,7 +414,7 @@
     "pinData": null,
     "versionId": "239a118b-25ef-4270-adad-60109c339c43",
     "activeVersionId": "239a118b-25ef-4270-adad-60109c339c43",
-    "versionCounter": 11,
+    "versionCounter": 15,
     "triggerCount": 1,
     "tags": [],
     "shared": [

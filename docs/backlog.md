@@ -25,22 +25,33 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🔴 HOTFIX n8n [B3] — race condition cron procesando solo 1 de N leads
-**Bug detectado 2026-05-02 en smoke comprehensivo:** workflow [B3] cron pull (cada 2 min con lookback 3 min) procesó SOLO 1 de 3 form leads creados en la misma ventana. Los 4 leads test (10x12, 10x13, 10x14, 10x15) tenían modifiedtime dentro del window del cron en 21:36:37, pero solo 10x12 hizo POST a ERP. Las leads 10x13 y 10x14 quedaron orphan (sin sync ERP), 10x15 correctamente filtrada por Op B (es wa-click).
+### 🟡 HOTFIX ERP — cod_lead generation race condition (atomic UPSERT)
+**Bug descubierto 2026-05-02 al fixear B3 race:** la generación de `cod_lead` en ERP no es atómica. Cuando 2+ INSERTs concurrentes llegan, ambos calculan el mismo MAX+1 → primero succeeds, segundo falla con `psycopg2.errors.UniqueViolation: Key (cod_lead)=(LIVLEADXXXX) already exists`.
 
-**Hipótesis a investigar:**
-1. n8n batch processing serial detenido en error silencioso del primer item
-2. Split items con race en Vtiger query response (multiple items no devuelven en order esperado)
-3. continueOnFail no seteado en algún nodo HTTP (Vtiger Retrieve o POST ERP)
-4. Vtiger query devuelve solo el último modificado por orden default
+**Bandaid temporal aplicado al [B3]:** `continueOnFail: true` + `retryOnFail: true` (max 3 retries, 1s wait). Esto hace que retry calcule un fresh MAX y eventualmente succeed. Funciona pero genera cod_leads out-of-order (LIVLEAD0007 puede asignarse a vtiger_id menor que LIVLEAD0005 si el segundo retry).
 
-**Severidad:** media. En producción sin smoke, leads quedan sin attribution en ERP por algunos minutos hasta próximo cron — pero como B3 sólo busca leads con modifiedtime > now-3min, **leads que pasan ese window quedan orphan permanentemente**.
+**Fix proper:** sustituir el cálculo MAX-en-Python por una secuencia Postgres NEXTVAL atómica O un trigger BEFORE INSERT que genere `cod_lead` server-side desde una secuencia. Variants:
+- `CREATE SEQUENCE leads_cod_lead_seq` + `cod_lead VARCHAR DEFAULT 'LIVLEAD' || lpad(nextval('leads_cod_lead_seq')::text, 4, '0')`
+- O trigger BEFORE INSERT que asigne si NULL
 
-**Tiempo estimado:** 15-30 min (investigar execution_data del run problemático en n8n DB + agregar continueOnFail + verificar query order).
+**Tiempo estimado:** 30-60 min (Alembic migration + tests + verificar backfill compatibility).
 
-**Bloqueante para:** primera campaña paga real con tráfico múltiple simultáneo. Smoke single-lead pasa OK; el problema solo se ve con leads concurrentes.
+**Severidad:** baja por ahora (retry transparente lo resuelve). Fix proper antes de campañas con tráfico alto donde retries amontonen logs/audit_log.
 
 **Agregado por:** Claude Code · 2026-05-02
+
+---
+
+### ✅ HOTFIX n8n [B3] — race condition cron procesando solo 1 de N leads (RESUELTO 2026-05-02)
+**Bug detectado y resuelto en sesión 2026-05-02:** workflow [B3] cron pull procesaba SOLO 1 de N leads concurrent. Causa raíz: dos Code nodes (`Prepare Retrieve` + `Map Vtiger to ERP Schema`) usaban `$input.first()` en vez de `$input.all().map(...)`, descartando N-1 items del split.
+
+**Fixes aplicados (2 patches):**
+1. **B3_BATCH_FIX_v1**: ambos Code nodes ahora procesan `$input.all().map(...)`. Map preserva Op B (skip wa-click) + agrega graceful skip de Vtiger retrieve failures (no aborta batch).
+2. **B3_CONTINUE_ON_FAIL_v1**: `continueOnFail: true` + `retryOnFail: true` (max 3 tries, 1s wait) en nodo POST ERP. Errores individuales (ej cod_lead race del ERP) no abortan el batch entero; retries resuelven transient failures.
+
+**Validación E2E:** 3 leads concurrent (10x22, 10x23, 10x24) creados en <1s span. Cron 785 procesó los 3 con status `success` — todos llegaron a ERP con cod_leads asignados. Pre-patch solo 1 hubiera llegado.
+
+**Memorias actualizadas:** `feedback_n8n_workflow_history_loads.md`, `feedback_n8n_db_modification_safety.md` siguen vigentes (mismo pattern de patch).
 
 ---
 
