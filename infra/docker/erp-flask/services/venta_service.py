@@ -75,6 +75,8 @@ class ClienteAutoCreateInput:
     telefono: Optional[str] = None
     email: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
+    # ADR-0033: vinculación opcional a lead origen confirmada via UI tip
+    cod_lead_origen: Optional[str] = None
 
 
 @dataclass
@@ -86,6 +88,11 @@ class SaveVentaResult:
     excedente_credito_generado: Decimal = Decimal("0")
     credito_aplicado: Decimal = Decimal("0")
     abonos_deudas: Decimal = Decimal("0")
+    # ADR-0033 — informa al caller si el cliente fue creado en esta venta
+    # (vs ya existía) y si quedó vinculado a un lead origen.
+    cliente_was_created: bool = False
+    cliente_cod_lead_origen: Optional[str] = None
+    cliente_vtiger_lead_id_origen: Optional[str] = None
 
 
 def save_venta(
@@ -116,6 +123,7 @@ def save_venta(
     if not items:
         raise ValueError("items no puede estar vacío")
 
+    cliente_was_created = False
     if cod_cliente:
         cliente = db.execute(
             select(Cliente).where(Cliente.cod_cliente == cod_cliente)
@@ -123,6 +131,18 @@ def save_venta(
         if cliente is None:
             raise ClienteNoExiste(f"Cliente {cod_cliente} no existe")
     elif cliente_data:
+        # ADR-0033: detect si get_or_create va a CREATE (no existe por nombre)
+        # para emitir el audit event canónico desde el caller.
+        from sqlalchemy import func
+        nombre_lower = (cliente_data.nombre or "").strip().lower()
+        existed_before = db.execute(
+            select(Cliente).where(
+                func.lower(Cliente.nombre) == nombre_lower,
+                Cliente.activo.is_(True),
+            )
+        ).scalar_one_or_none()
+        cliente_was_created = existed_before is None
+
         cliente = cliente_service.get_or_create(
             db,
             nombre=cliente_data.nombre,
@@ -131,6 +151,7 @@ def save_venta(
             fecha_nacimiento=cliente_data.fecha_nacimiento,
             actualizar=actualizar_cliente,
             created_by=created_by,
+            cod_lead_origen=cliente_data.cod_lead_origen,
         )
         cod_cliente = cliente.cod_cliente
     else:
@@ -383,6 +404,11 @@ def save_venta(
         )
         result.pagos.append(pago_excedente)
         result.excedente_credito_generado = leftover_cash
+
+    # ADR-0033: expose cliente creation status para audit log en caller
+    result.cliente_was_created = cliente_was_created
+    result.cliente_cod_lead_origen = cliente.cod_lead_origen
+    result.cliente_vtiger_lead_id_origen = cliente.vtiger_lead_id_origen
 
     db.flush()
     return result

@@ -15,6 +15,8 @@ class ClienteCreate(BaseModel):
     tratamiento_interes: Optional[str] = None
     consent_marketing: bool = False
     notas: Optional[str] = None
+    # ADR-0033: vinculación opcional a lead origen (UI confirma match)
+    cod_lead_origen: Optional[str] = Field(default=None, max_length=30)
 
 
 class ClienteUpdate(BaseModel):

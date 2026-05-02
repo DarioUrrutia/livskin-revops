@@ -10,7 +10,7 @@ from schemas.cliente import (
     ClienteListResponse,
     ClienteUpdate,
 )
-from services import cliente_service
+from services import audit_service, cliente_service
 
 bp = Blueprint("api_cliente", __name__)
 
@@ -83,10 +83,35 @@ def create_cliente():  # type: ignore[no-untyped-def]
                 tratamiento_interes=body.tratamiento_interes,
                 consent_marketing=body.consent_marketing,
                 notas=body.notas,
+                cod_lead_origen=body.cod_lead_origen,
             )
             response_json = ClienteFull.model_validate(cliente).model_dump(mode="json")
+            # ADR-0033: audit event canónico según vinculación
+            if body.cod_lead_origen:
+                audit_service.log(
+                    db,
+                    action="cliente.created_with_lead_match",
+                    entity_type="cliente",
+                    entity_id=cliente.cod_cliente,
+                    after_state={
+                        "cod_cliente": cliente.cod_cliente,
+                        "cod_lead_origen": cliente.cod_lead_origen,
+                        "vtiger_lead_id_origen": cliente.vtiger_lead_id_origen,
+                        "match_confirmed_in": "api_clientes",
+                    },
+                )
+            else:
+                audit_service.log(
+                    db,
+                    action="cliente.created_walk_in",
+                    entity_type="cliente",
+                    entity_id=cliente.cod_cliente,
+                    after_state={"cod_cliente": cliente.cod_cliente},
+                )
     except cliente_service.ClienteDuplicadoError as e:
         return jsonify({"error": str(e)}), 409
+    except cliente_service.LeadOrigenNotFoundError as e:
+        return jsonify({"error": str(e)}), 400
 
     return jsonify(response_json), 201
 

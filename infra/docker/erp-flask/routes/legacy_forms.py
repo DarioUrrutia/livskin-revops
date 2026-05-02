@@ -110,6 +110,7 @@ def venta_form():  # type: ignore[no-untyped-def]
         telefono=request.form.get("telefono") or None,
         email=request.form.get("email") or None,
         fecha_nacimiento=_to_date(request.form.get("cumpleanos")),
+        cod_lead_origen=(request.form.get("cod_lead_origen") or "").strip() or None,
     )
     actualizar_cliente = request.form.get("actualizar_cliente") == "1"
 
@@ -199,6 +200,31 @@ def venta_form():  # type: ignore[no-untyped-def]
                     "abonos_deudas": str(result.abonos_deudas),
                 },
             )
+            # ADR-0033: emitir cliente.created_with_lead_match / cliente.created_walk_in
+            # solo cuando el cliente fue creado en esta venta.
+            if result.cliente_was_created and result.ventas:
+                cod_cliente_creado = result.ventas[0].cod_cliente
+                if result.cliente_cod_lead_origen:
+                    audit_service.log(
+                        db,
+                        action="cliente.created_with_lead_match",
+                        entity_type="cliente",
+                        entity_id=cod_cliente_creado,
+                        after_state={
+                            "cod_cliente": cod_cliente_creado,
+                            "cod_lead_origen": result.cliente_cod_lead_origen,
+                            "vtiger_lead_id_origen": result.cliente_vtiger_lead_id_origen,
+                            "match_confirmed_in": "tab_venta",
+                        },
+                    )
+                else:
+                    audit_service.log(
+                        db,
+                        action="cliente.created_walk_in",
+                        entity_type="cliente",
+                        entity_id=cod_cliente_creado,
+                        after_state={"cod_cliente": cod_cliente_creado},
+                    )
         msg = f"Venta guardada ({len(result.ventas)} ítem(s))"
         if result.excedente_credito_generado > 0:
             msg += f" — Crédito generado: S/ {result.excedente_credito_generado}"
@@ -230,6 +256,14 @@ def venta_form():  # type: ignore[no-untyped-def]
         )
         flash(f"Error al guardar: {e}")
     except cliente_service.ClienteDuplicadoError as e:
+        audit_service.log_isolated(
+            action="venta.created",
+            result="failure",
+            error_detail=str(e),
+            metadata={"cliente": nombre, "fecha": fecha.isoformat()},
+        )
+        flash(f"Error al guardar: {e}")
+    except cliente_service.LeadOrigenNotFoundError as e:
         audit_service.log_isolated(
             action="venta.created",
             result="failure",

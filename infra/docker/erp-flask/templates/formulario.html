@@ -297,12 +297,12 @@
             <div class="fila-dos">
                 <div class="field">
                     <label>Teléfono</label>
-                    <input type="tel" name="telefono" id="input-telefono-venta" placeholder="Número" oninput="verificarCampoCli('telefono')">
+                    <input type="tel" name="telefono" id="input-telefono-venta" placeholder="Número" oninput="verificarCampoCli('telefono'); triggerLeadMatchSearch();">
                     <div id="aviso-cli-telefono" class="aviso-cli-campo" style="display:none;"></div>
                 </div>
                 <div class="field">
                     <label>Email</label>
-                    <input type="email" name="email" id="input-email-venta" placeholder="correo@ejemplo.com" oninput="verificarCampoCli('email')">
+                    <input type="email" name="email" id="input-email-venta" placeholder="correo@ejemplo.com" oninput="verificarCampoCli('email'); triggerLeadMatchSearch();">
                     <div id="aviso-cli-email" class="aviso-cli-campo" style="display:none;"></div>
                 </div>
             </div>
@@ -312,6 +312,18 @@
                 <div id="aviso-cli-cumpleanos" class="aviso-cli-campo" style="display:none;"></div>
             </div>
             <input type="hidden" name="actualizar_cliente" id="actualizar-cliente-flag" value="0">
+            <!-- ADR-0033: hidden input poblado por JS si la doctora confirma match con un lead origen -->
+            <input type="hidden" name="cod_lead_origen" id="cod-lead-origen-input" value="">
+
+            <!-- ADR-0033: tip visual cuando hay lead candidate matching (auto_match_lead_enabled) -->
+            <div id="lead-match-tip" style="display:none; margin-top:10px; background:#f0f9ed; border:1.5px solid #8bc995; border-radius:8px; padding:10px 12px;">
+                <div style="font-size:12px; font-weight:bold; color:#2e7d32; margin-bottom:4px;">💡 Lead reciente detectado</div>
+                <div style="font-size:13px; color:#333; margin-bottom:8px;" id="lead-match-tip-detalle">—</div>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="confirmarLeadMatch()" style="padding:5px 10px; font-size:12px; background:#2e7d32; color:#fff; border:none; border-radius:4px; cursor:pointer;">✓ Sí, vincular</button>
+                    <button type="button" onclick="descartarLeadMatch()" style="padding:5px 10px; font-size:12px; background:#fff; color:#666; border:1px solid #bbb; border-radius:4px; cursor:pointer;">✗ No, cliente nuevo</button>
+                </div>
+            </div>
 
             <div class="seccion">Servicios / Productos</div>
 
@@ -1095,6 +1107,9 @@ function parseToInputDate(val) {
 
 let anticiposTimer = null;
 let creditoDisponible = 0;
+// ADR-0033: state del lead match candidate
+let leadMatchTimer = null;
+let leadMatchCandidate = null;  // {cod_lead, vtiger_lead_id, nombre, fuente, fecha_captura, tratamiento_interes, ...}
 let creditoNotas = [];
 let deudasPendientesCliente = [];  // ítems anteriores con DEBE > 0
 let deudasPagos = {};              // { idx: monto asignado }
@@ -1197,6 +1212,94 @@ function actualizarCodigoCliente() {
             })
             .catch(() => {});
     }, 300);
+
+    // ADR-0033: trigger lead-match search (si el cliente NO existe ya)
+    triggerLeadMatchSearch();
+}
+
+// ADR-0033: lead match search debounced. Lee nombre/phone/email del form VENTA.
+// Si el nombre ya matchea un cliente existente, NO busca (no se crearía cliente nuevo).
+function triggerLeadMatchSearch() {
+    clearTimeout(leadMatchTimer);
+    const tipEl = document.getElementById('lead-match-tip');
+    const nombre = (document.getElementById('input-cliente-venta').value || '').trim();
+    const phone  = (document.getElementById('input-telefono-venta').value || '').trim();
+    const email  = (document.getElementById('input-email-venta').value || '').trim();
+
+    // Si nombre matchea cliente existente → no buscamos (no se va a crear cliente nuevo)
+    if (nombre && CLIENTES_DATA[nombre.toLowerCase()]) {
+        clearLeadMatchTip();
+        return;
+    }
+    if (!nombre && !phone && !email) {
+        clearLeadMatchTip();
+        return;
+    }
+
+    leadMatchTimer = setTimeout(() => {
+        const params = new URLSearchParams();
+        if (phone) params.set('phone', phone);
+        if (email) params.set('email', email);
+        if (nombre) params.set('nombre', nombre);
+        fetch('/api/leads/search-match?' + params.toString())
+            .then(r => {
+                if (r.status === 404) {
+                    // feature flag off — silencioso
+                    clearLeadMatchTip();
+                    return null;
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (!data) return;
+                if (data.match) {
+                    leadMatchCandidate = data.match;
+                    // Si la doctora ya había confirmado un lead distinto, conservar
+                    if (document.getElementById('cod-lead-origen-input').value &&
+                        document.getElementById('cod-lead-origen-input').value !== data.match.cod_lead) {
+                        // tip describe el match nuevo pero no auto-overwrite
+                    }
+                    const fechaTxt = data.match.fecha_captura
+                        ? data.match.fecha_captura.split('T')[0]
+                        : 'fecha desconocida';
+                    const fuenteTxt = data.match.fuente || data.match.canal_adquisicion || 'origen digital';
+                    const tratamiento = data.match.tratamiento_interes
+                        ? ` · interés: <strong>${data.match.tratamiento_interes}</strong>`
+                        : '';
+                    document.getElementById('lead-match-tip-detalle').innerHTML =
+                        `Este parece ser un lead reciente: <strong>${data.match.nombre}</strong>` +
+                        ` capturado de <strong>${fuenteTxt}</strong> el <strong>${fechaTxt}</strong>${tratamiento}.` +
+                        ` ¿Es la misma persona?`;
+                    tipEl.style.display = 'block';
+                } else {
+                    clearLeadMatchTip();
+                }
+            })
+            .catch(() => clearLeadMatchTip());
+    }, 600);
+}
+
+function clearLeadMatchTip() {
+    leadMatchCandidate = null;
+    const tip = document.getElementById('lead-match-tip');
+    if (tip) tip.style.display = 'none';
+}
+
+function confirmarLeadMatch() {
+    if (!leadMatchCandidate) return;
+    document.getElementById('cod-lead-origen-input').value = leadMatchCandidate.cod_lead;
+    const tip = document.getElementById('lead-match-tip');
+    tip.style.background = '#e8f5e9';
+    document.getElementById('lead-match-tip-detalle').innerHTML =
+        `✓ Vinculado a <strong>${leadMatchCandidate.nombre}</strong> (${leadMatchCandidate.cod_lead}).` +
+        ` Al guardar la venta, la atribución se preservará.`;
+    // Ocultar botones
+    tip.querySelectorAll('button').forEach(b => b.style.display = 'none');
+}
+
+function descartarLeadMatch() {
+    document.getElementById('cod-lead-origen-input').value = '';
+    clearLeadMatchTip();
 }
 
 function verificarCampoCli(campo) {

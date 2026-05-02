@@ -36,10 +36,12 @@ KNOWN_ACTIONS = {
     "gasto.created",
     "gasto.updated",
     "gasto.deleted",
-    # Cliente (3)
+    # Cliente (5)
     "cliente.created",
     "cliente.updated",
     "cliente.merged",
+    "cliente.created_with_lead_match",  # ADR-0033 — cliente creado vinculado a lead origen
+    "cliente.created_walk_in",          # ADR-0033 — cliente creado sin lead origen (walk-in / legacy)
     # Lead (6)
     "lead.created",
     "lead.synced_from_vtiger",

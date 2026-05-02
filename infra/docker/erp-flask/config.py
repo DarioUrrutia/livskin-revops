@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     n8n_capi_webhook_url: str = "https://flow.livskin.site/webhook/growth/capi-emit"
     n8n_capi_timeout_seconds: int = 5
 
+    # ADR-0033 — Match automático lead↔cliente al crear cliente en ERP.
+    # Si False: GET /api/leads/search-match retorna 404 (UI tip nunca aparece).
+    auto_match_lead_enabled: bool = True
+
     @property
     def database_url(self) -> str:
         return (

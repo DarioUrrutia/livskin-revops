@@ -11,6 +11,7 @@ from routes.api_internal_sync import bp as api_internal_sync_bp
 from routes.api_client_lookup import bp as client_lookup_bp
 from routes.api_leads_sync import bp as leads_sync_bp
 from routes.api_leads_sync import register_public_endpoints as _register_leads_sync_public
+from routes.api_leads_match import bp as leads_match_bp
 from routes.api_cliente import bp as cliente_bp
 from routes.api_config import bp as config_bp
 from routes.api_dashboard import bp as dashboard_bp
@@ -37,6 +38,7 @@ def create_app() -> Flask:
     flask_app.register_blueprint(client_lookup_bp)
     flask_app.register_blueprint(leads_sync_bp)
     _register_leads_sync_public()  # endpoint sync-from-vtiger es interno (auth shared secret)
+    flask_app.register_blueprint(leads_match_bp)
     flask_app.register_blueprint(cliente_bp)
     flask_app.register_blueprint(catalogo_bp)
     flask_app.register_blueprint(config_bp)

@@ -52,14 +52,14 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 | `venta.*` | 3 | erp-flask routes/legacy_forms.py + api_venta.py |
 | `pago.*` | 3 | idem + api_pagos.py |
 | `gasto.*` | 3 | idem + api_gasto.py |
-| `cliente.*` | 3 | api_cliente.py |
+| `cliente.*` | 5 | api_cliente.py + legacy_forms.py (incluye ADR-0033 events) |
 | `lead.*` | 5 | n8n workflows (Fase 4+) |
 | `admin.*` | 5 | admin actions (incluye `admin.budget_changed` Bloque 0.10) |
 | `webhook.*` | 2 | n8n SureForms + WhatsApp |
 | `infra.*` | 20 | CI/CD + crons + sensors (Bloque 0) — incluye `infra.budget_warning/exceeded` |
 | `agent.*` | 2 | wrappers de agentes IA (Bloque 0.10) |
 
-**Total: 54 eventos canónicos.**
+**Total: 56 eventos canónicos.**
 
 ## Catálogo completo por categoría
 
@@ -100,13 +100,15 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 | `gasto.updated` | Rare | `{}` |
 | `gasto.deleted` | Rare | `{}` |
 
-### cliente.* (3)
+### cliente.* (5)
 
 | Action | Cuándo | Metadata |
 |---|---|---|
 | `cliente.created` | Nuevo cliente registrado | `{}` |
 | `cliente.updated` | Modificación datos | `{fields_changed}` (con before/after) |
 | `cliente.merged` | Merge dedup (ADR-0013) | `{merged_into, merged_from}` |
+| `cliente.created_with_lead_match` | ADR-0033 — cliente nuevo vinculado a lead origen confirmado por la doctora | `{cod_cliente, cod_lead_origen, vtiger_lead_id_origen, match_confirmed_in}` |
+| `cliente.created_walk_in` | ADR-0033 — cliente nuevo sin vinculación a lead (walk-in / legacy / sin match) | `{cod_cliente}` |
 
 ### lead.* (5) — Fase 4+ (Conversation Agent)
 

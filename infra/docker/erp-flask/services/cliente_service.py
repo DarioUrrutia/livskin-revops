@@ -1,4 +1,4 @@
-"""ClienteService — CRUD + lookups (ADR-0011 v1.1, ADR-0013 v2)."""
+"""ClienteService — CRUD + lookups (ADR-0011 v1.1, ADR-0013 v2, ADR-0033)."""
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Optional
@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from models.cliente import Cliente
+from models.lead import Lead
 from models.pago import Pago
 from models.venta import Venta
 from services.codgen_service import next_codigo
@@ -26,6 +27,10 @@ class ClienteDuplicadoError(Exception):
     pass
 
 
+class LeadOrigenNotFoundError(Exception):
+    pass
+
+
 def get_by_cod(db: Session, cod_cliente: str) -> Cliente:
     cliente = db.execute(
         select(Cliente).where(Cliente.cod_cliente == cod_cliente)
@@ -42,6 +47,92 @@ def get_by_phone(db: Session, phone_raw: str) -> Optional[Cliente]:
     return db.execute(
         select(Cliente).where(Cliente.phone_e164 == phone_e164, Cliente.activo.is_(True))
     ).scalar_one_or_none()
+
+
+def search_lead_match(
+    db: Session,
+    phone_e164: Optional[str] = None,
+    email_lower: Optional[str] = None,
+    nombre: Optional[str] = None,
+    phone_raw: Optional[str] = None,
+    email_raw: Optional[str] = None,
+) -> Optional[Lead]:
+    """Busca un Lead candidato matching contra (phone, email, nombre).
+
+    ADR-0033 — usado por la pestaña CLIENTE del ERP cuando la doctora va a
+    crear un cliente walk-in: si hay match con un lead reciente NO convertido,
+    la UI ofrece vincularlo (tip visual).
+
+    Reglas de prioridad (NO se mezclan — se intenta una a una):
+    1. phone exacto match — si hay 1 lead → return; si 0 → fallback email
+    2. email exacto match — si hay 1 lead → return; si 0 → fallback nombre
+    3. nombre case-insensitive — si hay 1 lead → return
+
+    Si en cualquier nivel hay >1 match → return None (ambigüedad, doctora
+    decide manualmente; no auto-vinculamos para evitar falsos positivos).
+
+    Excluye leads ya convertidos: `lead.cod_lead` que ya aparece en
+    `clientes.cod_lead_origen` (cliente activo).
+
+    Args:
+        phone_e164: phone normalizado E.164 (preferido)
+        phone_raw: phone sin normalizar (service normaliza)
+        email_lower: email normalizado lowercase (preferido)
+        email_raw: email sin normalizar (service normaliza)
+        nombre: nombre del candidato (case-insensitive search)
+
+    Returns:
+        Lead candidato único o None.
+    """
+    norm_phone = phone_e164 or normalize_phone(phone_raw)
+    norm_email = email_lower or normalize_email(email_raw)
+    norm_nombre = (nombre or "").strip().lower() or None
+
+    # Subquery: cod_leads que ya fueron convertidos a cliente
+    converted_subq = (
+        select(Cliente.cod_lead_origen)
+        .where(Cliente.cod_lead_origen.is_not(None), Cliente.activo.is_(True))
+    )
+
+    base_query = select(Lead).where(Lead.cod_lead.not_in(converted_subq))
+
+    # Priority 1: phone exacto
+    if norm_phone:
+        rows = list(
+            db.execute(
+                base_query.where(Lead.phone_e164 == norm_phone)
+            ).scalars().all()
+        )
+        if len(rows) == 1:
+            return rows[0]
+        if len(rows) > 1:
+            return None  # ambigüedad
+
+    # Priority 2: email exacto
+    if norm_email:
+        rows = list(
+            db.execute(
+                base_query.where(Lead.email_lower == norm_email)
+            ).scalars().all()
+        )
+        if len(rows) == 1:
+            return rows[0]
+        if len(rows) > 1:
+            return None
+
+    # Priority 3: nombre case-insensitive (exacto, no fuzzy en MVP)
+    if norm_nombre:
+        rows = list(
+            db.execute(
+                base_query.where(func.lower(Lead.nombre) == norm_nombre)
+            ).scalars().all()
+        )
+        if len(rows) == 1:
+            return rows[0]
+        if len(rows) > 1:
+            return None
+
+    return None
 
 
 def list_active(db: Session, limit: int = 100, offset: int = 0) -> list[Cliente]:
@@ -91,6 +182,19 @@ def create(
                 f"Phone {phone_e164} ya existe (cliente {existing.cod_cliente})"
             )
 
+    # ADR-0033: si se pasa cod_lead_origen, validar lead existe y copiar attribution
+    lead_origen: Optional[Lead] = None
+    vtiger_lead_id_origen: Optional[str] = None
+    if cod_lead_origen:
+        lead_origen = db.execute(
+            select(Lead).where(Lead.cod_lead == cod_lead_origen)
+        ).scalar_one_or_none()
+        if lead_origen is None:
+            raise LeadOrigenNotFoundError(
+                f"Lead origen {cod_lead_origen} no existe"
+            )
+        vtiger_lead_id_origen = lead_origen.vtiger_id
+
     cod_cliente = next_codigo(db, Cliente, "cod_cliente", "LIVCLIENT")
 
     cliente = Cliente(
@@ -106,10 +210,27 @@ def create(
         consent_marketing=consent_marketing,
         notas=notas,
         cod_lead_origen=cod_lead_origen,
+        vtiger_lead_id_origen=vtiger_lead_id_origen,
         activo=True,
         created_by=created_by,
         updated_by=created_by,
     )
+
+    # Copiar attribution at_capture del lead origen al cliente (first-touch sagrada)
+    if lead_origen is not None:
+        cliente.utm_source_at_capture = lead_origen.utm_source_at_capture
+        cliente.utm_medium_at_capture = lead_origen.utm_medium_at_capture
+        cliente.utm_campaign_at_capture = lead_origen.utm_campaign_at_capture
+        cliente.utm_content_at_capture = lead_origen.utm_content_at_capture
+        cliente.utm_term_at_capture = lead_origen.utm_term_at_capture
+        cliente.fbclid_at_capture = lead_origen.fbclid_at_capture
+        cliente.gclid_at_capture = lead_origen.gclid_at_capture
+        # canal/fuente del lead son más informativos que defaults legacy
+        if lead_origen.canal_adquisicion:
+            cliente.canal_adquisicion = lead_origen.canal_adquisicion
+        if lead_origen.fuente:
+            cliente.fuente = lead_origen.fuente
+
     db.add(cliente)
     db.flush()
     return cliente
@@ -125,10 +246,15 @@ def get_or_create(
     canal_adquisicion: str = "legacy",
     actualizar: bool = False,
     created_by: Optional[int] = None,
+    cod_lead_origen: Optional[str] = None,
 ) -> Cliente:
     """Busca cliente por nombre case-insensitive. Si existe, opcionalmente
     actualiza campos vacíos (siempre) o todos los distintos (si actualizar=True).
     Si no existe, lo crea. Replica `get_or_create_cliente` del Flask original.
+
+    cod_lead_origen (ADR-0033): si se pasa Y el cliente NO existe, vincula al
+    lead y copia attribution. Si el cliente ya existe, NO se sobrescribe (la
+    vinculación es first-touch sagrada).
     """
     nombre_clean = (nombre or "").strip()
     if not nombre_clean:
@@ -151,6 +277,7 @@ def get_or_create(
             fuente=fuente,
             canal_adquisicion=canal_adquisicion,
             created_by=created_by,
+            cod_lead_origen=cod_lead_origen,
         )
 
     # Existe — actualizar selectivamente
