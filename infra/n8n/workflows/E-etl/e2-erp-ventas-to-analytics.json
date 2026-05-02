@@ -1,0 +1,488 @@
+[
+  {
+    "updatedAt": "2026-05-02T13:59:57.000Z",
+    "createdAt": "2026-05-02T13:59:52.705Z",
+    "id": "e2-erp-ventas-to-analytics",
+    "name": "[E2] ERP Ventas -> Analytics Opportunities",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "id": "node-schedule",
+        "name": "Schedule Every 5min",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          400
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 5
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node-get-cursor",
+        "name": "Get Last Sync Cursor",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          460,
+          400
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "21d033f5-c700-4513-906c-9adcd25c9a99",
+            "name": "Postgres Analytics ETL Writer"
+          }
+        },
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT COALESCE(MAX(finished_at), '1970-01-01T00:00:00Z'::timestamptz) AS cursor FROM etl_runs WHERE etl_name = 'E2' AND status = 'success';",
+          "options": {}
+        }
+      },
+      {
+        "id": "node-build-window",
+        "name": "Build Query Window",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          400
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const cursorRow = $input.first().json;\nlet cursor = cursorRow.cursor;\nif (cursor instanceof Date) cursor = cursor.toISOString();\nif (!cursor) cursor = '1970-01-01T00:00:00Z';\nconst cursorMs = new Date(cursor).getTime() - 30000;\nconst since = new Date(cursorMs).toISOString();\nreturn [{ json: { since, run_start: new Date().toISOString() } }];"
+        }
+      },
+      {
+        "id": "node-http-get-ventas",
+        "name": "GET ERP ventas since cursor",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          900,
+          400
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://erp.livskin.site/api/internal/sync/ventas",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "since",
+                "value": "={{ $json.since }}"
+              },
+              {
+                "name": "limit",
+                "value": "500"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Internal-Token",
+                "value": "={{ $env.AUDIT_INTERNAL_TOKEN }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "node-map-ventas",
+        "name": "Map ERP venta -> Analytics opp",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          400
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const response = $input.first().json;\nif (!response.ok) {\n  throw new Error('ERP sync failed: ' + JSON.stringify(response).slice(0,300));\n}\nconst items = response.items || [];\nconst mapped = items.map(v => ({\n  venta_id: v.id,\n  num_secuencial: v.num_secuencial,\n  cod_cliente: v.cod_cliente,\n  cliente_nombre: v.cliente_nombre,\n  cod_lead_origen: v.cod_lead_origen,\n  vtiger_lead_id: v.vtiger_lead_id_origen,\n  fecha_venta: v.fecha,\n  tipo: v.tipo,\n  cod_item: v.cod_item,\n  categoria: v.categoria,\n  zona_cantidad_envase: v.zona_cantidad_envase,\n  moneda: v.moneda,\n  total: v.total,\n  descuento: v.descuento,\n  pagado: v.pagado,\n  debe: v.debe,\n  efectivo: v.efectivo,\n  yape: v.yape,\n  plin: v.plin,\n  giro: v.giro,\n  created_at: v.created_at,\n  updated_at: v.updated_at\n}));\nif (mapped.length === 0) return [{ json: { _empty: true, count: 0 } }];\nreturn mapped.map(m => ({ json: m }));"
+        }
+      },
+      {
+        "id": "node-upsert-opps",
+        "name": "UPSERT analytics.opportunities",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1340,
+          400
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "21d033f5-c700-4513-906c-9adcd25c9a99",
+            "name": "Postgres Analytics ETL Writer"
+          }
+        },
+        "parameters": {
+          "operation": "upsert",
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "mode": "list",
+            "value": "opportunities"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "venta_id": "={{ $json.venta_id }}",
+              "num_secuencial": "={{ $json.num_secuencial }}",
+              "cod_cliente": "={{ $json.cod_cliente }}",
+              "cliente_nombre": "={{ $json.cliente_nombre }}",
+              "cod_lead_origen": "={{ $json.cod_lead_origen }}",
+              "vtiger_lead_id": "={{ $json.vtiger_lead_id }}",
+              "fecha_venta": "={{ $json.fecha_venta }}",
+              "tipo": "={{ $json.tipo }}",
+              "cod_item": "={{ $json.cod_item }}",
+              "categoria": "={{ $json.categoria }}",
+              "zona_cantidad_envase": "={{ $json.zona_cantidad_envase }}",
+              "moneda": "={{ $json.moneda }}",
+              "total": "={{ $json.total }}",
+              "descuento": "={{ $json.descuento }}",
+              "pagado": "={{ $json.pagado }}",
+              "debe": "={{ $json.debe }}",
+              "efectivo": "={{ $json.efectivo }}",
+              "yape": "={{ $json.yape }}",
+              "plin": "={{ $json.plin }}",
+              "giro": "={{ $json.giro }}",
+              "created_at": "={{ $json.created_at }}",
+              "updated_at": "={{ $json.updated_at }}"
+            },
+            "matchingColumns": [
+              "venta_id"
+            ],
+            "schema": [
+              {
+                "id": "venta_id",
+                "displayName": "venta_id",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "num_secuencial",
+                "displayName": "num_secuencial",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "cod_cliente",
+                "displayName": "cod_cliente",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "cliente_nombre",
+                "displayName": "cliente_nombre",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "cod_lead_origen",
+                "displayName": "cod_lead_origen",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "vtiger_lead_id",
+                "displayName": "vtiger_lead_id",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "fecha_venta",
+                "displayName": "fecha_venta",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "tipo",
+                "displayName": "tipo",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "cod_item",
+                "displayName": "cod_item",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "categoria",
+                "displayName": "categoria",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "zona_cantidad_envase",
+                "displayName": "zona_cantidad_envase",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "moneda",
+                "displayName": "moneda",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "total",
+                "displayName": "total",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "descuento",
+                "displayName": "descuento",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "pagado",
+                "displayName": "pagado",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "debe",
+                "displayName": "debe",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "efectivo",
+                "displayName": "efectivo",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "yape",
+                "displayName": "yape",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "plin",
+                "displayName": "plin",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "giro",
+                "displayName": "giro",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "created_at",
+                "displayName": "created_at",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "updated_at",
+                "displayName": "updated_at",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ]
+          },
+          "options": {}
+        },
+        "continueOnFail": true
+      },
+      {
+        "id": "node-log-etl-run",
+        "name": "INSERT etl_runs",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1560,
+          400
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "21d033f5-c700-4513-906c-9adcd25c9a99",
+            "name": "Postgres Analytics ETL Writer"
+          }
+        },
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO etl_runs (etl_name, started_at, finished_at, status, rows_processed) VALUES ('E2', NOW() - INTERVAL '5 seconds', NOW(), 'success', 1);",
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Every 5min": {
+        "main": [
+          [
+            {
+              "node": "Get Last Sync Cursor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Last Sync Cursor": {
+        "main": [
+          [
+            {
+              "node": "Build Query Window",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Query Window": {
+        "main": [
+          [
+            {
+              "node": "GET ERP ventas since cursor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET ERP ventas since cursor": {
+        "main": [
+          [
+            {
+              "node": "Map ERP venta -> Analytics opp",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Map ERP venta -> Analytics opp": {
+        "main": [
+          [
+            {
+              "node": "UPSERT analytics.opportunities",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "UPSERT analytics.opportunities": {
+        "main": [
+          [
+            {
+              "node": "INSERT etl_runs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "UTC"
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "1f402a03-559f-474d-8142-d84ac10a49ec",
+    "activeVersionId": "1f402a03-559f-474d-8142-d84ac10a49ec",
+    "versionCounter": 4,
+    "triggerCount": 1,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-05-02T13:59:52.715Z",
+        "createdAt": "2026-05-02T13:59:52.715Z",
+        "role": "workflow:owner",
+        "workflowId": "e2-erp-ventas-to-analytics",
+        "projectId": "EQqxa0Vj06Kx8pYk",
+        "project": {
+          "updatedAt": "2026-04-05T19:00:38.484Z",
+          "createdAt": "2026-04-05T18:54:04.825Z",
+          "id": "EQqxa0Vj06Kx8pYk",
+          "name": "Dario Urrutia <daizurma2@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "8f7997aa-2d8a-49dc-b314-314157233c4e"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

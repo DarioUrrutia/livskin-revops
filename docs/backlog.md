@@ -25,8 +25,41 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🟡 HOTFIX ERP — cod_lead generation race condition (atomic UPSERT)
-**Bug descubierto 2026-05-02 al fixear B3 race:** la generación de `cod_lead` en ERP no es atómica. Cuando 2+ INSERTs concurrentes llegan, ambos calculan el mismo MAX+1 → primero succeeds, segundo falla con `psycopg2.errors.UniqueViolation: Key (cod_lead)=(LIVLEADXXXX) already exists`.
+### ❌ Fix A + Fix B (sobreingeniería REVERTIDA 2026-05-02 PM)
+
+Cometí error: agregué Fix A (B3 cron 2 min→30s) + Fix B (A1 POST directo a ERP) asumiendo "leads calientes deben verse en ERP real-time". Modelo mental real (corregido por Dario):
+
+- **Vtiger UI** = donde la doctora trabaja con leads (real-time desde A1 webhook, ya estaba <2s)
+- **ERP** = donde se confirma cliente + venta (NO necesita ver leads en real-time)
+- **B3 cron 2 min** ya era suficiente
+
+Reverso aplicado: A1 vuelve a 16 nodos sin las extensions. B3 cron vuelve a 2 min. Memoria nueva `feedback_no_optimize_what_user_didnt_ask.md` para no repetir.
+
+---
+
+### ✅ HOTFIX B3 race + ERP cod_lead atomicidad — RESUELTOS (2026-05-02 PM)
+
+Causa raíz **idéntica** para ambos hallazgos: `codgen_service.next_codigo` hacía `MAX(cod_lead)+1` SIN lock — race entre transacciones concurrentes.
+
+**Síntomas previos:**
+- B3 cron: 2 de 3 leads concurrent fallaban en POST a ERP con `psycopg2.errors.UniqueViolation: Key (cod_lead)=(LIVLEAD####) already exists`
+- continueOnFail+retry de [B3] absorbía A VECES (depende del timing)
+- Smoke comprehensivo Mini-bloque 3.5 reveló que el "fix" anterior no era 100%
+
+**Fix proper aplicado (commit 2c03837):**
+- `services/codgen_service.py` agrega `pg_advisory_xact_lock(hash(prefijo))` al inicio de `next_codigo` y `next_codigos_batch`
+- Otras transacciones con el mismo prefijo (LIVLEAD/LIVCLIENT/LIVVTA/etc.) esperan hasta el COMMIT
+- Lock se libera automáticamente al fin de la transacción
+- Sin migration (puro Python + Postgres native)
+- Per-prefijo (no contention cross-domain)
+
+**Validación E2E (2026-05-02 PM):** 3 leads concurrentes (10x35/36/37) creados en <2s → los 3 llegaron a ERP con cod_leads consecutivos `LIVLEAD0001/0002/0003` sin conflict. Pre-fix solo 1 hubiera llegado.
+
+El `continueOnFail+retryOnFail` del [B3] queda como defensa (cubre otros transients como network blips), pero ya no se debe trigger por cod_lead conflict.
+
+**Memoria nueva:** `feedback_postgres_advisory_lock_pattern.md` — pattern reusable para racing serial-counter sin lock.
+
+---
 
 **Bandaid temporal aplicado al [B3]:** `continueOnFail: true` + `retryOnFail: true` (max 3 retries, 1s wait). Esto hace que retry calcule un fresh MAX y eventualmente succeed. Funciona pero genera cod_leads out-of-order (LIVLEAD0007 puede asignarse a vtiger_id menor que LIVLEAD0005 si el segundo retry).
 

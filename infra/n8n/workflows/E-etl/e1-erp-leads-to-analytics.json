@@ -1,0 +1,515 @@
+[
+  {
+    "updatedAt": "2026-05-02T10:02:52.000Z",
+    "createdAt": "2026-05-02T09:42:26.820Z",
+    "id": "e1-erp-leads-to-analytics",
+    "name": "[E1] ERP Leads -> Analytics Warehouse",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "id": "node-schedule-trigger",
+        "name": "Schedule Every 5min",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          400
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 5
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node-get-cursor",
+        "name": "Get Last Sync Cursor",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          460,
+          400
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "21d033f5-c700-4513-906c-9adcd25c9a99",
+            "name": "Postgres Analytics ETL Writer"
+          }
+        },
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT COALESCE(MAX(finished_at), '1970-01-01T00:00:00Z'::timestamptz) AS cursor FROM etl_runs WHERE etl_name = 'E1' AND status = 'success';",
+          "options": {}
+        }
+      },
+      {
+        "id": "node-build-window",
+        "name": "Build Query Window",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          400
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "// [E1] paso 3: construir cursor + run start timestamp\nconst cursorRow = $input.first().json;\n// cursor de la query Postgres viene como Date object o string\nlet cursor = cursorRow.cursor;\nif (cursor instanceof Date) cursor = cursor.toISOString();\nif (!cursor) cursor = '1970-01-01T00:00:00Z';\n// Overlap de 30s para no perder rows en boundary\nconst cursorMs = new Date(cursor).getTime() - 30000;\nconst since = new Date(cursorMs).toISOString();\nconst runStart = new Date().toISOString();\nreturn [{ json: { since, run_start: runStart } }];"
+        }
+      },
+      {
+        "id": "node-http-get-leads",
+        "name": "GET ERP leads since cursor",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          900,
+          400
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://erp.livskin.site/api/internal/sync/leads",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "since",
+                "value": "={{ $json.since }}"
+              },
+              {
+                "name": "limit",
+                "value": "500"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Internal-Token",
+                "value": "={{ $env.AUDIT_INTERNAL_TOKEN }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "node-map-leads",
+        "name": "Map ERP -> Analytics schema",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          400
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "// [E1] paso 5: parse response + map field names\nconst response = $input.first().json;\nif (!response.ok) {\n  throw new Error('ERP sync failed: ' + JSON.stringify(response).slice(0,300));\n}\nconst items = response.items || [];\nconst mapped = items.map(l => ({\n  vtiger_id: l.vtiger_id,\n  erp_lead_id: l.id,\n  cod_lead: l.cod_lead,\n  email_lower: l.email_lower,\n  phone_e164: l.phone_e164,\n  nombre: l.nombre,\n  fuente: l.fuente,\n  canal_adquisicion: l.canal_adquisicion,\n  utm_source_at_capture: l.utm_source_at_capture,\n  utm_medium_at_capture: l.utm_medium_at_capture,\n  utm_campaign_at_capture: l.utm_campaign_at_capture,\n  utm_content_at_capture: l.utm_content_at_capture,\n  utm_term_at_capture: l.utm_term_at_capture,\n  fbclid_at_capture: l.fbclid_at_capture,\n  gclid_at_capture: l.gclid_at_capture,\n  fbc_at_capture: l.fbc_at_capture,\n  ga_at_capture: l.ga_at_capture,\n  event_id_meta: l.event_id_at_capture,\n  tratamiento_interes: l.tratamiento_interes,\n  consent_marketing: l.consent_marketing,\n  estado_lead: l.estado_lead,\n  fecha_captura: l.fecha_captura,\n  created_at: l.created_at,\n  updated_at: l.updated_at,\n  sync_source: 'erp'\n}));\n// Filter out items con vtiger_id NULL (wa-click leads que aún no se sincronizaron)\nconst valid = mapped.filter(m => m.vtiger_id);\n// Pasar siempre at least one item para que el etl_runs nodo siga funcionando\nif (valid.length === 0) {\n  return [{ json: { _empty: true, count: 0 } }];\n}\nreturn valid.map(v => ({ json: v }));"
+        }
+      },
+      {
+        "id": "node-upsert-leads",
+        "name": "UPSERT analytics.leads",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1340,
+          400
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "21d033f5-c700-4513-906c-9adcd25c9a99",
+            "name": "Postgres Analytics ETL Writer"
+          }
+        },
+        "parameters": {
+          "operation": "upsert",
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "mode": "list",
+            "value": "leads"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "vtiger_id": "={{ $json.vtiger_id }}",
+              "erp_lead_id": "={{ $json.erp_lead_id }}",
+              "cod_lead": "={{ $json.cod_lead }}",
+              "email_lower": "={{ $json.email_lower }}",
+              "phone_e164": "={{ $json.phone_e164 }}",
+              "nombre": "={{ $json.nombre }}",
+              "fuente": "={{ $json.fuente }}",
+              "canal_adquisicion": "={{ $json.canal_adquisicion }}",
+              "utm_source_at_capture": "={{ $json.utm_source_at_capture }}",
+              "utm_medium_at_capture": "={{ $json.utm_medium_at_capture }}",
+              "utm_campaign_at_capture": "={{ $json.utm_campaign_at_capture }}",
+              "utm_content_at_capture": "={{ $json.utm_content_at_capture }}",
+              "utm_term_at_capture": "={{ $json.utm_term_at_capture }}",
+              "fbclid_at_capture": "={{ $json.fbclid_at_capture }}",
+              "gclid_at_capture": "={{ $json.gclid_at_capture }}",
+              "fbc_at_capture": "={{ $json.fbc_at_capture }}",
+              "ga_at_capture": "={{ $json.ga_at_capture }}",
+              "event_id_meta": "={{ $json.event_id_meta }}",
+              "tratamiento_interes": "={{ $json.tratamiento_interes }}",
+              "consent_marketing": "={{ $json.consent_marketing }}",
+              "estado_lead": "={{ $json.estado_lead }}",
+              "fecha_captura": "={{ $json.fecha_captura }}",
+              "created_at": "={{ $json.created_at }}",
+              "updated_at": "={{ $json.updated_at }}",
+              "sync_source": "={{ $json.sync_source }}"
+            },
+            "matchingColumns": [
+              "vtiger_id"
+            ],
+            "schema": [
+              {
+                "id": "vtiger_id",
+                "displayName": "vtiger_id",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "erp_lead_id",
+                "displayName": "erp_lead_id",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "cod_lead",
+                "displayName": "cod_lead",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "email_lower",
+                "displayName": "email_lower",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "phone_e164",
+                "displayName": "phone_e164",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "nombre",
+                "displayName": "nombre",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "fuente",
+                "displayName": "fuente",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "canal_adquisicion",
+                "displayName": "canal_adquisicion",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "utm_source_at_capture",
+                "displayName": "utm_source_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "utm_medium_at_capture",
+                "displayName": "utm_medium_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "utm_campaign_at_capture",
+                "displayName": "utm_campaign_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "utm_content_at_capture",
+                "displayName": "utm_content_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "utm_term_at_capture",
+                "displayName": "utm_term_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "fbclid_at_capture",
+                "displayName": "fbclid_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "gclid_at_capture",
+                "displayName": "gclid_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "fbc_at_capture",
+                "displayName": "fbc_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "ga_at_capture",
+                "displayName": "ga_at_capture",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "event_id_meta",
+                "displayName": "event_id_meta",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "tratamiento_interes",
+                "displayName": "tratamiento_interes",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "consent_marketing",
+                "displayName": "consent_marketing",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "estado_lead",
+                "displayName": "estado_lead",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "fecha_captura",
+                "displayName": "fecha_captura",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "created_at",
+                "displayName": "created_at",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "updated_at",
+                "displayName": "updated_at",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "sync_source",
+                "displayName": "sync_source",
+                "required": false,
+                "defaultMatch": false,
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ]
+          },
+          "options": {}
+        },
+        "continueOnFail": true
+      },
+      {
+        "id": "node-log-etl-run",
+        "name": "INSERT etl_runs",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1560,
+          400
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "21d033f5-c700-4513-906c-9adcd25c9a99",
+            "name": "Postgres Analytics ETL Writer"
+          }
+        },
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO etl_runs (etl_name, started_at, finished_at, status, rows_processed) VALUES ('E1', NOW() - INTERVAL '5 seconds', NOW(), 'success', 1);",
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Every 5min": {
+        "main": [
+          [
+            {
+              "node": "Get Last Sync Cursor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Last Sync Cursor": {
+        "main": [
+          [
+            {
+              "node": "Build Query Window",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Query Window": {
+        "main": [
+          [
+            {
+              "node": "GET ERP leads since cursor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET ERP leads since cursor": {
+        "main": [
+          [
+            {
+              "node": "Map ERP -> Analytics schema",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Map ERP -> Analytics schema": {
+        "main": [
+          [
+            {
+              "node": "UPSERT analytics.leads",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "UPSERT analytics.leads": {
+        "main": [
+          [
+            {
+              "node": "INSERT etl_runs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "UTC"
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "971be160-8ef4-4868-8c13-021f74b49785",
+    "activeVersionId": "971be160-8ef4-4868-8c13-021f74b49785",
+    "versionCounter": 9,
+    "triggerCount": 1,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-05-02T09:42:26.829Z",
+        "createdAt": "2026-05-02T09:42:26.829Z",
+        "role": "workflow:owner",
+        "workflowId": "e1-erp-leads-to-analytics",
+        "projectId": "EQqxa0Vj06Kx8pYk",
+        "project": {
+          "updatedAt": "2026-04-05T19:00:38.484Z",
+          "createdAt": "2026-04-05T18:54:04.825Z",
+          "id": "EQqxa0Vj06Kx8pYk",
+          "name": "Dario Urrutia <daizurma2@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "8f7997aa-2d8a-49dc-b314-314157233c4e"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]
