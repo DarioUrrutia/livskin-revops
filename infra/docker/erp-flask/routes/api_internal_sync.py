@@ -140,13 +140,27 @@ def _serialize_cliente(c: Cliente) -> dict[str, Any]:
     }
 
 
-def _serialize_venta(v: Venta) -> dict[str, Any]:
+def _serialize_venta(v: Venta, db: "Session" = None) -> dict[str, Any]:
+    # Lookup attribution del cliente (cod_lead_origen + vtiger_lead_id_origen) para warehouse JOINs
+    cod_lead_origen = None
+    vtiger_lead_id_origen = None
+    if db is not None and v.cod_cliente:
+        cliente = db.execute(
+            select(Cliente).where(Cliente.cod_cliente == v.cod_cliente)
+        ).scalar_one_or_none()
+        if cliente:
+            cod_lead_origen = cliente.cod_lead_origen
+            vtiger_lead_id_origen = cliente.vtiger_lead_id_origen
+
     return {
         "id": v.id,
         "num_secuencial": v.num_secuencial,
         "fecha": v.fecha.isoformat() if v.fecha else None,
         "cod_cliente": v.cod_cliente,
         "cliente_nombre": v.cliente_nombre,
+        # Attribution lookup (NULL si cliente word-of-mouth sin lead origen)
+        "cod_lead_origen": cod_lead_origen,
+        "vtiger_lead_id_origen": vtiger_lead_id_origen,
         "tipo": v.tipo,
         "cod_item": v.cod_item,
         "categoria": v.categoria,
@@ -261,7 +275,12 @@ def sync_resource(resource: str):  # type: ignore[no-untyped-def]
             .scalars()
             .all()
         )
-        items = [serializer(r) for r in rows]
+        # Algunos serializers (ventas) requieren `db` para JOINs cross-model
+        # (ej: enrich con cod_lead_origen del cliente)
+        if resource == "ventas":
+            items = [serializer(r, s) for r in rows]
+        else:
+            items = [serializer(r) for r in rows]
 
         # Compute next_since hint (max time_col en el batch)
         next_since = None
