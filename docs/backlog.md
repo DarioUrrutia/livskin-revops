@@ -25,6 +25,53 @@
 
 <!-- Cosas que hay que hacer pronto -->
 
+### 🔴 Bloque puente Agenda Mínima ERP (próxima sesión grande, 4-6h)
+
+**Hallazgos detectados en smoke E2E observable 2026-05-02 PM (Dario):**
+
+1. **Lead vs Cliente — UI confunde**: cliente que viene de un lead digital y todavía no ha asistido a su cita NO debería estar en pestaña "Cliente" del ERP. Debería estar en pestaña intermedia "AGENDA" / "PRÓXIMAS CITAS". Solo cuando asiste pasa a "Cliente".
+
+2. **Doctora debe poder simular TODO el flujo via UI**: Hoy yo (Claude) tuve que crear pago via SQL bypaseando los 4 tipos válidos del `pago_service`. La doctora necesita botones desde la UI para:
+   - Convertir lead a cita
+   - Marcar asistencia (lead → cliente con `cod_lead_origen` heredado)
+   - Crear venta (form ya existe, falta wire-up con lead origen)
+   - Crear pago (form ya existe, lógica densa de 4 tipos OK)
+
+**Solución arquitectónica:**
+
+- **Nueva tabla `appointments`** (Alembic migration):
+  - lead_id (FK a Vtiger via vtiger_lead_id)
+  - fecha + hora + tratamiento
+  - estado: `pendiente` / `confirmada` / `asistio` / `no_show` / `cancelada`
+  - cod_cliente (NULL hasta que se convierta en cliente)
+- **Nueva pestaña ERP "AGENDA"** en formulario.html:
+  - Lista citas próximas + estado
+  - Botón "Marcar asistencia" → crea cliente con cod_lead_origen + traspasa attribution UTMs
+  - Botón "Marcar no_show" / "Cancelar"
+  - Filtro por fecha + estado
+- **Endpoints** `/api/appointments` CRUD + `/api/appointments/<id>/mark-attended` (workflow trigger)
+- **n8n workflow A2** (futuro): WhatsApp Cloud API webhook → doctora confirma cita en chat → POST a `/api/appointments`
+
+**Pre-requisitos arquitectónicos:**
+- Aplicar `feedback_surgical_precision_erp.md` (8 pasos): ADR primero + tests + endpoints aislados + feature flag + Alembic reversible + validación con doctora real + docs + audit log
+- Memoria `project_agenda_module_erp.md` (existente) — Opción B: Agenda vive en ERP, no Vtiger
+- Pre-flight cross-system obligatorio (toca Vtiger + ERP + UI)
+
+**Es pre-requisito para Fase 4 Conversation Agent**: el chatbot tendrá tool `erp_create_appointment` para agendar citas durante conversación WhatsApp. Sin Agenda construida, Conversation Agent no puede operar.
+
+**Tiempo:** 4-6h con preflight + ADR formal + tests.
+
+**Agregado por:** Claude Code · 2026-05-02 PM (post smoke E2E)
+
+---
+
+### ✅ Hallazgos rápidos del smoke E2E (RESUELTOS 2026-05-02 PM)
+
+- **3 clientes "(sin nombre)" del backfill** (LIVCLIENT0006/0014/0092) marcados `activo=FALSE`. Tenían 0 ventas + 0 pagos + 0 revenue. Ya no aparecen en dropdowns. (DB UPDATE, no archivo)
+- **Card "Últimas 20 ventas" agregada al Dashboard 4** Revenue Total. Muestra fecha + cliente_nombre + cod_cliente + tipo + categoria + total + pagado + debe + flag attribution (🟢 Digital / ⚪ Walk-in).
+
+---
+
 ### ❌ Fix A + Fix B (sobreingeniería REVERTIDA 2026-05-02 PM)
 
 Cometí error: agregué Fix A (B3 cron 2 min→30s) + Fix B (A1 POST directo a ERP) asumiendo "leads calientes deben verse en ERP real-time". Modelo mental real (corregido por Dario):
