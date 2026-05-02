@@ -7,6 +7,7 @@ from routes.admin import bp as admin_bp
 from routes.api_catalogo import bp as catalogo_bp
 from routes.api_internal import bp as api_internal_bp
 from routes.api_internal import register_public_endpoints as _register_internal_public
+from routes.api_internal_sync import bp as api_internal_sync_bp
 from routes.api_client_lookup import bp as client_lookup_bp
 from routes.api_leads_sync import bp as leads_sync_bp
 from routes.api_leads_sync import register_public_endpoints as _register_leads_sync_public
@@ -29,6 +30,7 @@ def create_app() -> Flask:
     flask_app.register_blueprint(auth_bp)
     flask_app.register_blueprint(admin_bp)
     flask_app.register_blueprint(api_internal_bp)
+    flask_app.register_blueprint(api_internal_sync_bp)
     flask_app.register_blueprint(views_bp)
     _register_internal_public()  # marcar /api/system-map.json + /api/internal/* como públicos
     flask_app.register_blueprint(legacy_forms_bp)

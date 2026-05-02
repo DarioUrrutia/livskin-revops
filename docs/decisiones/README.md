@@ -69,14 +69,22 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 | 0027 | Audit log inmutable (tabla append-only, ~30 eventos canónicos, retención forever) | ✅ | 2 |
 | 0028 | Flujo de citas WhatsApp → Vtiger (sin LatePoint) | ✅ | 4 |
 
+### Adquisición y landings
+
+| ADR | Título | Estado | Fase |
+|---|---|---|---|
+| [0030](0030-file-naming-conventions-repo.md) | File naming conventions del repo | ✅ | 0 |
+| [0031](0031-landings-dedicadas-cloudflare-pages-y-sistema-convenciones.md) | Landings dedicadas Cloudflare Pages + sistema convenciones | ✅ | 3 |
+| [0032](0032-metabase-warehouse-architecture-y-etl-strategy.md) | Metabase warehouse + ETL n8n cross-system | ✅ | 3 |
+
 ### Agentes IA
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
 | 0029 | Conversation Agent — prompts, tools, golden set | ⏳ | 4 |
-| 0030 | Content Agent — Creative Factory + Claude Design | ⏳ | 5 |
-| 0031 | Acquisition Engine — testing matrix | ⏳ | 5 |
-| 0032 | Growth Agent — reporte semanal ejecutivo | ⏳ | 6 |
+| 0045 | Content Agent — Creative Factory + Claude Design (renum desde 0030) | ⏳ | 5 |
+| 0046 | Acquisition Engine — testing matrix (renum desde 0031) | ⏳ | 5 |
+| 0047 | Growth Agent — reporte semanal ejecutivo (renum desde 0032) | ⏳ | 6 |
 | 0033 | Escalación a doctora — WhatsApp personal | ✅ | 4 |
 | 0034 | Reactivación 45 días v1 | ✅ | 6 |
 | 0035 | Lead scoring v1 — rules-based | ✅ | 4 |
