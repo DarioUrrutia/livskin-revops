@@ -1,15 +1,21 @@
-# Agentes IA — 4 agentes del sistema Livskin
+# Agentes IA — scope reducido por audit 2026-05-03
 
-Cada agente es un sistema construido sobre Claude API + tools + contexto del segundo cerebro, orquestado por n8n.
+> **⚠️ ACTUALIZACIÓN 2026-05-03:** este README conserva los subdirs originales (`conversation/`, `content/`, `acquisition/`, `growth/`) como **placeholders de organización**, pero el audit 2026-05-03 redujo drásticamente el scope V1.
+>
+> **Doctrina rectora**: principio operativo #11 — *"Deterministic backbone first — IA es capa aditiva, no foundational"*. Memorias 🔥 CRÍTICAS: `feedback_deterministic_backbone_first.md` + `project_agent_scope_audit_2026_05_03.md`.
+>
+> **Antes de aprobar agente nuevo**: aplicar **filtro de 6 checks** (memoria audit). Sin pasarlo → tools determinísticas, no agente.
 
-## Los 4 agentes
+Cada agente futuro será un sistema construido sobre Claude API + tools + contexto del segundo cerebro, orquestado por n8n.
 
-| Agente | Propósito | Frecuencia ejecución | Fase construcción | Intervención humana |
-|---|---|---|---|---|
-| [conversation/](conversation/) | Primera línea atención paciente vía WhatsApp | Tiempo real 24/7 | Fase 4 (semana 6) | ~30 min/día escalaciones |
-| [content/](content/) | Generar 12 briefs semanales + Creative Factory | Semanal (domingos) | Fase 5 (semana 7) | 15 min domingo |
-| [acquisition/](acquisition/) | Optimización automática campañas Meta | Semanal (lunes) + diario | Fase 5 (semana 8) | 10 min lunes |
-| [growth/](growth/) | Análisis continuo + reporte ejecutivo | Diario + semanal | Fase 6 (semana 9) | 1 hora lunes |
+## Scope V1 post-audit 2026-05-03
+
+| Subdir | Status V1 | Plan |
+|---|---|---|
+| [conversation/](conversation/) | ⏸️ **Diferido** | V1 será chatbot rule-based en ERP (state machine Python, NO IA). Reabrir agente IA cuando volumen WA >100 conv/día sostenido |
+| [content/](content/) | ⏳ **Brand Orchestrator** (único agente IA V1) | Caso canónico subagent pattern (research/concept/copy/visual/implementation). Construcción Fase 4B post-validación + brand voice consolidado |
+| [acquisition/](acquisition/) | 🔧 **Script con LLM ocasional**, no agente | Meta API + Google API readers determinísticos + 1 LLM call para narrativa de reporte semanal. Fase 5 |
+| [growth/](growth/) | 🔧 **Script con LLM ocasional**, no agente | SQL determinístico cohorts + 1 LLM call para narrativa mensual. Fase 5 |
 
 ## Estructura común
 

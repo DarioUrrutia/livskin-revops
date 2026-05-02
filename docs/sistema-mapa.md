@@ -1,9 +1,9 @@
 ---
 type: system-map
-version: 1.0
-last_updated: 2026-04-26
+version: 1.1
+last_updated: 2026-05-03
 authoritative: true
-description: Mapa exhaustivo machine-readable del sistema Livskin. Source of truth para humanos y agentes IA. Indexed en pgvector (brain Layer 2).
+description: Mapa exhaustivo machine-readable del sistema Livskin. Source of truth para humanos y agentes IA. Indexed en pgvector (brain Layer 2). Verificado contra estado real de los 3 VPS el 2026-05-03 — agregada §2.5 (n8n workflows) + campanas.livskin.site en §6 + nota erp-staging eliminado 2026-04-26.
 ---
 
 # 🗺️ Livskin — System Map
@@ -296,6 +296,65 @@ containers:
 
 ---
 
+## §2.5 Workflows n8n activos (verificado 2026-05-03 vía sqlite query directo)
+
+```yaml
+n8n_workflows:
+  - id: a1-form-submit-vtiger-lead
+    name: "[A1] Capturar Form Submit → Vtiger Lead"
+    active: true
+    purpose: SureForms webhook + Cloudflare Pages POST → crear Lead Vtiger con UTMs+fbclid+event_id
+    trigger: webhook /webhook/a1-form-capture
+    fase: 3 (Mini-bloque 3.3)
+    nodes_count: 16
+    notes: WA_CLICK_PATCH_v1_1 aplicado (acepta phone vacío si _source=wa-click)
+
+  - id: b1-vtiger-lead-changed-erp-mirror
+    name: "[B1] Espejar Vtiger Lead Changed → ERP Mirror"
+    active: true
+    purpose: Receiver para futuro Custom PHP Hook de Vtiger (Fase 4+)
+    trigger: webhook /webhook/b1-vtiger-onchange
+    fase: 3 (Mini-bloque 3.3)
+    nodes_count: 13
+    notes: standby, no usado en producción todavía
+
+  - id: b3-vtiger-modified-cron-pull
+    name: "[B3] Sync Vtiger Modified Leads → ERP Mirror"
+    active: true
+    purpose: cron 2 min — pull Vtiger modified leads → POST ERP
+    trigger: cron */2 * * * *
+    fase: 3 (Mini-bloque 3.3)
+    nodes_count: 12
+    notes: BR3_SKIP_WA_CLICK_v1 (Op B), continueOnFail+retry (HOTFIX 2026-05-02)
+
+  - id: e1-erp-leads-to-analytics
+    name: "[E1] ERP Leads -> Analytics Warehouse"
+    active: true
+    purpose: ETL leads ERP → analytics warehouse (Metabase)
+    trigger: cron diario
+    fase: 3 (Mini-bloque 3.5)
+    added: 2026-05-02
+
+  - id: e2-erp-ventas-to-analytics
+    name: "[E2] ERP Ventas -> Analytics Opportunities"
+    active: true
+    purpose: ETL ventas ERP → analytics opportunities table
+    trigger: cron diario
+    fase: 3 (Mini-bloque 3.5)
+    added: 2026-05-02
+
+  - id: g3-capi-emit-to-meta
+    name: "[G3] Despachar ERP CAPI Event → Meta Graph API"
+    active: true
+    purpose: hash PII + POST Meta Graph API CAPI events (Lead, Purchase, etc.)
+    trigger: webhook /webhook/growth/capi-emit
+    fase: 3 (Mini-bloque 3.4)
+    nodes_count: 5
+    notes: hash SHA-256 PII per Meta CAPI spec
+```
+
+---
+
 ## §3 Cross-VPS connections (DO VPC `10.114.0.0/20`)
 
 ```yaml
@@ -534,8 +593,25 @@ public_urls:
     public: yes (con auth bcrypt — ADR-0026)
     purpose: ERP
 
-  # Eliminadas (decisión 2026-04-26):
-  # - erp-staging.livskin.site (eliminada — staging real en Fase 6)
+  - url: https://campanas.livskin.site
+    backend: Cloudflare Pages (NO en VPS, edge global)
+    cert: cloudflare
+    public: yes
+    purpose: Landings dedicadas para campañas pagas Meta/Google
+    deploy: GitHub Actions → wrangler@4.87 (Node 22)
+    project: livskin-landings
+    paths_active:
+      - /botox-mvp/      # ✅ live (Mini-bloque 3.6 cerrado 2026-05-01)
+      - /prp-mvp/        # ⏳ a crear en Bridge Episode (2026-05-04)
+    repo_path: infra/cloudflare-pages/livskin-landings/
+    added: 2026-05-01
+
+  # ELIMINADA 2026-04-26 (decisión Opción A, commit 59e37c2):
+  # - erp-staging.livskin.site
+  #   Razón: durante Fases 2-5 el ERP en VPS 3 actúa como staging del Render productivo.
+  #          Staging del staging era redundante. DNS borrado por Dario.
+  #   Reaparece: Fase 6 al cutover real (staging con DB separada — ADR-0024 strangler fig).
+  #   Verificación: DNS lookup retorna NXDOMAIN al 2026-05-03 (consistente con eliminación).
 ```
 
 ---

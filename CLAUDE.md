@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: 2026-05-02 v2.7 (Mini-bloque 3.6 ✅ COMPLETO landings dedicadas + smoke comprehensivo 16 tests + Op B atribución vía event_id end-to-end)
+> Última actualización: **2026-05-03 v3.0 (PIVOT ESTRATÉGICO — Doctrina "deterministic backbone first" elevada a principio operativo #11; audit honesto reduce scope agentes 5→1+2 scripts; Bridge Episode primera campaña paga FB Ads insertado entre Fase 3 cerrada y Fase 4 reescrita; ADR-0034 Conversation Agent IA → 💤 diferida)**
 
 ---
 
@@ -47,6 +47,7 @@ Lee en este orden antes de cualquier tarea sustantiva:
 8. **Cero servicios pagos nuevos sin aprobación explícita.** Prioridad: self-hosted > cross-VPS > SaaS free > pago.
 9. **Antes de implementar, definir.** Dossier aprobado + dependencies resueltas + exit criteria.
 10. **Responder a la profundidad pedida.** Táctica → concisa. Estratégica → comprehensiva.
+11. **Deterministic backbone first — IA es capa aditiva, no foundational.** El sistema debe operar 100% sin agentes IA. Si todos los agentes se apagan, la operación sigue. La IA se agrega sobre infraestructura validada con datos de campañas reales, no sobre hipótesis. Antes de aprobar un agente: aplicar filtro de 6 checks (memoria `project_agent_scope_audit_2026_05_03`). Articulado por Dario el 2026-05-03 tras audit honesto que reveló sobre-engineering del agent design original (5 agentes → 1 agente real + 2 scripts).
 
 ---
 
@@ -157,20 +158,25 @@ Union VPS - Maestro - Livskin/           ← este folder = hub central
 
 ---
 
-## 🗺️ Roadmap — estado actual
+## 🗺️ Roadmap — estado actual (v3.0 post-audit 2026-05-03)
 
 | Fase | Estado |
 |---|---|
 | 0 | ✅ Completada (2026-04-18) |
 | 1 | ✅ Completada (2026-04-20) |
-| 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage al 2026-04-26) |
-| **0 v2 (Bloque foundation cross-VPS)** | ✅ **Completado 2026-04-26** — versionado VPS 1+2 + CI/CD multi-VPS + system-map + sensors + backups + runbooks + DR drill + skills + MCP scaffold |
-| **Setup acceso programático** | ⏳ Próxima sesión inmediata — Google service account + Meta System User + audit programático definitivo (resuelve doble disparo Pixel + UTMs end-to-end) |
-| 3 | 🚧 **95% en progreso** — 3.1 ✅ + 3.2 ✅ + 3.3 REWRITE ✅ + 3.4 CAPI ✅ + 3.6 Landings ✅; pendiente 3.5 Observabilidad + Metabase para cerrar Fase 3 |
-| **Bloque puente Agenda Mínima ERP** | ⏳ Entre Fase 3 y Fase 4 — módulo `appointments` con precisión quirúrgica (ADR + tests + feature flag + validación doctora) |
-| 4 | ⏳ Conversation Agent (WhatsApp test number agenda en `appointments` automáticamente) |
-| 5 | ⏳ Brand Orchestrator + Acquisition Agents (precedida de sesión estratégica organizacional) |
-| 6 | ⏳ Growth + cutover ERP real + 5to agente Infra+Security |
+| 2 | ✅ Implementación ~99% (auth + audit + dashboard + tests 81% coverage) |
+| **Bloque 0 v2 (foundation cross-VPS)** | ✅ Completado 2026-04-26 |
+| **Fase 3** | ✅ **CERRADA 2026-05-02** — 3.1 cleanup + 3.2 GTM + 3.3 form→Vtiger→ERP + 3.4 CAPI + 3.5 Metabase warehouse + 3.6 landings dedicadas |
+| **Bloque 1 puente** | ✅ Completado 2026-05-02 — Match automático lead↔cliente (ADR-0033, 100% determinístico) |
+| **🚀 BRIDGE EPISODE — Primera campaña paga** | 🆕 ARRANCANDO 2026-05-03 — FB Ads $100/5 días, 3 destinos (botox-mvp landing + prp-mvp landing nueva + WA directo doctora con shortcodes manuales). Captura data real para informar Fase 4 con datos. Detalle: `docs/campaigns/2026-05-first-campaign/plan.md` |
+| **Fase 4 (REVISADA por audit 2026-05-03)** | ⏳ Post-Bridge Episode. **4A**: backbone determinístico restante (chatbot WA rule-based + módulo Agenda + notificaciones + re-engagement queue, **TODO sin IA**). **4B**: primer agente IA real = Brand Orchestrator (caso canónico subagentes, post-validación) |
+| Fase 5 | ⏳ Acquisition synth + Growth narrative como **scripts con LLM ocasional**, NO agentes (audit 2026-05-03) |
+| Fase 6 | ⏳ Cutover ERP Render→VPS3 + estabilización |
+
+**ADRs supersedidas/diferidas por audit 2026-05-03:**
+- ADR-0034 v1.0 Conversation Agent IA Foundation → 💤 Diferida. Será supersedida por ADR Conversation Agent v0 rule-based cuando se construya en Fase 4A.
+
+**Doctrina rectora:** principio operativo #11 — IA es capa aditiva sobre backbone determinístico validado.
 
 **Ver [docs/master-plan-mvp-livskin.md § 11](docs/master-plan-mvp-livskin.md#11-roadmap-10-semanas-con-6-workstreams) para detalle.**
 
@@ -257,6 +263,42 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 10. **Saltar el trámite WhatsApp Business API.** 5-10 días hábiles de Meta, bloqueo real.
 11. **Tocar VPS en producción sin snapshot previo y sin staging validado.**
 12. **Borrar/modificar historial git** sin autorización explícita.
+
+---
+
+## 📝 Estado al 2026-05-03 cierre (PIVOT ESTRATÉGICO — doctrina #11 + audit agentes + Bridge Episode)
+
+### Sesión 2026-05-03 — Re-articulación estratégica del proyecto
+
+**Pivot estratégico cerrado por Dario tras 3 conversaciones encadenadas:**
+
+1. **Doctrina rectora explicitada**: "Deterministic backbone first — IA es capa aditiva, no foundational" → elevada a **principio operativo #11** (este archivo).
+
+2. **Audit honesto del scope agentes** (memoria `project_agent_scope_audit_2026_05_03`):
+   - 5 agentes originales → **1 agente real (Brand Orchestrator) + 2 scripts con LLM ocasional**
+   - Conversation Agent IA → ⏸️ **diferido** (V1 será chatbot rule-based + handoff humano + templates Meta-approved)
+   - Growth Analyzer + Infra-Security → ❌ **NO V1** (scripts/skills cubren)
+   - **Framework de 6 checks** definido como gate obligatorio para aprobar agente futuro
+
+3. **Bridge Episode insertado en roadmap**: primera campaña paga FB Ads $100/5 días entre Fase 3 (cerrada) y Fase 4 (reescrita post-audit). Captura data real → informa Fase 4 con datos, no hipótesis. Detalle: `docs/campaigns/2026-05-first-campaign/plan.md`.
+
+4. **Auto-crítica de Claude documentada**: cuatro fallas en colaboración previa contribuyeron al sobreescalamiento (no empujar a customer development, aceptar premisa "5 agentes" sin friction, sumarse a sobre-engineering Bloque 0 v2, demasiados ADRs). Capturado en memoria audit.
+
+**Memorias nuevas 🔥 CRÍTICAS:**
+- `feedback_deterministic_backbone_first.md` — doctrina rectora
+- `project_agent_scope_audit_2026_05_03.md` — operacionalización + framework 6 checks
+- `project_first_paid_campaign_2026_05_03.md` — episodio efímero (archivar tras post-mortem)
+
+**Memorias actualizadas con header de supersedimiento:**
+- `project_agent_org_design.md` — visión válida, scope reducido
+- `project_roadmap.md` — Bridge Episode + Fase 4/5 reescritas
+
+**ADRs supersedidas/diferidas:**
+- ADR-0034 v1.0 Conversation Agent IA Foundation → 💤 Diferida (será supersedida por ADR Conversation Agent v0 rule-based en Fase 4A)
+
+**Bloque 1 commit pendiente push:** `60b609d feat(erp): match automático lead↔cliente al crear venta (ADR-0033)` — encaja perfecto con doctrina nueva (100% determinístico).
+
+**Próximos pasos inmediatos:** ejecutar Bridge Episode tactical plan (FB Ads + landings + tracking manual) — NO construir agentes hasta post-mortem de campaña.
 
 ---
 

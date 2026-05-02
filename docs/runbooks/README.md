@@ -1,9 +1,9 @@
 ---
 type: runbooks-index
-version: 2.0
-last_updated: 2026-04-26
+version: 2.1
+last_updated: 2026-05-03
 authoritative: true
-description: Índice de runbooks operativos. Cada runbook tiene frontmatter YAML ejecutable que el 5to agente (Infra+Security) puede consumir como skill MCP.
+description: Índice de runbooks operativos. Cada runbook tiene frontmatter YAML ejecutable consumible por skills MCP. Audit 2026-05-03 agregó 5 runbooks que faltaban en el index legacy.
 ---
 
 # 📘 Runbooks Operativos — Livskin
@@ -34,7 +34,7 @@ related_skills:                          # skills MCP que usan este runbook
 ---
 ```
 
-## Catálogo Bloque 0.6 + 0.10 (13 runbooks ejecutables)
+## Catálogo (18 runbooks ejecutables al 2026-05-03)
 
 ### Operacional
 
@@ -46,23 +46,34 @@ related_skills:                          # skills MCP que usan este runbook
 | 4 | [postgres-connections-exhausted](postgres-connections-exhausted.md) | high | ❌ |
 | 5 | [n8n-workflow-failing](n8n-workflow-failing.md) | medium | ❌ |
 | 6 | [backup-failed](backup-failed.md) | high | ⚠️ |
-| 13 | [cost-budget-exceeded](cost-budget-exceeded.md) | high | ❌ (Bloque 0.10) |
+| 7 | [cost-budget-exceeded](cost-budget-exceeded.md) | high | ❌ |
 
 ### Disaster Recovery
 
 | # | Runbook | Severity | Auto |
 |---|---|---|---|
-| 7 | [migration-failed-mid-deploy](migration-failed-mid-deploy.md) | critical | ❌ |
-| 8 | [vpc-down](vpc-down.md) | critical | ❌ |
-| 9 | [disaster-recovery-vps1](disaster-recovery-vps1.md) | critical | ❌ |
-| 10 | [disaster-recovery-vps2](disaster-recovery-vps2.md) | critical | ❌ |
-| 11 | [disaster-recovery-vps3](disaster-recovery-vps3.md) | critical | ❌ |
+| 8 | [migration-failed-mid-deploy](migration-failed-mid-deploy.md) | critical | ❌ |
+| 9 | [vpc-down](vpc-down.md) | critical | ❌ |
+| 10 | [disaster-recovery-vps1](disaster-recovery-vps1.md) | critical | ❌ |
+| 11 | [disaster-recovery-vps2](disaster-recovery-vps2.md) | critical | ❌ |
+| 12 | [disaster-recovery-vps3](disaster-recovery-vps3.md) | critical | ❌ |
+| 13 | [dr-drill-procedure](dr-drill-procedure.md) | low (cadencia semestral/trimestral) | ❌ |
 
 ### Seguridad
 
 | # | Runbook | Severity | Auto |
 |---|---|---|---|
-| 12 | [credential-leaked](credential-leaked.md) | critical | ❌ |
+| 14 | [credential-leaked](credential-leaked.md) | critical | ❌ |
+
+### Procesos de desarrollo (agregados al index 2026-05-03)
+
+| # | Runbook | Severity | Auto |
+|---|---|---|---|
+| 15 | [preflight-cross-system](preflight-cross-system.md) | informativo | N/A — protocolo obligatorio antes de tocar cross-system |
+| 16 | [cierre-sesion](cierre-sesion.md) | informativo | N/A — runbook 11-pasos de cierre de sesión |
+| 17 | [vtiger-custom-fields](vtiger-custom-fields.md) | informativo | N/A — referencia cf_NNN ↔ ERP fields |
+| 18 | [wordpress-form-livskin-integration](wordpress-form-livskin-integration.md) | informativo | N/A — activar/desactivar/debuggear forms WP |
+| 19 | [landing-pages-deploy](landing-pages-deploy.md) | informativo | N/A — Cloudflare Pages deploy de landings |
 
 ## Runbooks históricos (pre-Bloque 0.6)
 

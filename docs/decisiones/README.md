@@ -12,146 +12,156 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 |---|---|---|
 | 🔒 | En revisión | Borrador activo, pendiente de aprobación |
 | ✅ | Aprobada | Decisión tomada, en implementación o ya implementada |
-| 🔄 | Superseded | Reemplazada por otra ADR |
+| 🔄 | Superseded | Reemplazada por otra ADR (ver "supersedida por…") |
 | 💤 | Diferida | Decisión consciente de posponer |
 | ⏳ | Pendiente | Aún no se ha abordado, reserva de número |
 | 📝 | Borrador | Trabajando en el contenido |
 
 ---
 
-## Índice por workstream
+## ⚠️ Importante (auditoría 2026-05-03)
 
-### Arquitectura y datos
+Este index fue **reescrito el 2026-05-03** tras auditoría integral del proyecto. La versión legacy listaba ~50 ADRs ✅ pero solo existían **20 archivos físicos** — el resto eran números reservados con metadata "✅" engañosa. Removidos.
+
+Notas históricas relevantes:
+
+- **Conflicto de numeración 0033 / 0034**: el index legacy reservaba 0033 = "Escalación a doctora WhatsApp" y 0034 = "Reactivación 45 días". Ambos números fueron **reasignados** a archivos nuevos durante mayo 2026 (match auto + Conversation Agent IA). Las decisiones legacy reservadas tomarán números futuros (≥0035) cuando se materialicen como archivos físicos.
+
+- **ADRs entre 0004-0010, 0016-0018, 0020, 0022, 0028-0029, 0035-0044** estaban en el index legacy como ✅ pero NO existen como archivo. Si alguna decisión necesita ser ADR formal, se reservará número en el momento de escribir.
+
+---
+
+## ADRs físicos verificados (20 archivos al 2026-05-03)
+
+### Arquitectura y datos (Fase 0-1)
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
 | [0001](0001-segundo-cerebro-filosofia-y-alcance.md) | Segundo cerebro — filosofía y 6 capas | ✅ | 0 |
 | [0002](0002-arquitectura-de-datos-y-3-vps.md) | Arquitectura de datos (3 VPS, 5 DBs) | ✅ | 0 |
 | [0003](0003-seguridad-baseline-y-auditorias.md) | Seguridad baseline y auditorías | ✅ | 0 |
-| 0004 | Comunicación entre VPS — DigitalOcean VPC | ✅ **Implementada** 2026-04-19 (VPC 10.114.0.0/20, latencia <2ms verificada) | 1 |
-| 0005 | Orquestación agentes — n8n único orquestador + Claude API con tool use (Agent SDK diferido) | ✅ | 4 |
-| 0006 | Embeddings — multilingual-e5-small self-hosted | ✅ | 1 |
-| 0007 | Observabilidad — Langfuse desde Fase 3 | ✅ | 3 |
-| 0008 | Staging environment — mismo VPS 3 con compose separado | ✅ | 1 |
-| 0009 | CI/CD — GitHub Actions → SSH → docker compose | ✅ | 1 |
-| 0010 | Alembic migrations obligatorias desde día 1 | ✅ **Implementada** 2026-04-20 (alembic-brain + alembic-erp como containers oneshot) | 1 |
 
-### Gobierno de datos
+### Gobierno de datos (Fase 2)
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| 0011 | Modelo de datos Lead / Cliente / Venta / Pago / Gasto | ✅ | 2 |
-| 0012 | Pipeline stages en Vtiger | ✅ | 2 |
-| 0013 | Reglas de deduplicación (teléfono > email > nombre+fecha_nac) | ✅ | 2 |
-| 0014 | Naming conventions (códigos, fuentes, UTMs) | ✅ | 2 |
-| 0015 | Source of truth por dominio | ✅ | 2 |
-| 0016 | Time zones — UTC DB, local UI | ✅ | 0 |
-| 0017 | Consent mode Complianz (reject-or-accept MVP) | ⏳ | 3 |
-| 0018 | Schema detallado del segundo cerebro | ⏳ | 1 |
+| [0011](0011-modelo-de-datos-lead-cliente-venta.md) | Modelo de datos Lead / Cliente / Venta / Pago / Gasto (v1.1) | ✅ | 2 |
+| [0012](0012-pipeline-stages-vtiger.md) | Pipeline stages en Vtiger | ✅ | 2 |
+| [0013](0013-reglas-de-deduplicacion.md) | Dedup phone anchor + lead_touchpoints + cross-system (v2) | ✅ | 2 |
+| [0014](0014-naming-conventions.md) | Naming conventions (códigos, fuentes, UTMs) | ✅ | 2 |
+| [0015](0015-source-of-truth-por-dominio.md) | Source of truth por dominio | ✅ | 2 |
 
-### Tracking y atribución
+### ERP refactor (Fase 2)
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| 0019 | Arquitectura tracking (Meta CAPI + GA4 MP + GTM) | ✅ | 3 |
-| 0020 | Modelo de atribución — last-touch para MVP | ✅ | 3 |
-| 0021 | UTMs persistence en localStorage | ⏳ | 3 |
-| 0022 | Consent mode Complianz | ✅ | 3 |
+| [0023](0023-erp-refactor-flask-strategy.md) | ERP refactor Flask — estrategia modernización | ✅ | 2 |
+| [0024](0024-strangler-fig-render-vps3.md) | Strangler fig (clone + 60d cold standby + cutover on-demand) | ✅ | 2 |
+| [0025](0025-backfill-script-rerunable.md) | Backfill script re-ejecutable (Excel/Sheets → Postgres) | ✅ | 2 |
+| [0026](0026-auth-bcrypt-2-cuentas.md) | Auth bcrypt + 2 cuentas con roles | ✅ | 2 |
+| [0027](0027-audit-log-inmutable.md) | Audit log inmutable (56 eventos canónicos al 2026-05-03) | ✅ | 2 |
 
-### ERP
+### Tracking + atribución (Fase 3)
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| 0023 | ERP — refactor Flask: estrategia de modernización | ✅ | 2 |
-| 0024 | Strangler fig (clone + parallel standby + cutover on-demand, 60d cold standby) | ✅ | 2 |
-| 0025 | Backfill script re-ejecutable (Excel/Sheets → Postgres, 3 modos, idempotente) | ✅ | 2 |
-| 0026 | Auth bcrypt + 2 cuentas con roles (admin / operadora, sesión 48h) | ✅ | 2 |
-| 0027 | Audit log inmutable (tabla append-only, ~30 eventos canónicos, retención forever) | ✅ | 2 |
-| 0028 | Flujo de citas WhatsApp → Vtiger (sin LatePoint) | ✅ | 4 |
+| [0019](0019-arquitectura-tracking-2-capas-pixel-capi.md) | Arquitectura tracking 2-capas (GTM client-side + CAPI server-side via n8n) | ✅ | 3 |
+| [0021](0021-utms-persistence-y-tracking-engine-client-side.md) | UTMs persistence en localStorage + Tracking Engine | ✅ | 3 |
 
-### Adquisición y landings
+### Adquisición y landings (Fase 3)
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
 | [0030](0030-file-naming-conventions-repo.md) | File naming conventions del repo | ✅ | 0 |
-| [0031](0031-landings-dedicadas-cloudflare-pages-y-sistema-convenciones.md) | Landings dedicadas Cloudflare Pages + sistema convenciones | ✅ | 3 |
-| [0032](0032-metabase-warehouse-architecture-y-etl-strategy.md) | Metabase warehouse + ETL n8n cross-system | ✅ | 3 |
+| [0031](0031-landings-dedicadas-cloudflare-pages-y-sistema-convenciones.md) | Landings dedicadas Cloudflare Pages + sistema convenciones HTML | ✅ | 3 |
+| [0032](0032-metabase-warehouse-architecture-y-etl-strategy.md) | Metabase warehouse architecture + ETL strategy via n8n | ✅ | 3 |
 
-### Agentes IA
-
-| ADR | Título | Estado | Fase |
-|---|---|---|---|
-| 0029 | Conversation Agent — prompts, tools, golden set | ⏳ | 4 |
-| 0045 | Content Agent — Creative Factory + Claude Design (renum desde 0030) | ⏳ | 5 |
-| 0046 | Acquisition Engine — testing matrix (renum desde 0031) | ⏳ | 5 |
-| 0047 | Growth Agent — reporte semanal ejecutivo (renum desde 0032) | ⏳ | 6 |
-| 0033 | Escalación a doctora — WhatsApp personal | ✅ | 4 |
-| 0034 | Reactivación 45 días v1 | ✅ | 6 |
-| 0035 | Lead scoring v1 — rules-based | ✅ | 4 |
-| 0036 | Prompt versioning — git + Langfuse | ✅ | 4 |
-| 0037 | Embedding model versioning | ✅ | 1 |
-| 0038 | WhatsApp test number Meta (sandbox) | ✅ | 0 |
-
-### Observabilidad y calidad
+### Datos cross-system (Fase 3 puente)
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| 0039 | Evals LLM-as-judge con Haiku | ⏳ | 6 |
-| 0040 | Cost tracking Claude API | ⏳ | 3 |
+| [0033](0033-auto-match-lead-cliente.md) | Match automático lead↔cliente al crear cliente en ERP | ✅ | 3 puente |
 
-### Operativa
-
-| ADR | Título | Estado | Fase |
-|---|---|---|---|
-| 0041 | Backups escalonados por fase | ✅ | 2 |
-| 0042 | ETL schedule (polling 5min + Meta hourly) | ✅ | 4 |
-| 0043 | Gestión de secretos — .env.integrations + Bitwarden | ✅ | 0 |
-| 0044 | Git workflow — main + feature branches | ✅ | 0 |
-
-### Creatividad
+### Agentes IA — diferida por audit 2026-05-03
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| 0045 | Integración Claude Design + Canva + fal.ai | ⏳ | 5 |
-| 0046 | Pipeline landing pages (Claude Design → WP) | ⏳ | 5 |
+| [0034](0034-conversation-agent-foundation.md) | Conversation Agent IA Foundation | 💤 **Diferida** (audit 2026-05-03) | 4 (orig) |
+
+> **Nota sobre ADR-0034**: aprobada el 2026-05-02, diferida al día siguiente tras audit honesto del scope de agentes (memoria 🔥 CRÍTICA `project_agent_scope_audit_2026_05_03.md` + audit formal `docs/audits/agent-scope-audit-2026-05-03.md`). V1 será chatbot rule-based + handoff humano + templates Meta-approved (Fase 4A). Esta ADR será **supersedida** por ADR futura "Conversation Agent v0 rule-based" cuando se construya.
 
 ---
 
-## Diferimentos explícitos
+## ADRs reservados pero NO escritos (decisiones futuras)
 
-Decisiones conscientes de NO abordar en el MVP. Documentadas para evitar re-apertura inconsciente.
+Estas son decisiones que el proyecto va a necesitar formalizar cuando lleguen. **No tienen archivo todavía** y **el número se asigna al escribir, no al reservar** — para evitar conflictos como 0033/0034.
 
-| ADR | Título | Estado | Trigger para reabrir |
-|---|---|---|---|
-| 0099 | SUNAT / comprobantes electrónicos | 💤 | Cuando se decida formalizar facturación |
-| 0100 | IGV inclusive/exclusive | 💤 | Junto con 0099 |
-| 0101 | Inventario de productos | 💤 | Si retail se vuelve significativo |
-| 0102 | Historial clínico del paciente | 💤 | Post-MVP con la doctora |
-| 0103 | PDFs / impresión | 💤 | Si el equipo reporta necesidad |
-| 0104 | Offline mode ERP | 💤 | Si cortes de internet reportados frecuentes |
-| 0105 | Computer vision clínica (antes/después) | 💤 | Mes 4-6 con volumen de fotos |
-| 0106 | Multi-touch attribution | 💤 | Cuando volumen lo justifique |
-| 0107 | Fine-tuning modelos propios | 💤 | 10k+ conversaciones históricas |
+| Concepto | Cuándo se materializa |
+|---|---|
+| Conversation Agent v0 rule-based | Fase 4A (post-Bridge Episode + módulo Agenda) — supersede ADR-0034 |
+| Módulo Agenda mínimo en ERP | Fase 4A (Bloque puente operacional) |
+| VPS dedicado de agentes (`agents.livskin.site`) | Fase 4B (cuando se construya Brand Orchestrator) |
+| Brand Orchestrator multi-agent (5 subagentes) | Fase 4B post-validación + brand voice consolidado |
+| Acquisition synthesizer (script LLM ocasional) | Fase 5 — script con LLM, NO agente formal |
+| Growth narrative (script LLM mensual) | Fase 5 — script |
+| Cutover ERP Render → VPS 3 | Fase 6 |
+| Reactivación 45 días post-visita | Fase 6+ post-cutover |
+| Escalación handoff doctora WhatsApp | cuando se construya Conversation Agent v0 |
+| Lead scoring v1 rules-based | Fase 4A o 4B según necesidad observada en datos del Bridge Episode |
+| Re-introducir staging real (DB separada) | Fase 6 al cutover Render→VPS3 — supersede la Opción A actual de erp-staging eliminado |
+
+---
+
+## Diferimentos explícitos del MVP
+
+Decisiones conscientes de NO abordar en el MVP. Documentadas para evitar re-apertura inconsciente. **Sin número asignado** hasta que se materialicen.
+
+| Concepto | Trigger para reabrir |
+|---|---|
+| SUNAT / comprobantes electrónicos | Cuando se decida formalizar facturación |
+| IGV inclusive/exclusive | Junto con SUNAT |
+| Inventario de productos | Si retail se vuelve significativo |
+| Historial clínico del paciente | Post-MVP con la doctora |
+| PDFs / impresión | Si el equipo reporta necesidad |
+| Offline mode ERP | Si cortes de internet reportados frecuentes |
+| Computer vision clínica (antes/después) | Mes 4-6 con volumen de fotos |
+| Multi-touch attribution | Cuando volumen lo justifique |
+| Fine-tuning modelos propios | 10k+ conversaciones históricas |
+| Conversation Agent IA monolítico (post-diferimiento ADR-0034) | Volumen WhatsApp >100 conv/día sostenido |
 
 ---
 
 ## Cómo proponer una nueva decisión
 
-1. Copia `_template.md` → nuevo archivo con próximo número disponible
-2. Completa contexto + opciones + tradeoffs (sin recomendación final aún)
-3. Claude Code puede redactar la propuesta pero **la decisión final es de la usuaria**
-4. Actualiza este index con la nueva entrada (status 🔒)
-5. Discusión en sesión estratégica
-6. Al aprobar: status pasa a ✅, se registra fecha y razonamiento en el ADR
+1. **NO reservar número anticipadamente.** Asignar en el momento de escribir.
+2. Copia `_template.md` → nuevo archivo con el siguiente número físico libre (verificar con `ls *.md | sort` o glob `0*.md`).
+3. Completa contexto + opciones + tradeoffs (sin recomendación final aún).
+4. Claude Code puede redactar la propuesta pero **la decisión final es de la usuaria**.
+5. Actualiza este index con la nueva entrada.
+6. Discusión en sesión.
+7. Al aprobar: status pasa a ✅, se registra fecha y razonamiento en el ADR.
 
 ## Cómo cambiar una decisión aprobada
 
 **NO editar la ADR original.** Crear nueva ADR que la supersede:
-1. Nueva ADR explica el cambio de contexto
-2. Lista qué aspectos de la ADR anterior ya no aplican
-3. Marca la anterior con 🔄 Superseded por ADR-NNNN
-4. El index refleja ambas
+
+1. Nueva ADR explica el cambio de contexto.
+2. Lista qué aspectos de la ADR anterior ya no aplican.
+3. Marca la anterior con 🔄 Superseded por ADR-NNNN (con header explícito en el archivo).
+4. El index refleja ambas (con nota cruzada).
 
 ---
 
-**Última actualización:** 2026-04-18 (v1.0 — Fase 0)
+## Estadísticas (al 2026-05-03)
+
+- **20 ADRs físicos** verificados (físicamente como archivo `.md`)
+- **18 ADRs ✅ aprobadas** (operativas)
+- **1 ADR 💤 diferida** (0034)
+- **1 conflicto de numeración histórico** documentado (0033/0034 vs index legacy)
+- **0 ADRs 🔒 en revisión** activos
+- **0 ADRs 🔄 superseded** todavía (esperado: 0034 será superseded por ADR Conversation Agent v0)
+- **~30 ADRs fantasma** removidos del index legacy (eran números con metadata ✅ pero sin archivo)
+
+---
+
+**Última actualización:** 2026-05-03 (auditoría integral — index reescrito desde verificación física de archivos)

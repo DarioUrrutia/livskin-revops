@@ -21,11 +21,50 @@
 
 ---
 
-## Prioritario
+## 🆕 Prioridad post-pivot estratégico 2026-05-03
+
+**Ver `docs/sesiones/2026-05-03-strategic-pivot-and-first-campaign.md` + `docs/audits/agent-scope-audit-2026-05-03.md` para razonamiento.**
+
+**Cambio de prioridades** vs estado pre-2026-05-03:
+
+| Antes (pre-pivot) | Ahora (post-pivot) |
+|---|---|
+| 🔴 Bloque puente Agenda Mínima | 🟡 Diferido a Fase 4A post-Bridge Episode |
+| 🔴 Conversation Agent IA Fase 4 | ⏸️ Diferido — V1 será chatbot rule-based |
+| (no existía) | 🚀 **Bridge Episode — primera campaña paga FB Ads $100/5 días** |
+
+### 🚀 Bridge Episode — Primera campaña paga (EN CURSO 2026-05-03 a ~2026-05-09)
+
+Plan táctico completo: [docs/campaigns/2026-05-first-campaign/plan.md](campaigns/2026-05-first-campaign/plan.md)
+
+**Tareas pendientes inmediatas (esta noche / mañana):**
+1. Verificar end-to-end botox-mvp con UTMs (30 min)
+2. Crear landing prp-mvp clonando botox-mvp (1h)
+3. Generar 3 links WhatsApp con shortcodes (15 min)
+4. Setup FB Ads Manager + creatividades + cheat sheet doctora (3-4h)
+5. Lanzar campaña + Google Sheet tracking
+6. Post-mortem ~2026-05-09 con data real
+
+### 🟡 Hallazgos operacionales registrados 2026-05-03 (audit integral)
+
+Follow-ups del reconocimiento real de los 3 VPS — no bloquean Bridge Episode.
+
+1. **VPS 2 + VPS 3 en branch `chore/foundation-cross-vps`**, no `main`. VPS 3 ahead 46 commits del remote + 6 archivos modificados sin commit en `infra/scripts/backups/`. Sistema funciona (containers healthy) pero git state desordenado. Cleanup futuro: cambiar branch a main + commit-or-revert de los 6 modified files. **No urgente** porque CI/CD deploya desde main correctamente.
+2. **Plugin `duplicate-page` activo en VPS 1**: ✅ **CONFIRMADO LEGÍTIMO 2026-05-03** por Dario — lo usa para duplicar páginas WP que le sirven de plantilla. NO es legacy, mantener activo. Mi documentación lo había marcado como "verificar".
+3. **n8n container reiniciado hace 7h** (al 2026-05-03 14:00 local) — ¿auto-restart Watchtower o crash? Logs follow-up.
+4. **Disk VPS 3 = 49% usado** (24GB/49GB). Monitor hacia 70% — probable crecimiento por audit_log + brain pgvector + backups locales.
+5. **`erp-staging.livskin.site` → DNS NXDOMAIN**: confirmado consistent con **decisión Opción A del 2026-04-26** (eliminado deliberadamente por Dario, commit `59e37c2`). Razón: durante Fases 2-5 el ERP en VPS 3 actúa como staging del Render productivo — staging del staging era redundante. Reaparece como staging real con DB separada en **Fase 6** al cutover (ADR-0024 strangler fig). Mi documentación de mañana lo había marcado erróneamente como "diferido / pendiente" — **corregido**.
+6. **WP plugin updates disponibles** (no críticos): Elementor 4.0.3→4.0.5, SureForms 2.8.0→2.8.1, Turnstile 1.39.0→1.39.1, LatePoint 5.4.2→5.5.0 (inactive).
+
+---
+
+## Prioritario pre-pivot (mantenidos por valor de planificación, re-priorizados 2026-05-03)
 
 <!-- Cosas que hay que hacer pronto -->
 
-### 🔴 Bloque puente Agenda Mínima ERP (próxima sesión grande, 4-6h)
+### 🟡 Bloque puente Agenda Mínima ERP (Fase 4A post-Bridge Episode, 4-6h)
+
+> **⚠️ RE-PRIORIZADO 2026-05-03**: era 🔴 alta, bajado a 🟡 media. Razón: Bridge Episode (primera campaña real) tiene mayor valor de aprendizaje hoy. Agenda mínima se construye en Fase 4A con datos reales de campaña en mano.
 
 **Hallazgos detectados en smoke E2E observable 2026-05-02 PM (Dario):**
 
@@ -200,7 +239,11 @@ Patch B3_SKIP_WA_CLICK_v1 aplicado live: workflow [B3] retorna `[]` cuando `lead
 
 ---
 
-### 🔴 Metabase dashboards de leads (Mini-bloque 3.5 — después de 3.6)
+### ✅ Metabase dashboards de leads (Mini-bloque 3.5 — RESUELTO 2026-05-02)
+
+> **CERRADO 2026-05-02**: Mini-bloque 3.5 ejecutado con 4 dashboards live + warehouse v3 opportunities + ETL n8n E1+E2. Card "Últimas 20 ventas" agregada al Dashboard 4. Detalle: ADR-0032 + memoria `project_first_paid_campaign_2026_05_03` para uso pos-Bridge Episode.
+
+#### Backlog histórico (mantenido por contexto)
 **Insight detectado 2026-05-01:** después de validar que el pipeline form → Vtiger → ERP funciona, Dario detectó gap importante: NO hay UI analítica en ERP para ver leads y métricas. Vtiger UI cubre gestión operativa (lista, edit), pero NO permite cruzar leads con conversiones, CAC, LTV.
 
 **Dashboards a construir en Metabase (sobre `livskin_erp.leads` + joins con `clientes`/`ventas`):**

@@ -131,7 +131,7 @@ Si una decisión favorece a uno pero perjudica al otro, **gana el operacional**.
 
 ---
 
-## 4. Filosofía operativa — 10 principios
+## 4. Filosofía operativa — 11 principios
 
 Rigen cada decisión técnica y estratégica. No son aspiracionales — son vinculantes.
 
@@ -145,6 +145,7 @@ Rigen cada decisión técnica y estratégica. No son aspiracionales — son vinc
 8. **Cero servicios pagos nuevos sin aprobación explícita.** Prioridad: self-hosted > cross-VPS > SaaS free > SaaS pago.
 9. **Antes de implementar, definir.** Cada construcción requiere dossier aprobado + dependencies resueltas + exit criteria.
 10. **Responder a la profundidad pedida.** Conversación táctica → respuesta concisa. Conversación estratégica → respuesta comprehensiva con estructura.
+11. **Deterministic backbone first — IA es capa aditiva, no foundational.** El sistema debe operar 100% sin agentes IA. Si todos los agentes se apagan, la operación sigue. La IA se agrega sobre infraestructura validada con datos de campañas reales, no sobre hipótesis. Antes de aprobar un agente IA, aplicar el filtro de 6 checks (memoria `project_agent_scope_audit_2026_05_03`). Articulado por Dario el 2026-05-03 tras audit honesto que reveló sobre-engineering del agent design original.
 
 ---
 
@@ -556,6 +557,8 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 
 **Interludio estratégico** (1-2 sesiones dedicadas, ~4-8h) entre Fase 3 y Fase 4 — ver § 11.5b. Produce arquetipos + segmentación + plan estratégico que alimentan Fases 4-5. No desplaza fechas si se hace con foco.
 
+**Bridge Episode** (5-7 días, primera campaña paga FB Ads $100) — ver § 11.5c. Insertado el 2026-05-03 post-audit. Captura data real para informar Fase 4 con datos, no hipótesis. Doctrina rectora: principio operativo #11.
+
 ### 11.2 Fase 0 — Fundación (Semana 1)
 
 **Objetivo:** hub central listo, cero pérdida al cambiar de máquina.
@@ -795,7 +798,65 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 
 **Importante:** no es una fase numerada del roadmap (no añade semanas ni cambia exit criteria de Fases 1-6). Es un **interludio narrativo-estratégico** de 1-2 sesiones que encaja entre Fase 3 y Fase 4 sin desplazar fechas si se hace con foco.
 
-### 11.6 Fase 4 — Conversation Agent (Semana 6)
+### 11.5c Bridge Episode — Primera campaña paga FB Ads (insertado 2026-05-03 post-audit)
+
+**⚠️ Insertado el 2026-05-03 entre Fase 3 (cerrada) y Fase 4 (reescrita).** Resultado del audit honesto del scope de agentes (`docs/audits/agent-scope-audit-2026-05-03.md`) + articulación del principio operativo #11 (`feedback_deterministic_backbone_first.md`).
+
+**Objetivo:** validar el deterministic backbone construido con tráfico real ANTES de construir agentes IA. Captura data para informar Fase 4 con datos en mano, no hipótesis.
+
+**No es fase numerada del roadmap** (similar al interludio § 11.5b) — es un **episodio puente operacional de 5-7 días** entre Fase 3 cerrada y Fase 4 reescrita.
+
+**Setup:**
+- Budget: $100 USD lifetime / 5 días
+- Audiencia: F25-55, Cusco + Lima, intereses skincare/beauty/aesthetic
+- 3 destinos: landing botox-mvp (existente) + landing prp-mvp (a crear) + WhatsApp directo doctora con shortcodes manuales
+- Atribución del WA: shortcodes pre-poblados `[BTX-MAY-FB]`, `[PRP-MAY-FB]`, `[GEN-MAY-FB]` en mensajes que la doctora copia a tracking sheet manual
+
+**Plan táctico completo:** `docs/campaigns/2026-05-first-campaign/plan.md`
+**Cheat sheet doctora:** `docs/campaigns/2026-05-first-campaign/tracking-sheet-template.md`
+**Memoria efímera:** `project_first_paid_campaign_2026_05_03.md` (archivar tras post-mortem)
+
+**Exit criteria:**
+- Campaña corrió 5 días + Ads Manager muestra impresiones + clicks reales
+- Vtiger tiene leads con `utm_source=facebook` correctamente atribuidos
+- Doctora llenó al menos 5 entradas tracking sheet manual
+- **Post-mortem ejecutado con data real** — los aprendizajes informan decisión de próxima fase
+
+**Aprendizajes esperados:**
+- ¿Tracking end-to-end funciona con tráfico real?
+- ¿Botox vs PRP convierte mejor?
+- ¿WA directo, landing, o site convierte mejor?
+- ¿ICP F25-55 funciona?
+- ¿CAC sostenible para tratamientos $300-800?
+- ¿Las creatividades hechas por Dario+Claude convierten? → informa urgencia construir Brand Orchestrator IA
+
+### 11.6 Fase 4 (REVISADA POR AUDIT 2026-05-03)
+
+**⚠️ La Fase 4 fue reescrita drásticamente.** La versión original ("Conversation Agent IA") fue **diferida** por audit. La versión revisada divide Fase 4 en dos sub-bloques con orden estricto:
+
+**Sub-bloque 4A — Cerrar el deterministic backbone restante** (post-Bridge Episode):
+- Chatbot WhatsApp **rule-based** (state machine Python en ERP, NO IA)
+- Módulo Agenda mínimo en ERP (tabla `appointments` + UI tab + audit log)
+- Notificaciones a doctora (n8n workflow chico, sin IA)
+- Re-engagement queue determinística (cron SQL → cola para doctora)
+- Cualquier hallazgo del Bridge Episode que sea bloqueante
+
+**Sub-bloque 4B — Primer agente IA real: Brand Orchestrator** (solo cuando 4A está validado):
+- Caso canónico subagent pattern (5 subagentes: research/concept/copy/visual/implementation)
+- Brand voice consolidado como input (debe estar listo del trabajo paralelo del Bridge Episode)
+- Eval suite previa con 30+ ejemplos
+- Budget hard-cap (~$70/mes per audit)
+- VPS dedicado de agentes (`agents.livskin.site`) — decisión arquitectónica formal con ADR-0035 cuando arranque construcción
+
+**Conversation Agent IA — diferido**: V1 es chatbot rule-based de 4A. Reabrir cuando volumen WA >100 conv/día sostenido (memoria `project_agent_scope_audit_2026_05_03`).
+
+**ADR-0034 v1.0** (Conversation Agent IA Foundation, escrita 2026-05-02) → marcada 💤 Diferida; será supersedida por ADR Conversation Agent v0 rule-based cuando se construya en Fase 4A.
+
+---
+
+### 11.6 (versión histórica, diferida) — Fase 4 — Conversation Agent IA (Semana 6)
+
+> **⚠️ DIFERIDA por audit 2026-05-03**. Conservado como referencia histórica del scope original. Ver § 11.6 reescrita arriba.
 
 **Objetivo:** primer agente productivo respondiendo leads reales en <60s.
 
@@ -1248,6 +1309,24 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 - **ADR-0015 escrita** (era orphan): SoT por dominio oficializado. Tabla canónica de 13 dominios con sistema autoritativo + reglas de sync.
 - **§ 5.2 corregido**: Vtiger ya no es "CRM maestro identidad cliente" → ahora "master del lead digital solamente". ERP es master de cliente + transacciones.
 - **Razón del cambio**: clarificación de Dario sobre scope narrow de Vtiger (marketing automation para adquisición digital). Los 135 clientes históricos word-of-mouth nunca entran a Vtiger. Memorias `project_vtiger_erp_sot`, `project_acquisition_flow`, `project_whatsapp_architecture`.
+
+### v1.4 — 2026-05-03 — PIVOT ESTRATÉGICO
+
+- **Principio operativo #11 nuevo**: *"Deterministic backbone first — IA es capa aditiva, no foundational."* — articulado por Dario tras audit honesto. Memoria 🔥 CRÍTICA `feedback_deterministic_backbone_first.md`.
+- **Audit del scope de agentes ejecutado** (`docs/audits/agent-scope-audit-2026-05-03.md`):
+  - 5 agentes originales → **1 agente real (Brand Orchestrator) + 2 scripts con LLM ocasional**
+  - Conversation Agent IA → ⏸️ **diferido**, V1 será chatbot rule-based + handoff humano + templates Meta-approved
+  - Growth Analyzer + Infra-Security → ❌ **NO V1** (scripts/skills cubren)
+  - **Framework de 6 checks** definido como gate obligatorio para aprobar agente futuro
+  - Memoria 🔥 CRÍTICA `project_agent_scope_audit_2026_05_03.md`
+- **Bridge Episode insertado en roadmap** (§ 11.5c): primera campaña paga FB Ads $100/5 días entre Fase 3 (cerrada) y Fase 4 (reescrita). Captura data real → informa Fase 4 con datos, no hipótesis.
+- **§ 11.6 Fase 4 reescrita**:
+  - Versión original (Conversation Agent IA) movida a sección histórica diferida
+  - Versión revisada divide Fase 4 en 4A (backbone determinístico restante: chatbot rule-based + agenda + notifs + re-engagement) y 4B (primer agente IA real = Brand Orchestrator)
+- **§ 11.7 Fase 5 reescrita**: Acquisition + Growth → scripts con LLM ocasional, NO agentes
+- **ADR-0034 v1.0** (Conversation Agent IA Foundation, escrita 2026-05-02) → marcada 💤 Diferida con header explicativo
+- **Auto-crítica de Claude documentada**: 4 fallas en colaboración previa (no empujar customer development, aceptar premisa "5 agentes" sin friction, sumarse al sobre-engineering Bloque 0 v2, demasiados ADRs)
+- **Razón del cambio**: Dario detectó en sesión que las decisiones sobre agentes se estaban escalando críticamente sin haberlas estructurado. Articuló doctrina rectora: el sistema debe operar 100% sin agentes; la IA se suma sobre infraestructura validada con datos de campañas reales.
 
 ---
 
