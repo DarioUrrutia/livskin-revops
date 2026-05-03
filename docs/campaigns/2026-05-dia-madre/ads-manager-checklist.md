@@ -4,7 +4,17 @@
 >
 > **NO ejecutar este checklist hasta que `campaign-config-draft.md` esté aprobado.**
 >
-> **Tiempo estimado total**: 60-90 minutos de UI ininterrumpida.
+> **⚠️ REFACTORED 2026-05-04**: scope simplificado a **1 ad set umbrella "Armonización Facial"** (no 2 ad sets Botox + AH separados). Cuando el checklist abajo hable de "Ad Set 1" + "Ad Set 2" — leer como **1 solo ad set**. Cambios concretos:
+>   - Solo crear **1 ad set** (paso 5) — saltarse el paso 7 que decía crear el segundo
+>   - Solo **3 ads** en ese único ad set (TOFU/MOFU/BOFU) bajo umbrella
+>   - Customize message del WhatsApp en cada ad: `[ARM-MAY-FB]` (no más `[BTX-MAY-FB]` ni `[AH-MAY-FB]`)
+>   - Destination URL: landing umbrella `dia-madre-armonizacion-2026` (no más URLs separadas Botox/AH)
+>   - **Objective**: ya no es Engagement → Messages. Ahora es **Leads (Pixel optimization en landing)** porque ahora hay landing page como destino. Cambia el setup del paso 2.
+>   - Budget: $100 lifetime concentrado en 1 ad set (no split 60/40)
+>
+> **El checklist original abajo se mantiene como referencia técnica de UI**. Cuando ejecutemos juntos, te voy guiando con los ajustes del refactor en tiempo real. Reescritura completa del checklist se hará si me pedís claridad total.
+>
+> **Tiempo estimado total post-refactor**: 30-45 minutos (vs 60-90 original) — porque solo hay 1 ad set + 3 ads.
 
 ---
 

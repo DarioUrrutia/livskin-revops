@@ -1,18 +1,22 @@
 ---
 campaign: Livskin — Día de la Madre 2026
 slug: 2026-05-dia-madre
+treatment_frame: armonizacion-facial (umbrella Botox + Ácido Hialurónico)
 status: BORRADOR — pendiente aprobación Dario
 created: 2026-05-04
+refactored: 2026-05-04 (de 2 tratamientos separados → 1 umbrella por presión de tiempo)
 launches: 2026-05-05 (target)
 ends: 2026-05-09 (target)
 mothers_day_peru: 2026-05-11 (Domingo)
 ---
 
-# Campaign Brief — Livskin Día de la Madre 2026
+# Campaign Brief — Livskin Día de la Madre 2026 — Armonización Facial
 
 > **Plantilla aplicada**: `docs/brand/campaign-brief-template.md` v0.1 BORRADOR (modo bootstrap principio #13)
 >
-> **Gate de aprobación**: las 4 preguntas DEBEN estar respondidas con claridad ANTES de tocar cualquier asset (banners, fotos, landings). Sin claridad → no se construye.
+> **Refactor 2026-05-04**: la campaña pasa de 2 tratamientos separados (Botox + AH) a **1 umbrella "Armonización Facial"** por presión de tiempo + alineación con doctrina del doc Guidelines (no listar tratamientos en TOFU). La doctora decide en consulta presencial qué tratamiento aplicar.
+>
+> **Gate de aprobación**: las 4 preguntas DEBEN estar respondidas con claridad ANTES de tocar cualquier asset.
 
 ---
 
@@ -20,16 +24,16 @@ mothers_day_peru: 2026-05-11 (Domingo)
 
 | Campo | Valor |
 |---|---|
-| Nombre | Livskin Día de la Madre 2026 |
+| Nombre | Livskin Día de la Madre 2026 — Armonización Facial |
 | Slug técnico | `2026-05-dia-madre` |
-| Frame contextual | Día de la Madre Perú = Domingo 11 de mayo 2026 |
+| Frame umbrella | Armonización Facial (cubre Botox + Ácido Hialurónico) |
 | Fecha lanzamiento | 2026-05-05 (lunes) |
-| Fecha cierre | 2026-05-09 (viernes) — 4 días pre-DM + viernes para conversiones tardías |
+| Fecha cierre | 2026-05-09 (viernes) |
 | Budget | $100 USD lifetime |
-| Plataforma | Meta (Facebook + Instagram) — solo |
+| Plataforma | Meta (Facebook + Instagram) |
 | Ad account | `2885433191763149` (Business Manager Livskin Perú) |
 | Pixel | `4410809639201712` (Livskin 2026) |
-| Operador | Dario (UI manual Ads Manager — sin Marketing API token esta vez) |
+| Operador | Dario (UI manual Ads Manager) |
 | Doctora aprueba copy | [ ] Pendiente |
 | Brief aprobado por Dario | [ ] **PENDIENTE — gate de aprobación** |
 
@@ -41,157 +45,144 @@ mothers_day_peru: 2026-05-11 (Domingo)
 
 **Madre que decide cuidarse a sí misma — recibir tiempo en vez de solo darlo.**
 
-El Día de la Madre tradicionalmente activa el código de "darle algo a mamá". Livskin invierte el frame: **la mamá decide darse algo a sí misma**. No es "recibir un regalo de los hijos" — es "recibir tiempo de sí misma".
+El Día de la Madre tradicionalmente activa el código de "darle algo a mamá". Livskin invierte el frame: la mamá decide darse algo a sí misma. Bajo umbrella "armonización facial" — porque la armonización es sobre **decidir cómo se ve tu rostro**, no sobre un tratamiento específico.
 
-Arquetipo: mujer 35-55, con hijos, vive en Cusco. Económicamente estable, ha cuidado a otros toda su vida, y este día específicamente se permite priorizarse. NO espera permiso de la familia — decide.
+Arquetipo: mujer 35-55 en Cusco, con hijos, económicamente estable, ha cuidado a otros toda su vida, este día específicamente se permite priorizarse.
 
 ### 2. ¿Qué emoción genera?
 
 **Permiso interno + tranquilidad.** No urgencia, no ansiedad, no comparación.
 
-NO buscamos: FOMO, "última oportunidad", urgencia barata.
-
-SÍ buscamos: la sensación de pausa, de "para mí también", de control sobre lo propio.
+Sí buscamos: pausa, "para mí también", control sobre lo propio.
 
 ### 3. ¿Qué decisión sugiere?
 
-**Dedicarse una hora a sí misma — evaluación con criterio médico en Livskin.**
+**Dedicarse una hora a evaluación con la doctora — para conocer su armonía facial.**
 
-NO sugerimos: "agendar tratamiento de Botox/AH" (ese es el siguiente paso, decisión de la doctora en consulta).
-
-SÍ sugerimos: **conversación con la doctora vía WhatsApp** para empezar a explorar — la decisión sobre qué tratamiento (si alguno) la toma la doctora con ella en consulta presencial.
+NO sugerimos: "agendar Botox" o "agendar relleno". La decisión sobre qué tratamiento se aplica es médica, la toma la doctora con la paciente en consulta presencial. **Por eso umbrella "armonización facial" es coherente** — el ad invita a la conversación, no a un producto.
 
 ### 4. ¿Qué NO está diciendo?
 
-**Lista explícita de frames evitados** (aplicación rigurosa de `docs/brand/copy-principles.md`):
-
+- ❌ NO menciona "Botox", "ácido hialurónico", "rellenos", "toxina"
 - ❌ NO promete rejuvenecer / "eliminar arrugas" / "quitar años"
-- ❌ NO dice "tu hijo te lo regala" (frame regalo de tercero)
+- ❌ NO dice "tu hijo te lo regala"
 - ❌ NO menciona precios / descuentos / promociones
 - ❌ NO crea urgencia barata ("antes del 11", "última oportunidad")
 - ❌ NO usa "envejecimiento" / "problema" / "defecto"
-- ❌ NO menciona Botox o Ácido Hialurónico en TOFU/MOFU del ad (sí en el banner BOFU del que ya identificó tratamiento)
 - ❌ NO promete "resultados inmediatos" / "garantizados"
-- ❌ NO usa modelos artificiales / sonrisas exageradas / piel digital
+- ❌ NO usa modelos artificiales / sonrisas exageradas
 
 ---
 
 ## Aplicación del funnel a esta campaña
 
-**Decisión arquitectónica**: Opción A — todos los ads optimizan para **Click-to-WhatsApp** (Engagement → Maximize messages).
+**Decisión arquitectónica**: 1 campaña umbrella → todos los ads van a **1 landing page "Armonización Facial"**.
 
-| Etapa | Aplica en esta campaña |
+| Etapa | Aplica |
 |---|---|
-| **TOFU** | Banners de declaración de identidad — abren WhatsApp con shortcode |
-| **MOFU** | Banners explicativos emocionales — abren WhatsApp con shortcode (mismo destino que TOFU) |
-| **BOFU** | Banners más directos — abren WhatsApp con shortcode |
+| **TOFU** | Banner declaración de identidad → click → landing |
+| **MOFU** | Banner explicativo emocional → click → landing |
+| **BOFU** | Banner directo evaluación → click → landing |
 
-**Nota importante**: aunque los banners siguen TOFU/MOFU/BOFU como código creativo (declaración → consideración → acción), **TODOS terminan en WhatsApp directo**. No hay landing pages de Día de la Madre en esta campaña — la audiencia chica de Cusco + objetivo simple "máximo contacto WhatsApp" no justifica el costo de producir landings dedicadas.
-
-Las landings core (`botox-mvp` evergreen) siguen vivas para tráfico orgánico, pero no se promocionan en esta campaña.
+La landing tiene CTA principal a WhatsApp con shortcode `[ARM-MAY-FB]` + form (Pixel Lead optimization).
 
 ---
 
 ## Destinos y atribución
 
-| Destino | Tipo | Tracking |
-|---|---|---|
-| WhatsApp Botox | `wa.me/51980727888?text=Hola%2C%20vengo%20del%20aviso%20de%20Livskin%20Día%20de%20la%20Madre%20%5BBTX-MAY-FB%5D` | Shortcode `[BTX-MAY-FB]` manual + Pixel "Lead" event vía Custom Conversion |
-| WhatsApp Ácido Hialurónico | `wa.me/51980727888?text=Hola%2C%20vengo%20del%20aviso%20de%20Livskin%20Día%20de%20la%20Madre%20%5BAH-MAY-FB%5D` | Shortcode `[AH-MAY-FB]` manual + Pixel "Lead" event |
+**1 landing umbrella**:
+- URL: `https://campanas.livskin.site/dia-madre-armonizacion-2026/`
+- Slug técnico: `dia-madre-armonizacion-2026`
+- Path repo: `infra/landing-pages/dia-madre-armonizacion-2026/` (a crear cuando reciba la versión casi-final de Dario)
+
+**WhatsApp tracking shortcode** (en CTA dentro de landing):
+- `[ARM-MAY-FB]` — único shortcode
 
 Tracking flow:
-1. Usuario clickea ad → WhatsApp se abre con mensaje pre-poblado con shortcode
-2. Usuario manda mensaje (la mayoría sin editar texto)
-3. Doctora ve shortcode → anota en Google Sheet manual
-4. Al final de la campaña, cruzamos sheet con métricas de Ads Manager
+1. Usuario clickea ad → Pixel `Click` event
+2. Llega a landing → Pixel `PageView`
+3. Llena form O clickea CTA WhatsApp → Pixel `Lead` event
+4. Si WhatsApp directo: doctora ve shortcode `[ARM-MAY-FB]` en mensaje → anota en Google Sheet
+5. Cross-check al final: form leads (Pixel) + WA leads (manual sheet) = leads totales
 
 ---
 
-## Activos a producir (operacional)
+## Activos a producir
 
-### Por Dario en Canva (banners visuales)
+### Por Dario en Canva (banners)
 
-Por cada tratamiento (Botox + AH = 2 tratamientos):
-- **3 ideas creativas** (TOFU declaración / MOFU consideración / BOFU acción)
-- **3 aspect ratios cada una** (1:1 1080x1080 + 4:5 1080x1350 + 9:16 1080x1920)
-- Total: **9 banners por tratamiento × 2 tratamientos = 18 banners**
+- **3 banners principales** (TOFU/MOFU/BOFU) ← drag-drop a Claude o `armonizacion-facial/banners/`
+- **Aspect ratio variants** (1:1, 4:5, 9:16) por cada banner — Dario los hace en Canva y **sube directo a FB Ads Manager** (no archiva en repo)
 
-Lugar: `docs/campaigns/2026-05-dia-madre/<tratamiento>/banners/`
+### Por Dario en claude.ai/design u otra herramienta (landing)
+
+- 1 landing casi-final basada en estructura de la botox-mvp existente
+- Adaptar texto a frame "Armonización Facial" (Botox + AH simultáneamente)
+- Pegar a Claude para review gate + adaptación técnica + deploy
+
+### Por Dario incrementalmente (fotos)
+
+- Fotos para la landing pasadas "poco a poco" después de tener todo organizado
+- Claude integra cada foto cuando llegue (mover a `infra/uploads/` + actualizar HTML)
 
 ### Por Claude (sistema + texto)
 
 - ✅ Este `brief.md` (gate aprobación)
-- ⏳ `campaign-config-draft.md` (configuración técnica exhaustiva)
-- ⏳ `ads-manager-checklist.md` (paso a paso UI manual)
-- ⏳ `copies.md` por tratamiento (textos para banners bajo doctrina)
-- ⏳ `tracking.md` por tratamiento (UTMs específicas)
-- ⏳ CSV de Custom Audience (131 clientes hasheados)
+- ✅ `plan.md` operativo
+- ✅ `tracking.md` consolidado
+- ✅ `campaign-config-draft.md` técnico
+- ✅ `ads-manager-checklist.md` UI manual
+- ✅ `armonizacion-facial/` con README + copies + landing.md + tracking.md
+- ⏳ Adaptación landing al sistema (10 pasos cuando llegue)
+- ⏳ Compliance review banners (al recibir)
+- ⏳ Daily reports durante campaña
+- ⏳ Post-mortem
 
 ---
 
-## Hipótesis a validar (qué aprendemos de esta campaña)
+## Hipótesis a validar (qué aprendemos)
 
 | Hipótesis | Cómo se mide | Decisión que informa |
 |---|---|---|
-| Click-to-WhatsApp directo convierte mejor que landing→form para Cusco | Cost-per-message (Meta) + leads anotados en sheet manual | Si CPL <$10 USD: scale en próximas campañas. Si >$15: revisar segmentación |
-| Botox vs AH: cuál convierte mejor en Cusco | Mensajes WhatsApp por shortcode | Próxima campaña: ajustar budget allocation |
-| Audience F30-55 Cusco radio 5-8km es viable | Frequency + impresiones + CTR | Refinar audience post-mortem |
-| LAL 1-3% sobre 131 clientes mejora performance | Comparar ad set con LAL vs solo interest-based | Si funciona: subir CA es práctica estándar |
-| Identidad "decisión personal" del Día de la Madre resuena | CTR por banner (TOFU declaración vs alternativa) | Refinar doctrina v0.2 |
-| Ads sin mencionar tratamiento específico convierten | Tasa de mensaje por banner | Validar principio "no producto en TOFU" |
+| Umbrella "armonización facial" convierte mejor que tratamiento específico | CTR + form lead rate vs benchmark interno | Próxima campaña: validar umbrella vs split por tratamiento |
+| Audience F30-55 Cusco radio 8km es viable con $100/5 días | Frequency + impresiones + cost per lead | Refinar audience post-mortem |
+| Landing → form fill convierte mejor que Click-to-WhatsApp directo | Pixel Lead events vs mensajes manuales WA | Decide próxima inversión: optimizar landing o ir directo a WA |
+| Identidad "decisión personal" Día de la Madre resuena | CTR por banner (TOFU declaración) | Refinar doctrina v0.2 |
+| Spontaneously los leads expresan preferencia tratamiento (Botox vs AH) | Doctora anota en sheet qué dice cada lead | Validar split 60/40 histórico vs preferencia orgánica |
 
 ---
 
 ## Restricciones operativas
 
 - [x] Doctrina de marca v0.1 BORRADOR cargada (`docs/brand/`)
-- [ ] Custom Audience subida a ad account `2885433191763149` (Dario, ~30 min UI)
-- [ ] Lookalike Audience 2-3% creada en Cusco (Meta tarda 24-48h en preparar)
-- [ ] Pixel + CAPI verificados con flujo end-to-end (ya validado 2026-05-03 Tarea 1)
-- [ ] Compliance Meta health category — verificar al crear ad (puede aplicar "Special Ad Category")
-- [ ] Banners 18 producidos por Dario en Canva
-- [ ] Pre-aprobación copy por Dario (línea por línea de `copies.md`)
-- [ ] Doctora informada del shortcode tracking + cheat sheet imprimible
+- [ ] Custom Audience subida a ad account (Dario, ~10 min)
+- [ ] LAL creada (Meta procesa 24-48h) — opcional, no bloquea
+- [ ] Pixel + CAPI verificados (ya validado 2026-05-03)
+- [ ] Compliance Meta health category — verificar al crear ad
+- [ ] 3 banners principales producidos por Dario en Canva
+- [ ] Aspect ratio variants generadas por Dario
+- [ ] Landing casi-final entregada por Dario
+- [ ] Pre-aprobación copy por Dario
+- [ ] Doctora informada del shortcode + cheat sheet impreso
 
 ---
 
 ## Aprendizajes para doctrina (modo BOOTSTRAP)
 
-> Sección obligatoria mientras estamos en bootstrap (principio #13). Cada insight relevante para refinar `docs/brand/` se anota acá durante la campaña + se procesa al cierre del Bloque BOOTSTRAP-feedback.
+Ver [`_doctrine-feedback.md`](_doctrine-feedback.md) para insights acumulados durante producción + ejecución.
 
-| Insight | Archivo doctrina afectado | Promovido a v0.X | Commit |
-|---|---|---|---|
-| (a llenar durante producción y campaña) | | | |
-
-Archivo dedicado: `_doctrine-feedback.md` en raíz de la campaña.
-
----
-
-## Post-mortem (completar al cerrar)
-
-→ `post-mortem.md` (template vacío — se llena 2026-05-12/13).
-
----
-
-## Cross-link
-
-- Doctrina: `docs/brand/` v0.1 BORRADOR
-- Plan operativo: `plan.md` en esta carpeta
-- Configuración técnica detallada: `campaign-config-draft.md`
-- Checklist Ads Manager UI: `ads-manager-checklist.md`
-- Copies por tratamiento: `botox/copies.md`, `acido-hialuronico/copies.md`
-- Tracking sheet doctora: `tracking.md` (raíz de campaña, consolidado)
+Insight relevante de este refactor: `INS-009` (cambio de scope mid-prep — de 2 tratamientos a 1 umbrella por presión de tiempo).
 
 ---
 
 ## Estado del brief
 
-**APROBACIÓN PENDIENTE DE DARIO.** Cuando vos aprobés explícitamente este brief, procedemos con `campaign-config-draft.md` técnico + `ads-manager-checklist.md`.
+**APROBACIÓN PENDIENTE DE DARIO.** Cuando vos aprobés explícitamente, procedemos con producción de banners + landing + checklist UI.
 
 Acción de Dario:
 - [ ] Leer las 4 preguntas (§ "Las 4 preguntas")
 - [ ] Aprobar respuesta de cada una (o pedir ajuste)
-- [ ] Confirmar approach Opción A (todo Click-to-WhatsApp, no landings de campaña)
-- [ ] Confirmar fechas de lanzamiento (5-9 may)
+- [ ] Confirmar approach: 1 campaña umbrella + 1 landing
+- [ ] Confirmar fechas (5-9 may)
 - [ ] Confirmar budget $100 lifetime
-- [ ] Confirmar shortcode `[BTX-MAY-FB]` y `[AH-MAY-FB]`
+- [ ] Confirmar shortcode `[ARM-MAY-FB]`

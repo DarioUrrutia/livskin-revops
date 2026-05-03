@@ -115,6 +115,42 @@ Cualquier insight del tipo *"esto debería ir en la doctrina porque..."* se anot
 
 ---
 
+### Tipo de cambio: scope estratégico mid-prep
+
+#### [INS-009] (2026-05-04, Dario) — Refactor scope mid-prep: 2 tratamientos → 1 umbrella por presión de tiempo
+
+**Contexto**: durante producción del Bloque B (estructura de campaña ya creada con 2 tratamientos separados Botox + AH), Dario decidió simplificar a **1 campaña umbrella "Armonización Facial"** que cubre ambos tratamientos.
+
+**Cita literal Dario 2026-05-04**:
+> "ahora tenemos que hacer un cambio sustancial, porque lamentablemente esto esta tomando mucho tiempo, haremos una sola campana, pero para botox y acido hialuronico, lo presentaremos como Armonizacion facial. Usaremo un solo landing page, ya no dos como antes, la estructura debe ser la misma, solo que ahora solo sera uno nomas, el tiempo nos aprieta."
+
+**Razón**: presión de tiempo (lanzamiento target 2026-05-05, 1 día restante para producción).
+
+**Decisión coherente con doctrina**: el doc Guidelines explícitamente recomienda umbrella + no-listar-tratamientos en TOFU. La decisión simplifica + alinea simultáneamente. **NO es un atajo, es lo correcto.**
+
+**Reducción operativa real**:
+- 2 ad sets → 1 ad set
+- 6 ads (3×2) → 3 ads
+- 18 banners → 9 banners (50% menos workload Canva)
+- 2 shortcodes → 1 shortcode `[ARM-MAY-FB]`
+- 0 landings (Op A) → 1 landing umbrella
+- Budget split 60/40 → concentrado $100
+
+**Aprendizaje para doctrina v0.2**:
+- **Cuándo elegir umbrella vs split por tratamiento**: sección a agregar en `docs/brand/brand-system.md` o nuevo archivo `docs/brand/campaign-scope-decision.md`
+- Regla provisional (a refinar post-mortem): *"si budget <$200 + audience <50K + tiempo <7 días → umbrella. Si >$300 + audience >100K + tiempo >14 días → split."*
+- Trade-off aceptado: perdemos comparación directa Botox vs AH conversion rate. Recuperamos vía tracking sheet manual (qué tratamiento expresa el lead en chat).
+
+**Implicación para Brand Orchestrator futuro**: cuando el agente evalúe scope de campaña, este criterio (presión de tiempo + audience size + budget) debería ser parte del decision tree.
+
+**Archivo afectado**:
+- Nuevo `docs/brand/campaign-scope-decision.md` (en doctrina v0.2)
+- O sección dedicada en `brand-system.md`
+
+**Estado**: 🟡 **CRÍTICO PARA DOCTRINA v0.2** — promoción al cierre del bootstrap.
+
+---
+
 ### Tipo de cambio: configuración técnica de campaña
 
 #### [INS-008] (2026-05-04, Claude — corregido contexto post-feedback Dario) — Captura inconsistente de phone en walk-ins

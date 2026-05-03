@@ -1,113 +1,108 @@
-# Plan Operativo — Campaña Día de la Madre 2026
+# Plan Operativo — Día de la Madre 2026 (Armonización Facial umbrella)
 
-> **Status:** 🚀 EN PREPARACIÓN — pendiente aprobación brief.md
-> **Frame contextual:** Día de la Madre Perú (Domingo 11 de mayo 2026)
-> **Tipo:** Bridge Episode entre Fase 3 (cerrada) y Fase 4 (reescrita post-audit)
-> **Doctrina rectora:** principio operativo #11 (deterministic backbone first) + #13 (modo bootstrap)
-> **Brief:** ver [`brief.md`](brief.md) — gate de aprobación
-> **Configuración técnica detallada:** ver [`campaign-config-draft.md`](campaign-config-draft.md)
-> **Checklist Ads Manager UI:** ver [`ads-manager-checklist.md`](ads-manager-checklist.md)
+> **Refactored 2026-05-04**: de 2 tratamientos separados → 1 umbrella "Armonización Facial" por presión de tiempo.
+> **Brief estratégico:** [`brief.md`](brief.md)
+> **Configuración técnica:** [`campaign-config-draft.md`](campaign-config-draft.md)
+> **Checklist UI manual:** [`ads-manager-checklist.md`](ads-manager-checklist.md)
 
 ---
 
-## 1. Objetivo REAL
+## 1. Objetivo
 
-**Maximizar contactos directos a WhatsApp de la doctora durante la ventana del Día de la Madre.**
+**Maximizar leads (form fills + mensajes WhatsApp) durante la ventana del Día de la Madre.**
 
-NO es solo generar data (eso era el Bridge Episode genérico). Esta campaña tiene un objetivo comercial directo:
-- Aprovechar el momento contextual (DM peruano)
-- Activar identidad de "madre que decide cuidarse"
-- Llegar a WhatsApp directo donde la doctora cierra la conversación
+Frame umbrella "Armonización Facial" que cubre Botox + Ácido Hialurónico — la doctora decide en consulta presencial qué tratamiento aplicar.
 
-Data secundaria que aprendemos (hipótesis del brief):
-- ¿Cost-per-message viable en Cusco?
-- ¿Botox vs AH cuál mueve más?
-- ¿Audience F30-55 Cusco radio 5-8km es suficiente?
-- ¿LAL 2-3% mejora performance vs interest-based puro?
+Hipótesis secundarias (post-mortem informa):
+- ¿Cost-per-lead viable en Cusco con audience chica?
+- ¿Audience F30-55 Cusco radio 8km es la correcta?
+- ¿Landing → form vs Click-to-WhatsApp directo: cuál convierte mejor?
+- Spontaneously: ¿qué tratamiento expresan los leads en chat? (Botox vs AH vs ambos vs no especificado)
 
 ---
 
-## 2. Decisión arquitectónica — Opción A (todo Click-to-WhatsApp)
+## 2. Estructura simplificada
 
 ```
-Campaign: Livskin — Día de la Madre 2026
-   Objective: Engagement → Maximize messages (Click-to-WhatsApp)
-   Budget: $100 USD lifetime CBO
-   Schedule: 2026-05-05 → 2026-05-09 (5 días corridos)
+1 Campaign: "Livskin — Día de la Madre 2026 — Armonización Facial"
+   Objective: LEADS (Pixel Lead optimization)
+   Budget: $100 lifetime CBO
+   Schedule: 2026-05-05 → 2026-05-09
    Ad account: 2885433191763149 (Business Manager Livskin Perú)
    Pixel: 4410809639201712 (Livskin 2026)
-
-   ├─ Ad Set 1: BOTOX
-   │  Budget allocation: 60% (~$60 lifetime)
-   │  Audience: ver § 3
-   │  Optimization: Lead conversation (WhatsApp)
-   │  Placements: Advantage+ (Meta auto-optimiza)
-   │  Frequency cap: 3-4 (audience chica de Cusco)
-   │  Banners: 9 (3 ideas × 3 aspect ratios)
-   │  Destination: WhatsApp con shortcode [BTX-MAY-FB]
    │
-   └─ Ad Set 2: ÁCIDO HIALURÓNICO
-      Budget allocation: 40% (~$40 lifetime)
-      Audience: idéntica a Botox
-      Banners: 9 (idem)
-      Destination: WhatsApp con shortcode [AH-MAY-FB]
+   └─🟨 1 Ad Set: "Armonización Facial - Cusco F30-55"
+      Audience: Cusco radio 8km, F 30-55, intereses skincare/beauty
+      Budget: $100 completo (sin split — concentrado en 1 ad set)
+      Optimization: Lead conversion (Pixel)
+      Placements: Advantage+ (Meta auto)
+      Frequency cap: 4 / 7 días
+      │
+      ├─🟩 Ad 1: TOFU — banner declaración identidad
+      │   Asset variants: tofu-1x1, tofu-4x5, tofu-9x16 (Dario sube a Ads Manager)
+      │   Destination: landing dia-madre-armonizacion-2026
+      │   utm_content=arm-tofu
+      │
+      ├─🟩 Ad 2: MOFU — banner consideración
+      │   Asset variants: mofu-1x1, mofu-4x5, mofu-9x16
+      │   Destination: landing
+      │   utm_content=arm-mofu
+      │
+      └─🟩 Ad 3: BOFU — banner acción
+          Asset variants: bofu-1x1, bofu-4x5, bofu-9x16
+          Destination: landing
+          utm_content=arm-bofu
+
+📦 Total: 1 campaign / 1 ad set / 3 ads / 9 banners (3 principales × 3 aspect ratios)
+   + 1 landing umbrella
+
+🛬 Landing destination común:
+   https://campanas.livskin.site/dia-madre-armonizacion-2026/
 ```
-
-**Por qué 60/40 Botox/AH:**
-Datos históricos del Excel productivo (`Datos_Livskin_2026-04-25.xlsx`):
-- Botox: 25 ventas históricas
-- Ácido Hialurónico: 4 ventas históricas
-- Botox tiene 6× más historial → mayor probabilidad de conversión → más budget
-
-Ratio 60/40 da a AH suficiente budget para validar (~$40 / 5 días = $8/día → 4-8 messages esperados, suficiente para learning).
 
 ---
 
 ## 3. Audience
 
-**Geografía (Cusco-only, radio 5-8 km desde Wanchaq):**
+**Geografía** (Cusco-only, radio 5-8 km desde Wanchaq):
 
 ```
 Ubicación principal: Wanchaq (donde está la clínica)
-Radio: 5-8 km
+Radio: 8 km
    ├─ Wanchaq ✅
    ├─ Cercado de Cusco ✅
    ├─ San Sebastián ✅
    └─ Santiago ✅
 
 Excluido:
-   ❌ San Jerónimo (10-15 km, lejos)
-   ❌ Saylla (12-18 km, lejos)
-   ❌ Provincias lejanas (Quillabamba, Espinar)
+   ❌ San Jerónimo, Saylla, provincias lejanas
 ```
 
-**Demografía:**
+**Demografía**:
 - Mujeres
 - 30-55 años
 - Idioma: Spanish
 
-⚠️ **Plan B si Meta marca "Special Ad Category — Health"**: ampliar a 18-65, ambos géneros (Meta optimiza por Pixel events).
+⚠️ **Plan B si Meta marca "Special Ad Category — Health"**: ampliar a 18-65, ambos géneros.
 
-**Detailed targeting (intereses):**
+**Detailed targeting**:
 - Skincare, Beauty
 - Cosmetic procedures
 - Anti-aging
 - Aesthetic medicine
-- Mother's Day (si Meta lo expone para Perú)
+- Mother's Day (si aparece)
 
-**Behavior:** Engaged shoppers (proxy de poder adquisitivo).
+**Behavior**: Engaged shoppers.
 
-**Custom Audiences:**
-- 131 clientes activos del ERP → CSV hasheado en `_pending-uploads/livskin-clientes-CA-20260504.csv`
-- Subir a Meta Business Manager → Audiences → Customer file
-- Meta tarda 24-48h en procesar
-- Después: crear Lookalike Audience 2-3% en Cusco → ~10-15K personas similares en el radio
+**Custom Audiences**:
+- 36 clientes activos con phone (CSV ya generado: `_pending-uploads/livskin-clientes-CA-20260504.csv`)
+- ⚠️ Solo 36 personas — Meta puede rechazar LAL o generar baja calidad (ver INS-008)
+- Plan operativo: subir CA igual + intentar LAL 2-3% Peru. Si Meta rechaza LAL → seguimos con interest-based puro
 
-**Audience size esperado** (post-filtros):
-- Cusco metro radio 5-8 km: ~280-300K personas
+**Audience size estimado** (post-filtros):
+- Cusco metro radio 8km: ~280-300K personas
 - Mujeres 30-55: ~45-55K
-- Tras intereses + behavior: ~10-18K alcanzables
-- Con LAL 2-3% adicional: ~25-30K efectivos
+- Tras intereses: ~10-18K alcanzables
 
 ---
 
@@ -115,62 +110,59 @@ Excluido:
 
 | Métrica | Target / Benchmark | Notas |
 |---|---|---|
-| **CPM** (cost per mille) | $7-15 USD | Audience chica → más caro que mercados grandes |
-| **Impresiones totales** | 7-14K con $100 lifetime | Función de CPM |
-| **Frequency** | 2-3 promedio (cap 3-4) | Audience chica → frequency sube rápido |
-| **CTR** | 1-2% | Benchmark medicina estética LATAM |
-| **Cost per message** | $5-15 USD | Si <$10 → muy bueno; si >$15 → revisar segmentación |
-| **Mensajes WhatsApp totales esperados** | 6-15 | Realista para $100/5 días en Cusco |
-| **Conversion mensaje → consulta agendada** | 30-50% | Depende de qué tan rápido responde la doctora |
-| **Conversion consulta → cliente pagante** | 20-40% | Depende de cierre comercial doctora |
-| **Clientes pagantes esperados (post-DM)** | 1-4 | Es validación, no growth |
-| **Revenue esperado** | S/. 800-3.200 PEN | Si tratamiento promedio S/. 800 |
+| **CPM** (cost per mille) | $7-15 USD | Audience chica → más caro |
+| **Impresiones totales** | 7-14K con $100 lifetime | |
+| **Frequency** | 2-3 promedio (cap 4) | |
+| **CTR** ad | 1-2% | Benchmark medicina estética LATAM |
+| **Click-to-landing rate** | ~70% del CTR (varios placements) | |
+| **Cost per landing visitor** | $1-3 USD | |
+| **Conversion landing → Pixel Lead** | 2-5% | Form fill o WA click |
+| **Leads totales esperados** (form + WA) | 5-15 | Realista para $100/5 días Cusco |
+| **Cost per Lead** | $7-20 USD | Si <$15 → bueno; >$25 → revisar |
+| **Conversion Lead → cliente pagante** | 20-40% | Doctora cierra |
+| **Clientes pagantes esperados (post-DM)** | 1-4 | |
+| **Revenue esperado** | S/. 800-3.200 PEN | Tratamiento promedio S/. 800 |
 
-**ROI mínimo aceptable**: $100 USD ≈ S/. 380. Con 1 cliente que pague S/. 600+ ya es break-even directo. Con 2+ es campaña ganadora.
-
-⚠️ **Pero el ROI directo NO es el único output**: aprendizajes de tracking + audience + creative son input crítico para próxima campaña.
+**ROI mínimo aceptable**: $100 ≈ S/. 380. 1 cliente que pague S/. 600+ = break-even directo.
 
 ---
 
-## 5. Cronograma operativo día por día
+## 5. Cronograma operativo
 
 | Día | Fecha | Acciones |
 |-----|-------|----------|
-| **Día -1 (prep)** | 2026-05-04 (hoy) | • Brief aprobado<br>• Custom Audience subida<br>• Lookalike creada (24-48h procesamiento Meta)<br>• Banners producidos por Dario en Canva<br>• Copies refinados bajo doctrina<br>• Pre-flight smoke E2E |
-| **Día 0 (pre-launch)** | 2026-05-04 noche / 2026-05-05 mañana | • Configurar campaña en Ads Manager (siguiendo `ads-manager-checklist.md`)<br>• Verificar Pixel + UTMs<br>• Submit a Meta review |
-| **Día 1 (launch)** | 2026-05-05 (lunes) | • Meta aprueba ads (puede tardar 4-24h)<br>• Monitor primeras 6h |
-| **Día 2-4** | 2026-05-06 a 2026-05-08 | • Daily check Ads Manager 1× día<br>• Doctora llena tracking sheet WA<br>• Pause/swap creatives si performance baja |
-| **Día 5 (cierre)** | 2026-05-09 (viernes) | • Last-day spend<br>• Pre-DM final push si budget remaining |
-| **Día 6 (Día de la Madre)** | 2026-05-11 (domingo) | • Doctora atiende citas presenciales<br>• Tracking de quiénes vinieron por la campaña |
-| **Día 7-8 (post-mortem)** | 2026-05-12 a 2026-05-13 | • Análisis completo en `post-mortem.md`<br>• Cierre del modo bootstrap (principio #13)<br>• Doctrina v0.X → v1.0 |
+| **Día -1 (prep)** | 2026-05-04 (hoy) | • Brief aprobado<br>• Custom Audience subida<br>• Banners 3 principales producidos por Dario<br>• Landing casi-final entregada por Dario<br>• Adaptación landing + push CF Pages<br>• Smoke E2E pre-launch |
+| **Día 0 (configuración)** | 2026-05-04 noche / 2026-05-05 mañana | • Configurar campaña en Ads Manager (siguiendo `ads-manager-checklist.md`)<br>• Submit a Meta review (4-24h aprobación) |
+| **Día 1 (launch)** | 2026-05-05 (lunes) | • Meta aprueba ads<br>• Monitor primeras 6h<br>• Lanzamiento target: 18:00-21:00 hora Cusco |
+| **Día 2-4** | 2026-05-06 a 2026-05-08 | • Daily check Ads Manager<br>• Doctora llena tracking sheet<br>• Pause/swap ads bajos performance |
+| **Día 5 (cierre)** | 2026-05-09 (viernes) | • Last-day spend<br>• Pre-DM final push |
+| **Día 6 (Día de la Madre)** | 2026-05-11 (domingo) | • Doctora atiende citas<br>• Anota en sheet quiénes vinieron de la campaña |
+| **Día 7-8** | 2026-05-12 a 2026-05-13 | • Post-mortem session<br>• Cierre del modo bootstrap (principio #13)<br>• Doctrina v0.X → v1.0 |
 
 ---
 
-## 6. Tracking + monitoring (sin Marketing API token)
+## 6. Tracking + monitoring (sin Marketing API)
 
-**Sin Marketing API token disponible** (decisión 2026-05-04 — no repetir el camino fallido del 27/4). Monitoring 100% manual:
+100% manual:
 
 ### Daily checklist Dario (5 min cada mañana)
 
 1. Abrir Ads Manager → ad account `2885433191763149`
-2. Filtrar campaña "Livskin Día de la Madre 2026"
-3. Screenshot o copia de las métricas clave:
-   - Impresiones, alcance, frequency
-   - CTR, CPM, costo por mensaje
-   - Mensajes recibidos por ad set
-4. Pasar screenshot/CSV a Claude vía chat
+2. Filtrar campaña "Livskin — Día de la Madre 2026 — Armonización Facial"
+3. Screenshot/copia de métricas clave
+4. Pasar a Claude vía chat
 5. Claude genera análisis + recomendaciones en `daily-reports/YYYY-MM-DD.md`
 
 ### Tracking manual WhatsApp doctora
 
-- Doctora con cheat sheet impreso de shortcodes
-- Anota cada mensaje nuevo en Google Sheet con: fecha, hora, número, shortcode visto, tratamiento_interés, status
-- Al final de la campaña, cruzar sheet con métricas Meta para CAC real
+- Cheat sheet impreso con shortcode `[ARM-MAY-FB]`
+- Doctora anota cada mensaje en Google Sheet
+- Status flow: Nuevo → Contactado → Agendado → Asistió → Cliente
 
-### Tracking automático (lo que sí funciona sin Marketing API)
+### Tracking automático (lo que sí funciona)
 
-- ✅ Pixel + CAPI ya operativos: cada click-to-WhatsApp dispara Pixel "Lead" event si configuramos Custom Conversion para detectar clicks
-- ✅ Vtiger sigue capturando leads de form orgánico (NO de esta campaña, esta es solo WhatsApp directo)
+- ✅ Pixel + CAPI: cada PageView + form submit + click WA dispara events
+- ✅ Form de la landing → A1 webhook → Vtiger Lead → ERP via B3 cron (validado smoke E2E 2026-05-03)
 - ✅ Audit log ERP: registra cada lead
 
 ---
@@ -179,40 +171,37 @@ Excluido:
 
 | Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| Meta marca "Special Ad Category — Health" | Media | Audience más amplia (no F35-55) | Plan B: ajustar a 18-65 ambos géneros |
-| Compliance ad rejection por copy | Baja-Media | Retraso de aprobación 24-48h | Pre-validar copy contra políticas Meta |
-| Audience Cusco demasiado chica | Baja | CPM alto, low impresiones | Ampliar radio a 10 km en plan B |
-| Doctora no llena tracking sheet | Media | Pérdida de atribución manual | Cheat sheet impreso + WhatsApp recordatorio cada mañana |
-| Banners no se aprueban a tiempo | Media | Lanzamiento tardío | Submit ads el viernes 4 noche para aprobación lunes mañana |
-| Budget se gasta antes de día 5 | Baja | Campaña termina antes del DM | Lifetime budget evita esto, Meta distribuye |
-| Pixel no firea correctamente | Baja | Pérdida de optimization signal | Smoke E2E pre-launch (ya validado 2026-05-03) |
-| Custom Audience tarda >48h en procesar | Media | LAL no disponible al lanzamiento | Subir CA hoy mismo (Meta procesa 24-48h) |
+| Meta marca "Special Ad Category — Health" | Media | Audience más amplia (no F30-55) | Plan B: ajustar a 18-65 ambos géneros |
+| Compliance ad rejection por copy | Baja-Media | Retraso 24-48h | Pre-validar copy contra políticas Meta |
+| Audience Cusco demasiado chica | Baja | CPM alto | Ampliar radio a 10 km en plan B |
+| Doctora no llena tracking sheet | Media | Pérdida atribución manual | Cheat sheet impreso + WA recordatorio |
+| Banners no aprobados a tiempo | Media | Lanzamiento tardío | Submit ads viernes noche para aprobación lunes |
+| Budget se gasta antes de día 5 | Baja | Termina antes DM | Lifetime budget evita esto |
+| Pixel no firea | Baja | Pérdida optimization | Smoke E2E pre-launch (validado) |
+| LAL rechazada por Meta (36 source < 100) | Alta | Sin LAL targeting | OK, dependemos de interest-based |
+| Landing tarda más de lo esperado | Media | Lanzamiento se mueve | Empezamos sin landing (Click-to-WhatsApp directo) si aprieta — fallback Op A |
 
 ---
 
-## 8. Lo que NO se hace en esta campaña (resistir FOMO)
+## 8. Lo que NO se hace en esta campaña
 
-❌ Landings de Día de la Madre (decisión Opción A — todo Click-to-WhatsApp)
-❌ Marketing API token (queda en backlog post-Bridge Episode)
-❌ Banners para 3+ tratamientos (solo Botox + AH)
+❌ 2 ad sets por tratamiento (refactored a 1 umbrella)
+❌ Marketing API token (UI manual con checklist)
+❌ Banners para 3+ tratamientos (solo umbrella armonización)
 ❌ Targeting fuera de Cusco
 ❌ Promociones / descuentos / "antes del 11"
-❌ Múltiples objectives en 1 campaña (solo Engagement→Messages)
-
-Si emerge alguna tentación de estas durante la producción → al `_doctrine-feedback.md` para procesar post-mortem, no se cambia campaña corriendo.
+❌ Landings dedicadas separadas Botox + AH
 
 ---
 
 ## 9. Definition of Done
 
-**La campaña se considera cerrada cuando:**
-
 - [ ] Campaña corrió 5 días + Ads Manager muestra impresiones + clicks reales
-- [ ] Mínimo 5 mensajes WhatsApp recibidos por la doctora con shortcodes anotados
-- [ ] Tracking sheet manual llenado por doctora con al menos 5 entradas
-- [ ] Daily reports de Claude por cada día de campaña
+- [ ] Mínimo 5 leads recibidos (form + WA combined)
+- [ ] Doctora llenó tracking sheet con al menos 5 entradas
+- [ ] Daily reports de Claude
 - [ ] Post-mortem ejecutado con data real
-- [ ] Decisión consciente del cierre del modo bootstrap (doctrina v0.1 → v1.0)
+- [ ] Modo bootstrap cerrado (doctrina v0.X → v1.0)
 - [ ] Aprendizajes durables migrados a memorias permanentes
 - [ ] Carpeta `2026-05-dia-madre/` movida a `_archive/` post-cierre
 
@@ -220,15 +209,14 @@ Si emerge alguna tentación de estas durante la producción → al `_doctrine-fe
 
 ## 10. Cross-link
 
-- `brief.md` — gate de aprobación + las 4 preguntas
-- `tracking.md` — cheat sheet shortcodes consolidado
-- `campaign-config-draft.md` — config técnica exhaustiva
-- `ads-manager-checklist.md` — paso a paso UI manual
-- `botox/copies.md` — copies bajo doctrina
-- `acido-hialuronico/copies.md` — idem
-- `_doctrine-feedback.md` — bootstrap insights
-- `post-mortem.md` — llenar al cerrar
+- Brief: [`brief.md`](brief.md) — gate de aprobación
+- Tracking consolidado: [`tracking.md`](tracking.md)
+- Config técnico exhaustivo: [`campaign-config-draft.md`](campaign-config-draft.md)
+- Checklist UI: [`ads-manager-checklist.md`](ads-manager-checklist.md)
+- Tratamiento umbrella: [`armonizacion-facial/`](armonizacion-facial/)
+- Doctrine feedback: [`_doctrine-feedback.md`](_doctrine-feedback.md)
+- Post-mortem template: [`post-mortem.md`](post-mortem.md)
 
 ---
 
-**Plan vivo.** Refinable antes del lanzamiento. Una vez la campaña corre, NO se modifican estructura/budget/audience sin OK explícito de Dario.
+**Plan vivo.** Refinable hasta lanzamiento. Una vez en producción, NO se modifica estructura/budget/audience sin OK explícito de Dario.

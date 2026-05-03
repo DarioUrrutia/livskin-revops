@@ -1,147 +1,134 @@
-# Tracking — Campaña Día de la Madre 2026
+# Tracking — Campaña Día de la Madre 2026 (umbrella Armonización Facial)
 
 > **Cheat sheet consolidado** — para Dario al monitorear + para la doctora al recibir mensajes WhatsApp.
 
 ---
 
-## Shortcodes manuales (para la doctora)
+## Shortcode único
 
-Cuando alguien clickea el ad de Facebook/Instagram, WhatsApp se abre con un mensaje pre-poblado que contiene un código entre corchetes. La doctora ve ese código en el primer mensaje del lead.
+```
+[ARM-MAY-FB]
+```
 
-| Código | Significado | Qué tratamiento promociona el ad |
-|---|---|---|
-| `[BTX-MAY-FB]` | Lead vino del ad de **Botox** Día de la Madre 2026 | Botox |
-| `[AH-MAY-FB]` | Lead vino del ad de **Ácido Hialurónico** Día de la Madre 2026 | Ácido Hialurónico |
+Significado: lead vino de **Armonización Facial Día de la Madre 2026 — Facebook/Instagram**.
 
-**Si el mensaje no tiene código entre corchetes**: lead orgánico (no de campaña). Anotar igualmente con código `[ORGANIC]`.
+**1 solo shortcode** para toda la campaña (refactored 2026-05-04 desde 2 originales `[BTX-MAY-FB]` + `[AH-MAY-FB]` → 1 unificado `[ARM-MAY-FB]`).
 
 ---
 
-## Mensajes WhatsApp pre-poblados (lo que el lead manda)
+## Mensaje WhatsApp pre-poblado (en CTA dentro de la landing)
 
-### Botox
-
+**Texto**:
 ```
-Hola, vengo del aviso de Livskin Día de la Madre [BTX-MAY-FB]
-```
-
-URL de href para los ads:
-```
-https://wa.me/51980727888?text=Hola%2C%20vengo%20del%20aviso%20de%20Livskin%20D%C3%ADa%20de%20la%20Madre%20%5BBTX-MAY-FB%5D
+Hola, vengo del aviso de Livskin Día de la Madre [ARM-MAY-FB]
 ```
 
-### Ácido Hialurónico
+**URL completa**:
+```
+https://wa.me/51980727888?text=Hola%2C%20vengo%20del%20aviso%20de%20Livskin%20D%C3%ADa%20de%20la%20Madre%20%5BARM-MAY-FB%5D
+```
 
-```
-Hola, vengo del aviso de Livskin Día de la Madre [AH-MAY-FB]
-```
-
-URL de href para los ads:
-```
-https://wa.me/51980727888?text=Hola%2C%20vengo%20del%20aviso%20de%20Livskin%20D%C3%ADa%20de%20la%20Madre%20%5BAH-MAY-FB%5D
-```
+**Donde se usa**:
+- Como `href` del botón "Reservar por WhatsApp" / "Conversar con la doctora" en la landing umbrella
+- Yo lo configuro como parte de los 10 pasos de adaptación cuando me pases la landing casi-final
 
 ---
 
 ## UTMs estandarizadas (a nivel ad creative)
 
-Aunque esta campaña va a WhatsApp directo (no a landings), las UTMs se incluyen en los ads para tracking en Pixel + CAPI events.
-
-**Estructura estándar:**
-
 ```
-utm_source=facebook | instagram (según placement Meta auto-detecte)
+utm_source=facebook | instagram (Meta auto-detect según placement)
 utm_medium=paid
 utm_campaign=dia-madre-2026
-utm_content=<treatment>-<funnel>-<aspect_ratio>
-utm_term=<adset_id_meta>
+utm_content=arm-<funnel>     # arm-tofu / arm-mofu / arm-bofu
+utm_term={{adset.id}}        # Meta auto-rellena
 ```
 
-**Ejemplos por banner:**
+**3 valores únicos de utm_content** (vs 18 que teníamos en versión 2-tratamientos):
 
-| Treatment | Funnel | Aspect ratio | utm_content |
-|---|---|---|---|
-| Botox | TOFU | 1:1 | `botox-tofu-1x1` |
-| Botox | TOFU | 4:5 | `botox-tofu-4x5` |
-| Botox | TOFU | 9:16 | `botox-tofu-9x16` |
-| Botox | MOFU | 1:1 | `botox-mofu-1x1` |
-| Botox | MOFU | 4:5 | `botox-mofu-4x5` |
-| Botox | MOFU | 9:16 | `botox-mofu-9x16` |
-| Botox | BOFU | 1:1 | `botox-bofu-1x1` |
-| Botox | BOFU | 4:5 | `botox-bofu-4x5` |
-| Botox | BOFU | 9:16 | `botox-bofu-9x16` |
-| AH | TOFU | 1:1 | `ah-tofu-1x1` |
-| ... | ... | ... | ... |
+| Banner | utm_content |
+|---|---|
+| TOFU | `arm-tofu` |
+| MOFU | `arm-mofu` |
+| BOFU | `arm-bofu` |
 
-**Total**: 18 combinaciones únicas (9 por tratamiento × 2 tratamientos).
+Las variantes de aspect ratio comparten el MISMO `utm_content` del banner principal — Meta serve según placement automático.
 
 ---
 
-## Google Sheet de tracking manual (para la doctora)
+## Cheat sheet doctora (imprimir o pegar en WhatsApp Web)
 
-**Ubicación**: Google Drive → "Livskin Tracking 2026-05 Día de la Madre"
+**Cuando la doctora reciba un mensaje nuevo en WhatsApp**:
 
-**Compartido con**: Dario + doctora (edit)
+1. **Buscar el código entre corchetes** en el primer mensaje del lead:
+   - Si dice `[ARM-MAY-FB]` → lead de la campaña Día de la Madre
+   - Si NO tiene código → lead orgánico (anotar igualmente con código `[ORGANIC]`)
 
-**Columnas**:
+2. **Anotar en Google Sheet** "Livskin Tracking 2026-05 Día de la Madre" con columnas:
 
 | # | Columna | Descripción |
 |---|---|---|
 | A | Fecha | YYYY-MM-DD del primer mensaje |
 | B | Hora | HH:MM cuándo llegó |
-| C | Phone | Número del lead (con +51) |
-| D | Shortcode visto | `[BTX-MAY-FB]` / `[AH-MAY-FB]` / `[ORGANIC]` |
-| E | Tratamiento de interés expresado | Lo que dijo el lead en la conversación (puede no coincidir con shortcode) |
+| C | Phone | Número con +51 |
+| D | Shortcode | `ARM-MAY-FB` o `ORGANIC` |
+| E | **Tratamiento_interés expresado** | ⭐ Lo que el lead diga en chat: "Botox", "rellenos", "armonización", "no especificó", etc. |
 | F | Status | Nuevo / Contactado / Agendado / Asistió / Cliente / No-show / Descartado |
-| G | Notas | Comentarios libres de la doctora |
+| G | Notas | Comentarios libres |
 
-**Status flow**:
-- Nuevo → Contactado (la doctora respondió) → Agendado (cita confirmada) → Asistió (vino) → Cliente (compró)
-- O: Nuevo → Contactado → No-show / Descartado
-
-**Update frequency**: la doctora actualiza al final de cada día de campaña.
+**⭐ Importante**: la columna E (tratamiento expresado) es **el dato más valioso**. Aunque la campaña no menciona producto, los leads naturalmente expresan qué quieren. Esto valida la hipótesis "qué tratamiento prefiere la audiencia espontáneamente".
 
 ---
 
 ## Métricas a monitorear (daily, sin Marketing API)
 
-Dario abre Ads Manager cada mañana → screenshot + paso a Claude:
+Dario abre Ads Manager cada mañana → screenshot/CSV → pasa a Claude:
 
-**Daily key metrics:**
-
-| Métrica | Dónde la encuentro en Ads Manager | Target / alarma |
+| Métrica | Dónde encontrar | Target / alarma |
 |---|---|---|
-| Impresiones (total + por ad set) | Vista de campaña | Debería crecer linealmente |
-| Frequency | Vista de ad set | Cap a 3-4 (audience chica) — alarma si >4 |
-| CTR (click-through-rate) | Por ad creative | Target 1-2%, alarma <0.5% (creative malo, swap) |
-| CPM (cost per mille) | Por ad set | Target $7-15 USD para Cusco |
-| Costo por mensaje | Por ad set | Target $5-15 USD, alarma >$20 |
-| Mensajes recibidos | Reportado por Meta + cross-check con tracking sheet | Target 6-15 totales en 5 días |
-| Spend total (vs budget $100) | Vista de campaña | Debe gastarse uniformemente |
+| Spend total | Vista de campaña | Distribuido en 5 días |
+| Impresiones (total + por ad) | Vista de campaña + por ad | Crecimiento lineal |
+| Frequency | Vista de ad set | Cap 4, alarma >4 |
+| CTR (click-through-rate) | Por ad creative | Target 1-2%, alarma <0.5% (swap) |
+| CPM | Por ad set | Target $7-15 USD |
+| Pixel "Lead" events | Events Manager | Target 5-15 totales |
+| Cost per Lead | Calculado spend / leads | Target $7-20 USD |
 
 **Acciones de Claude post-screenshot diario:**
 1. Update `daily-reports/YYYY-MM-DD.md`
-2. Identificar creatives con CTR <0.5% → recomendar pause
-3. Identificar audience saturado (frequency >4 sin más leads) → recomendar pause o ampliar
-4. Comparar Botox vs AH: si uno está dominando, recomendar reasignar budget
+2. Identificar ads con CTR <0.5% → recomendar pause
+3. Identificar audience saturado (frequency >4 sin más leads) → recomendar ampliar
+4. Cross-check Pixel Lead events vs tracking sheet manual de la doctora
 
 ---
 
-## Audit events (capturados automáticamente)
+## Cross-check Pixel + sheet manual
 
-Si configuramos un Custom Conversion en Meta para "Click-to-WhatsApp Lead":
-- Cada click dispara Pixel `Lead` event
-- CAPI server-side via n8n G3 también dispara (deduplicado por event_id)
-- ERP audit log captura `tracking.capi_event_emitted`
+Al final de la campaña:
 
-NOTA: para esta campaña sin landings, el Pixel solo firea en el momento del click del ad (no hay landing PageView). El "Lead" event llega a Meta directamente desde el botón Click-to-WhatsApp si Meta lo soporta como conversion automática.
+```
+Total leads = (form fills via Pixel Lead event) + (mensajes WhatsApp con [ARM-MAY-FB] en sheet doctora)
+```
+
+Si hay divergencia >20% entre los dos canales:
+- Form leads >> WA leads → CTA WhatsApp en landing podría estar roto, investigar
+- WA leads >> form leads → form de landing tiene fricción, optimizar
 
 ---
 
-## Cleanup post-campaña (al cerrar carpeta)
+## Audit events automáticos (capturados sin esfuerzo)
+
+- ✅ Pixel `PageView` cada vez que alguien llega a la landing
+- ✅ Pixel `Lead` event al submit form (configurado en Custom Conversion)
+- ✅ Pixel `Click` event al click WA CTA
+- ✅ CAPI server-side via n8n G3 cuando se crea el lead en ERP
+- ✅ ERP `audit_log` registra cada lead nuevo
+
+---
+
+## Cleanup post-campaña
 
 - [ ] Exportar Google Sheet a CSV
-- [ ] Importar CSV a tabla `campaign_manual_tracking` en ERP (modelo a crear post-Bridge si hay valor recurrente)
 - [ ] Cruzar con métricas Ads Manager exportadas
 - [ ] Generar análisis CAC real en `post-mortem.md`
 - [ ] Archivar `2026-05-dia-madre/` a `docs/campaigns/_archive/`

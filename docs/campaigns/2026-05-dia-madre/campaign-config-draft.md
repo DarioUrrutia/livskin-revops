@@ -1,10 +1,20 @@
-# Campaign Config Draft — Livskin Día de la Madre 2026
+# Campaign Config Draft — Livskin Día de la Madre 2026 (Armonización Facial umbrella)
 
 > **Estado:** 📝 **BORRADOR — pendiente aprobación Dario**
-> **NO se publica nada hasta que vos apruebes este documento sección por sección.**
+>
+> **⚠️ REFACTORED 2026-05-04**: scope simplificado de **2 tratamientos separados → 1 umbrella "Armonización Facial"** por presión de tiempo + alineación con doctrina del doc Guidelines (no listar tratamientos en TOFU). Ver `_doctrine-feedback.md` INS-009. Las secciones siguientes referían a 2 ad sets — cuando hablen de "Botox" y "Ácido Hialurónico" como ad sets separados, leer como **1 ad set umbrella unificado**. Cambios concretos:
+>   - 2 ad sets (Botox + AH) → **1 ad set "Armonización Facial - Cusco F30-55"**
+>   - 6 ads → **3 ads** (TOFU/MOFU/BOFU bajo umbrella)
+>   - Budget split 60/40 → **$100 concentrado en 1 ad set**
+>   - 18 banners → **9 banners** (3 principales × 3 aspect ratios)
+>   - 2 shortcodes → **1 shortcode `[ARM-MAY-FB]`**
+>   - Objective Engagement→Messages → **Leads (Pixel optimization en landing)**
+>   - 0 landings → **1 landing umbrella** `dia-madre-armonizacion-2026`
+>
+> **NO se publica nada hasta que vos apruebes.** El doc completo se reescribe v2.0 si querés total claridad — por ahora este header captura los deltas vs versión anterior.
 >
 > **Brief estratégico:** [`brief.md`](brief.md) (gate de las 4 preguntas)
-> **Plan operativo:** [`plan.md`](plan.md)
+> **Plan operativo:** [`plan.md`](plan.md) — versión actualizada con umbrella
 > **Checklist UI manual:** [`ads-manager-checklist.md`](ads-manager-checklist.md)
 
 ---
