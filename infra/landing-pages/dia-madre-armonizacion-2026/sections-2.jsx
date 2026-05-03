@@ -205,18 +205,31 @@ const Testimonials = ({ accent }) => {
 };
 
 // ============== RESERVAR ==============
+// phone interno = 9 dígitos sin prefijo (ej: "980727888")
+// formato display = "980 727 888"
+// formato canónico (WA + sistema) = "+51 980 727 888"
+const formatPhoneDisplay = (digits) => {
+  if (!digits) return "";
+  const a = digits.slice(0, 3);
+  const b = digits.slice(3, 6);
+  const c = digits.slice(6, 9);
+  return [a, b, c].filter(Boolean).join(" ");
+};
+
 const Booking = ({ accent }) => {
   const [name, setName] = React.useState("");
-  const [phone, setPhone] = React.useState("");
+  const [phone, setPhone] = React.useState(""); // solo dígitos, max 9
   const [email, setEmail] = React.useState("");
   const [consent, setConsent] = React.useState(false);
   const [touched, setTouched] = React.useState(false);
 
   const nameOk = name.trim().length >= 2;
-  const phoneOk = phone.trim().length >= 7;
+  const phoneOk = /^9\d{8}$/.test(phone); // móvil Perú: 9 dígitos empezando con 9
   const canSubmit = nameOk && phoneOk && consent;
 
-  const waLink = `https://wa.me/51980727888?text=${encodeURIComponent(`Hola Livskin, soy ${name || "[nombre]"}, mi número es ${phone || "[tel]"}${email ? `, email: ${email}` : ""}. Me gustaría agendar una valoración de Armonización Facial.`)}`;
+  const phoneCanonical = phone ? `+51 ${formatPhoneDisplay(phone)}` : "[tel]";
+  const waText = `Hola Livskin, soy ${name || "[nombre]"}, mi número es ${phoneCanonical}${email ? `, email: ${email}` : ""}. Me gustaría agendar una valoración de Armonización Facial.`;
+  const waLink = window.getWALink ? window.getWALink(waText) : `https://wa.me/51980727888?text=${encodeURIComponent(waText)}`;
 
   const handleClick = (e) => {
     if (!canSubmit) {
@@ -262,7 +275,7 @@ const Booking = ({ accent }) => {
           <div style={{ width: 30, height: 2, background: accent, marginBottom: 20 }} />
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <Field label="Nombres" value={name} onChange={setName} required error={touched && !nameOk} />
-            <Field label="Teléfono" value={phone} onChange={setPhone} type="tel" required error={touched && !phoneOk} />
+            <PhoneField label="Teléfono móvil" value={phone} onChange={setPhone} required error={touched && !phoneOk} />
             <Field label="Email" hint="(opcional)" value={email} onChange={setEmail} type="email" />
 
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 4 }}>
@@ -309,6 +322,58 @@ const Booking = ({ accent }) => {
         </div>
       </div>
     </section>
+  );
+};
+
+const PhoneField = ({ label, value, onChange, required, error }) => {
+  const display = formatPhoneDisplay(value);
+  const handleChange = (e) => {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
+    onChange(digits);
+  };
+  return (
+    <div>
+      <label style={{ display: "block", fontSize: 13, color: "var(--ink)", marginBottom: 8, fontWeight: 600 }}>
+        {label}
+      </label>
+      <div style={{
+        display: "flex", alignItems: "stretch",
+        border: `1px solid ${error ? "#B91C1C" : "var(--line)"}`,
+        borderRadius: 4, background: "#FFF", overflow: "hidden",
+      }}>
+        <span style={{
+          padding: "13px 12px",
+          background: "#FAFAFA",
+          borderRight: "1px solid var(--line)",
+          fontFamily: "'Open Sans', sans-serif", fontSize: 15,
+          color: "var(--ink-soft)", display: "flex", alignItems: "center",
+          letterSpacing: "0.02em", whiteSpace: "nowrap",
+        }}>
+          🇵🇪 +51
+        </span>
+        <input
+          type="tel"
+          inputMode="numeric"
+          value={display}
+          onChange={handleChange}
+          placeholder="999 999 999"
+          required={required}
+          maxLength={11}
+          style={{
+            flex: 1, padding: "13px 14px",
+            border: "none", background: "transparent",
+            fontFamily: "'Open Sans', sans-serif", fontSize: 15,
+            color: "var(--ink)", outline: "none",
+            letterSpacing: "0.02em",
+          }}
+        />
+      </div>
+      {error && (
+        <div style={{ fontSize: 11.5, color: "#B91C1C", marginTop: 6, lineHeight: 1.5 }}>
+          Ingresa un número móvil de 9 dígitos que empiece con 9.
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -359,10 +424,13 @@ const Footer = () => (
   </footer>
 );
 
-const WAFloat = () => (
-  <a href="https://wa.me/51980727888" target="_blank" rel="noreferrer" style={{ position: "fixed", right: 18, bottom: 18, zIndex: 40, width: 54, height: 54, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 14px 30px -10px rgba(37,211,102,0.5)", color: "#FFF" }}>
-    <Icon name="wa" size={24} color="#FFF" />
-  </a>
-);
+const WAFloat = () => {
+  const href = window.getWALink ? window.getWALink() : "https://wa.me/51980727888";
+  return (
+    <a href={href} target="_blank" rel="noreferrer" style={{ position: "fixed", right: 18, bottom: 18, zIndex: 40, width: 54, height: 54, borderRadius: "50%", background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 14px 30px -10px rgba(37,211,102,0.5)", color: "#FFF" }}>
+      <Icon name="wa" size={24} color="#FFF" />
+    </a>
+  );
+};
 
 Object.assign(window, { BeforeAfter, Process, Booking, Testimonials, Footer, WAFloat, Marquee: () => null });

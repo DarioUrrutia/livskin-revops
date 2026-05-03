@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Livskin — Armonización Facial</title>
 
-<!-- Livskin convenciones (Mini-bloque 3.6) — PREVIEW MODE (sin tracking todavía) -->
+<!-- Livskin convenciones (Mini-bloque 3.6) — STABLE: livskin-tracking.js + consent modal activos -->
 <meta name="livskin-treatment" content="Armonización Facial" />
 <meta name="livskin-landing-slug" content="dia-madre-armonizacion-2026" />
 <meta name="livskin-conventions-version" content="1.0" />
-<meta name="livskin-state" content="preview" />
+<meta name="livskin-state" content="stable" />
 <meta name="robots" content="noindex,nofollow" />
 
 <!-- OG meta tags para sharing -->
@@ -160,6 +160,36 @@
   .show-mobile { display: block; }
   @media (min-width: 720px) { .show-mobile { display: none; } }
 </style>
+
+<!-- Shortcode injection: lee ?src=tofu|mofu de la URL y construye getWALink global.
+     Corre ANTES de React para que los componentes lo usen sincrónicamente al montar. -->
+<script>
+(function() {
+  var WA_NUMBER = "51980727888";
+  var DEFAULT_SHORTCODE = "ARM-MAY-FB";
+  try {
+    var url = new URL(window.location.href);
+    var src = url.searchParams.get("src");
+    if (src) {
+      localStorage.setItem("livskin_src", src);
+    } else {
+      src = localStorage.getItem("livskin_src");
+    }
+    var shortcode = DEFAULT_SHORTCODE;
+    if (src && /^(tofu|mofu|bofu)$/i.test(src)) {
+      shortcode = DEFAULT_SHORTCODE + "-" + src.toUpperCase() + "-WEB";
+    }
+    window.LIVSKIN_WA_SHORTCODE = shortcode;
+  } catch (e) {
+    window.LIVSKIN_WA_SHORTCODE = DEFAULT_SHORTCODE;
+  }
+  window.getWALink = function(text) {
+    var sc = window.LIVSKIN_WA_SHORTCODE || DEFAULT_SHORTCODE;
+    var t = (text || "Hola, vengo del aviso de Livskin Día de la Madre") + " [" + sc + "]";
+    return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(t);
+  };
+})();
+</script>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>

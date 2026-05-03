@@ -136,7 +136,7 @@ const Nav = ({ accent }) => {
               <NavLink key={l.id} href={l.href} label={l.label} active={active === l.id} />
             ))}
             <a
-              href="https://wa.me/51980727888"
+              href={window.getWALink ? window.getWALink() : "https://wa.me/51980727888"}
               onMouseEnter={() => setWaHover(true)}
               onMouseLeave={() => setWaHover(false)}
               style={{
@@ -201,7 +201,7 @@ const Nav = ({ accent }) => {
             >{l.label}</a>
           ))}
           <a
-            href="https://wa.me/51980727888"
+            href={window.getWALink ? window.getWALink() : "https://wa.me/51980727888"}
             onClick={() => setMenuOpen(false)}
             style={{
               marginTop: 28,

@@ -1,0 +1,20 @@
+{
+  "slug": "dia-madre-armonizacion-2026",
+  "treatment_canonical_label": "Armonización Facial",
+  "wa_phone_e164": "+51980727888",
+  "wa_message_template": "Hola, vengo del aviso de {{treatment}} de Livskin",
+  "noindex": true,
+  "og": {
+    "title": "Armonización Facial | Livskin Cusco",
+    "description": "Tu rostro, a tu manera. Aplicación con criterio.",
+    "type": "website"
+  },
+  "lighthouse_target_mobile": 70,
+  "consent_required_for_marketing_cookies": true,
+  "_meta": {
+    "created": "2026-05-04",
+    "campaign_period": "2026-05 (Día de la Madre)",
+    "owner": "Dario + Claude (bootstrap)",
+    "notes": "Landing umbrella Armonización Facial para FB Ads $100/5d. Consent modal activo, livskin-tracking.js auto-inyectado por workflow."
+  }
+}
