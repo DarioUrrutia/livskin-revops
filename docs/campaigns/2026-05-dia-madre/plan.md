@@ -21,44 +21,49 @@ Hipótesis secundarias (post-mortem informa):
 
 ---
 
-## 2. Estructura simplificada
+## 2. Estructura final (decidida 2026-05-04)
 
 ```
-1 Campaign: "Livskin — Día de la Madre 2026 — Armonización Facial"
-   Objective: LEADS (Pixel Lead optimization)
+📦 Campaign: "Livskin — Día de la Madre 2026 — Armonización Facial"
+   Objective: TRÁFICO (Traffic / Maximize Link Clicks)
    Budget: $100 lifetime CBO
-   Schedule: 2026-05-05 → 2026-05-09
-   Ad account: 2885433191763149 (Business Manager Livskin Perú)
-   Pixel: 4410809639201712 (Livskin 2026)
+   Schedule: 2026-05-05 06:00 → 2026-05-09 23:59 (Lima)
+   Ad account: 2885433191763149 (BM Livskin Perú)
+   Pixel: 4410809639201712 (tracking, no optimización)
    │
-   └─🟨 1 Ad Set: "Armonización Facial - Cusco F30-55"
-      Audience: Cusco radio 8km, F 30-55, intereses skincare/beauty
-      Budget: $100 completo (sin split — concentrado en 1 ad set)
-      Optimization: Lead conversion (Pixel)
-      Placements: Advantage+ (Meta auto)
-      Frequency cap: 4 / 7 días
-      │
-      ├─🟩 Ad 1: TOFU — banner declaración identidad
-      │   Asset variants: tofu-1x1, tofu-4x5, tofu-9x16 (Dario sube a Ads Manager)
-      │   Destination: landing dia-madre-armonizacion-2026
-      │   utm_content=arm-tofu
-      │
-      ├─🟩 Ad 2: MOFU — banner consideración
-      │   Asset variants: mofu-1x1, mofu-4x5, mofu-9x16
-      │   Destination: landing
-      │   utm_content=arm-mofu
-      │
-      └─🟩 Ad 3: BOFU — banner acción
-          Asset variants: bofu-1x1, bofu-4x5, bofu-9x16
-          Destination: landing
-          utm_content=arm-bofu
+   ├─🟦 Ad Set 1: "Landing - Cusco F30-55"
+   │   Spend limit: $50-70 (CBO da más a quien convierte mejor)
+   │   Conversion location: Sitio web
+   │   Optimization: Link clicks
+   │   ├─🟩 Ad TOFU → Landing (?src=tofu)
+   │   │   Banner: tofu.png (9:16, Meta crop auto)
+   │   │   utm_content=tofu
+   │   │
+   │   └─🟩 Ad MOFU → Landing (?src=mofu)
+   │       Banner: mofu.png
+   │       utm_content=mofu
+   │
+   └─🟩 Ad Set 2: "WhatsApp directo - Cusco F30-55"
+       Spend limit: $30-50
+       Conversion location: Messaging Apps (WhatsApp)
+       Optimization: Conversaciones
+       └─🟥 Ad BOFU → WhatsApp directo
+           Banner: bofu.png
+           Pre-text: "Hola, vengo del aviso de Livskin Día de la Madre [ARM-MAY-FB-BOFU]"
 
-📦 Total: 1 campaign / 1 ad set / 3 ads / 9 banners (3 principales × 3 aspect ratios)
-   + 1 landing umbrella
-
-🛬 Landing destination común:
-   https://campanas.livskin.site/dia-madre-armonizacion-2026/
+Total: 1 campaign · 2 ad sets · 3 ads · 3 banners 9:16
 ```
+
+**Hipótesis a validar**: ¿landing convierte mejor que WA directo? CBO redistribuye el budget según performance → respuesta natural en 2-3 días.
+
+**Tracking de origen al WA (3 calidades de lead)**:
+| Shortcode | Vino de | Calidad |
+|---|---|---|
+| `[ARM-MAY-FB-BOFU]` | Ad BOFU directo (no vio landing) | Frío educado |
+| `[ARM-MAY-FB-MOFU-WEB]` | Ad MOFU → landing → click WA | Tibio |
+| `[ARM-MAY-FB-TOFU-WEB]` | Ad TOFU → landing → click WA | Caliente (más info procesada) |
+
+🛬 **Landing destino**: https://campanas.livskin.site/dia-madre-armonizacion-2026/
 
 ---
 
@@ -94,10 +99,18 @@ Excluido:
 
 **Behavior**: Engaged shoppers.
 
-**Custom Audiences**:
-- 36 clientes activos con phone (CSV ya generado: `_pending-uploads/livskin-clientes-CA-20260504.csv`)
-- ⚠️ Solo 36 personas — Meta puede rechazar LAL o generar baja calidad (ver INS-008)
-- Plan operativo: subir CA igual + intentar LAL 2-3% Peru. Si Meta rechaza LAL → seguimos con interest-based puro
+**Custom Audiences (decidido 2026-05-04 tras revisar audiences existentes)**:
+
+✅ **Usar las 4 audiences históricas** (todas en ad account `2885433191763149`):
+1. `TODO COMPLETO FB` — engagement general
+2. `personas que hicieron clic en llamada de accion` — warm (mostraron intención)
+3. `Interaccion con la pagina 365 dias` — cobertura amplia anual
+4. `PERSONA QUE INTERACTUARON 28 DIAS` — hot reciente
+
+❌ **Saltar el upload del CSV de 36 clientes** — muy chico para LAL útil + agrega fricción
+❌ **Sin LAL en esta corrida** — generar seed nueva con la data que recolectemos. La próxima campaña sí tendrá LAL.
+
+**Bonus**: usar las 6 audiences "Por caducar 0 días" en una campaña activa **las salva automáticamente** de la eliminación.
 
 **Audience size estimado** (post-filtros):
 - Cusco metro radio 8km: ~280-300K personas
@@ -185,12 +198,15 @@ Excluido:
 
 ## 8. Lo que NO se hace en esta campaña
 
-❌ 2 ad sets por tratamiento (refactored a 1 umbrella)
+❌ 2 ad sets por tratamiento (refactored a 1 umbrella Armonización Facial)
 ❌ Marketing API token (UI manual con checklist)
-❌ Banners para 3+ tratamientos (solo umbrella armonización)
+❌ Banners para 3+ aspect ratios (solo 9:16 — Meta hace crop auto a 1:1 / 4:5)
 ❌ Targeting fuera de Cusco
 ❌ Promociones / descuentos / "antes del 11"
 ❌ Landings dedicadas separadas Botox + AH
+❌ Upload del CSV de 36 clientes (muy chico para LAL útil)
+❌ LAL en esta corrida (generar seed nueva con la data de esta campaña)
+❌ Optimización por Pixel Lead (objective Tráfico, no Conversiones — $100/5d sin volumen para optimizar bien)
 
 ---
 

@@ -1,407 +1,453 @@
 # Ads Manager Checklist — Día de la Madre 2026 (UI manual paso a paso)
 
-> **Para Dario** — vos ejecutás click por click siguiendo este orden estricto. Cada paso tiene "qué clickear", "qué pegar/escribir", "qué deberías ver". Si algo se desvía → parás y me decís.
+> **Versión final 2026-05-04** — alineada a decisiones del 2026-05-04:
+> - Objetivo: **Tráfico** (link clicks)
+> - Estructura: **1 campaña, 2 ad sets con CBO**, destinos mixtos (Landing + WhatsApp)
+> - 3 ads totales: TOFU + MOFU → landing; BOFU → WA directo
+> - Banners: solo 9:16 (Meta hace crop automático)
+> - Pixel `4410809639201712` (Livksin Pixel 2026) confirmado activo
+> - Ad account `2885433191763149` (Livskin Perú) confirmada
 >
-> **NO ejecutar este checklist hasta que `campaign-config-draft.md` esté aprobado.**
+> **Para Dario** — ejecutás click por click siguiendo este orden estricto. Cada paso dice qué clickear, qué pegar, qué deberías ver. Si algo se desvía → parás y me decís.
 >
-> **⚠️ REFACTORED 2026-05-04**: scope simplificado a **1 ad set umbrella "Armonización Facial"** (no 2 ad sets Botox + AH separados). Cuando el checklist abajo hable de "Ad Set 1" + "Ad Set 2" — leer como **1 solo ad set**. Cambios concretos:
->   - Solo crear **1 ad set** (paso 5) — saltarse el paso 7 que decía crear el segundo
->   - Solo **3 ads** en ese único ad set (TOFU/MOFU/BOFU) bajo umbrella
->   - Customize message del WhatsApp en cada ad: `[ARM-MAY-FB]` (no más `[BTX-MAY-FB]` ni `[AH-MAY-FB]`)
->   - Destination URL: landing umbrella `dia-madre-armonizacion-2026` (no más URLs separadas Botox/AH)
->   - **Objective**: ya no es Engagement → Messages. Ahora es **Leads (Pixel optimization en landing)** porque ahora hay landing page como destino. Cambia el setup del paso 2.
->   - Budget: $100 lifetime concentrado en 1 ad set (no split 60/40)
->
-> **El checklist original abajo se mantiene como referencia técnica de UI**. Cuando ejecutemos juntos, te voy guiando con los ajustes del refactor en tiempo real. Reescritura completa del checklist se hará si me pedís claridad total.
->
-> **Tiempo estimado total post-refactor**: 30-45 minutos (vs 60-90 original) — porque solo hay 1 ad set + 3 ads.
+> **Tiempo estimado total**: 30-45 min (campaña + 2 ad sets + 3 ads).
 
 ---
 
-## Pre-flight checklist (Día -1, antes de configurar)
+## 1. Estructura objetivo de la campaña
 
-### A. Verificar Account Quality (5 min)
+```
+📦 Campaña: "Livskin — Día de la Madre 2026 — Armonización Facial"
+   Objective: Tráfico (Traffic)
+   Optimización: Link Clicks
+   Budget: $100 lifetime CBO
+   Schedule: 2026-05-05 06:00 → 2026-05-09 23:59 (Lima)
+   Pixel: 4410809639201712 (para tracking, no optimización)
+   Ad account: 2885433191763149 (Livskin Perú)
+   │
+   ├─🟦 Ad Set 1: "Landing"
+   │   Audience: misma que Ad Set 2 (compartida)
+   │   Optimization location: Website
+   │   ├─ Ad TOFU → https://campanas.livskin.site/dia-madre-armonizacion-2026/?src=tofu
+   │   └─ Ad MOFU → https://campanas.livskin.site/dia-madre-armonizacion-2026/?src=mofu
+   │
+   └─🟩 Ad Set 2: "WhatsApp directo"
+       Audience: misma que Ad Set 1
+       Optimization location: Messaging Apps (WhatsApp)
+       └─ Ad BOFU → wa.me/51980727888 con pre-text [ARM-MAY-FB-BOFU]
+
+Total: 1 campaign · 2 ad sets · 3 ads
+```
+
+**Hipótesis a validar**: ¿landing convierte mejor que WA directo? Meta CBO redistribuye budget según performance → respuesta natural en 2-3 días.
+
+---
+
+## 2. Pre-flight (Día -1, antes de configurar)
+
+### A. Account Quality (3 min)
 
 1. Abrir https://business.facebook.com/accountquality
-2. Account selector → "Livskin Perú · 2885433191763149"
+2. Account selector → seleccionar **"Livskin Perú · 2885433191763149"**
 3. Verificar status:
    - ✅ "Excellent" o "Good" → seguir
-   - ❌ "Limited" o "Restricted" → **PARAR**, resolver primero (escribime y vemos)
+   - ❌ "Limited" o "Restricted" → **PARAR**, escribime
 
-### B. Verificar Pixel + Custom Conversion (10 min)
+### B. Pixel funcionando (3 min)
 
-1. Abrir https://business.facebook.com/events_manager2/list/pixel
-2. Account selector → "Livskin Perú · 2885433191763149"
-3. Verificar Pixel "Livskin 2026" (`4410809639201712`):
+1. Abrir https://business.facebook.com/events_manager2/list/datasets
+2. Seleccionar **Livksin Pixel 2026** (`4410809639201712`)
+3. Verificar:
    - Status: Active
-   - Last received event: <24h
-   - Si no hay events recientes → smoke test: navegá a https://campanas.livskin.site/botox-mvp/ → verificar event "PageView" en Test Events
-4. **Crear Custom Conversion para WhatsApp Lead** (si no existe):
-   - Events Manager → Custom Conversions → Create
-   - Name: "WhatsApp Lead Día de la Madre"
-   - Source: Pixel Livskin 2026
-   - Rule: Event = "Click" AND URL contains "wa.me"
-   - Category: Lead
-   - Value: dejar vacío (no asignamos $)
-   - Save
+   - Eventos recientes: PageView debe estar disparando (ya validamos: 154 PV en últimas 14h ✅)
+4. **Smoke test rápido**: abrir https://campanas.livskin.site/dia-madre-armonizacion-2026/?src=tofu en otra pestaña → aceptar consent modal → en Events Manager → "Probar eventos" debe registrar el PageView en 1-2 min
 
-### C. Verificar FB Page + WhatsApp conectado (5 min)
+### C. FB Page + WhatsApp conectado (3 min)
 
 1. Abrir https://business.facebook.com/settings/pages
-2. Account selector → "Livskin Perú"
-3. Verificar que Livskin page está listada
-4. Click en la page → Settings → "Apps and integrations"
-5. Verificar que **WhatsApp Business** está conectado a `+51980727888`
-   - ✅ Si está conectado → seguir
-   - ❌ Si no → **PARAR**, conectar primero (Settings → WhatsApp → Add)
+2. Seleccionar la Page de Livskin
+3. Settings → "Apps and integrations" → confirmar **WhatsApp Business** está conectado a `+51980727888`
+4. Si NO está → **PARAR**, conectar primero (Settings → WhatsApp → Add)
 
-### D. Verificar Custom Audience procesada (verificar día antes de lanzamiento)
+### D. Método de pago + spending limit (2 min)
 
-1. Abrir https://business.facebook.com/asset_library/audiences
-2. Account selector → "Livskin Perú · 2885433191763149"
-3. Buscar "Livskin Clientes Activos 2026-05"
-4. Verificar status:
-   - ✅ "Ready" → seguir
-   - ⏳ "Building" → esperar (Meta tarda 24-48h)
-   - ❌ "Failed" → me decís, regeneramos CSV
-5. Verificar Lookalike "Livskin LAL 2-3% Peru":
-   - ✅ "Ready" → seguir
-   - ⏳ "Building" → esperar (Meta tarda 12-24h post-CA ready)
-
-### E. Método de pago + Spending limit (3 min)
-
-1. Abrir https://business.facebook.com/billing
-2. Verificar payment method activo (tarjeta)
-3. Verificar account spending limit ≥ $100 (para que la campaña corra los 5 días)
+1. https://business.facebook.com/billing
+2. Verificar:
+   - Payment method activo (tarjeta no vencida)
+   - Account spending limit ≥ $100
 
 ---
 
-## Crear la campaña — Step by step
+## 3. Crear la campaña
 
-### Paso 1: Abrir Ads Manager + nueva campaña (1 min)
+### Paso 1: Abrir Ads Manager (1 min)
 
 1. Abrir https://www.facebook.com/adsmanager/manage/campaigns?act=2885433191763149
 2. **Verificar arriba a la izquierda dice "Livskin Perú · 2885433191763149"**
-   - ❌ Si dice otro nombre → click selector → cambiar a "Livskin Perú"
-3. Click verde "**+ Crear**" (esquina superior izquierda de la tabla)
+   - ❌ Si dice otro → click selector → cambiar a Livskin Perú
+3. Click verde **"+ Crear"** (esquina superior izquierda)
 
 ### Paso 2: Buying type + objective (2 min)
 
-1. Buying type: **Auction** (default, dejar)
-2. Campaign objective: scroll y seleccionar **"Engagement"**
-3. Click "**Continue**"
+1. **Buying type**: Auction (default)
+2. **Campaign objective**: seleccionar **"Tráfico"** (Traffic)
+3. Click **"Continuar"**
 
-### Paso 3: Special Ad Categories (1 min) — VERIFICAR CON CUIDADO
+### Paso 3: Special Ad Categories (1 min) — atención
 
-1. Pantalla pregunta "Does this campaign promote credit, employment, housing, or social/political issues?"
-2. **Health no aparece como Special Ad Category obligatoria normalmente** para medicina estética en LATAM. PERO Meta puede preguntarte después si la cuenta está flag-eada.
-3. Seleccionar **"Declare no special ad category"** (default)
-4. ⚠️ Si Meta te muestra alerta amarilla "Esta cuenta está categorizada como Health" → **PARAR**, escribime, ajustamos plan B
+1. Pantalla pregunta sobre Crédito / Empleo / Vivienda / Política / Salud
+2. Seleccionar **"Declarar que no es categoría especial de anuncios"** (default)
+3. ⚠️ Si Meta muestra alerta amarilla "Esta cuenta está categorizada como Salud" → **PARAR**, me avisás. Plan B = ampliar audiencia 18-65 ambos géneros.
 
 ### Paso 4: Campaign details (3 min)
 
-1. **Campaign name**: pegar exacto
+1. **Nombre de la campaña** (pegar exacto):
    ```
-   Livskin — Día de la Madre 2026
+   Livskin — Día de la Madre 2026 — Armonización Facial
    ```
-
-2. **Campaign budget optimization (CBO)**: TOGGLE ON ✅
-3. **Campaign budget**:
-   - Tipo: **Lifetime budget**
-   - Amount: **100 USD**
-4. **Bid strategy**: dejar default "Highest volume" (= LOWEST_COST)
+2. **Optimización del presupuesto de la campaña (CBO)**: TOGGLE **ON** ✅
+3. **Presupuesto de la campaña**:
+   - Tipo: **Presupuesto total** (Lifetime)
+   - Cantidad: **100** USD
+4. **Estrategia de puja**: dejar default "Mayor volumen" (Highest volume)
 5. **A/B test**: NO marcar
-6. Click "**Next**"
+6. Click **"Siguiente"**
 
-### Paso 5: Crear Ad Set 1 — Botox (10 min)
+---
 
-#### 5.1 Ad set name
+### Paso 5: Crear Ad Set 1 — "Landing"
 
+#### 5.1 Nombre del conjunto de anuncios
 ```
-Botox - Día de la Madre 2026 - Cusco F30-55
+Landing - Cusco F30-55 - Armonización Facial
 ```
 
-#### 5.2 Conversion location
-
-- Seleccionar: **"Messaging apps"**
-- App: ✅ **WhatsApp**
-- ❌ Messenger (NO marcar)
-- ❌ Instagram (NO marcar — solo WhatsApp directo)
+#### 5.2 Conversion Location
+- Seleccionar: **"Sitio web"** (Website)
 
 #### 5.3 Performance goal
+- "Maximizar el número de clics en el enlace" (Maximize link clicks)
 
-- "Maximize number of conversations"
+#### 5.4 Pixel (opcional, para tracking)
+- Si Meta lo pregunta: seleccionar **Livksin Pixel 2026 (`4410809639201712`)**
 
-#### 5.4 Facebook Page
+#### 5.5 Budget & schedule
 
-- Seleccionar la **FB Page Livskin** (la que tiene WhatsApp conectado)
+- **Spend limits del ad set** (forzar split):
+  - Toggle "Establecer límites de gasto del conjunto de anuncios" → ON
+  - Mínimo: **50** USD
+  - Máximo: **70** USD
+  - (Asegura que Landing recibe entre 50-70%, dejando 30-50% para WhatsApp)
 
-#### 5.5 WhatsApp number
-
-- Seleccionar `+51980727888` (debe aparecer disponible si la FB Page tiene WhatsApp conectado)
-- Si no aparece → **PARAR**, problema de conexión FB Page ↔ WhatsApp Business
-
-#### 5.6 Budget & schedule
-
-- Esta sección está deshabilitada porque CBO está ON a nivel campaign — Meta distribuirá.
-- **Budget allocation por ad set NO se setea acá.** Lo veremos al final cuando tengamos los 2 ad sets, vamos a balancear 60/40 manualmente con "Bid amount" o "Spend cap" por ad set.
 - **Schedule**:
-  - Start date: **2026-05-05**, time: **06:00** (hora local Lima/Cusco)
-  - End date: **2026-05-09**, time: **23:59**
+  - Fecha de inicio: **2026-05-05**, hora: **06:00** (hora local Lima)
+  - Fecha de finalización: **2026-05-09**, hora: **23:59**
 
-#### 5.7 Audience
+#### 5.6 Audience
 
-- **Locations**:
-  - Click "Edit" → buscar "Cusco" → seleccionar **Cusco, Perú** (ciudad)
-  - Cambiar a "Address" (no "current city")
-  - Radio: **8 km** (drag slider o type)
-  - Eliminar cualquier otra ubicación que aparezca por default
+- **Ubicaciones**:
+  - Click "Editar" → buscar **"Cusco"** → seleccionar **Cusco, Perú** (ciudad)
+  - Cambiar tipo a **"Personas que viven en este lugar"** (no "personas en este lugar recientemente")
+  - Radio: **8 km**
+  - Verificar que NO aparece Lima ni provincias lejanas; eliminar si aparecen
 
-- **Custom Audiences (Include)**:
-  - Click "Custom Audiences" → buscar
-    - "Livskin Clientes Activos 2026-05" → seleccionar
-    - "Livskin LAL 2-3% Peru sobre Clientes 2026-05" → seleccionar
-  - Total CA en include: 2
+- **Custom Audiences (Include)** — click en "Públicos personalizados" → buscar y agregar las 4:
+  - ✅ TODO COMPLETO FB
+  - ✅ personas que hicieron clic en llamada de accion
+  - ✅ Interaccion con la pagina 365 dias
+  - ✅ PERSONA QUE INTERACTUARON 28 DIAS
 
-- **Age**: 30 - 55
-- **Gender**: Women
-- **Languages**: agregar "Spanish (all)"
-- **Detailed targeting** (interests):
-  - Buscar y agregar:
-    - Skincare
-    - Beauty
-    - Aesthetic medicine
-    - Cosmetic procedures
-    - Anti-aging
-    - Mother's Day (si aparece para Perú)
-- **Detailed targeting expansion**: ON ✅ (Meta puede ampliar si encuentra mejor audiencia)
-- **Estimated daily reach**: anota lo que muestra (debería estar entre 5-15K alcance estimado)
-  - Si <2K → audience demasiado chica, ampliar interests
-  - Si >50K → demasiado amplia para budget chico
+- **Edad**: 30 - 55
+- **Género**: Mujeres
+- **Idiomas**: Spanish (todos)
 
-#### 5.8 Placements
+- **Detailed targeting** (intereses) — agregar:
+  - Skincare
+  - Beauty
+  - Aesthetic medicine
+  - Cosmetic procedures
+  - Anti-aging
+  - Mother's Day (si aparece para Perú)
+
+- **Detailed targeting expansion**: ON ✅
+
+- **Estimated audience size**: anota lo que muestra
+  - <2K → audience demasiado chica, ampliar intereses
+  - >50K → demasiado amplia, considera quitar 1-2 intereses
+
+#### 5.7 Placements
 
 - Seleccionar **Advantage+ placements** (Meta auto-optimiza)
-- Si Meta pregunta sobre Audience Network → leave default (incluido)
+- Si pregunta sobre Audience Network → leave default
 
-#### 5.9 Frequency cap
+#### 5.8 Click "Siguiente" → vamos a crear los 2 ads del Ad Set "Landing"
 
-Si Meta lo expone (no siempre):
-- Cap: **4 impressions**
-- Window: **7 days**
+---
 
-#### 5.10 Optimization & delivery
+### Paso 6: Crear Ads del Ad Set "Landing" (2 ads)
 
-- Optimization for delivery: "Conversations" (default)
-- Cost per result goal: dejar vacío (LOWEST_COST sin cap)
+#### 6.1 Ad TOFU → Landing
 
-#### 5.11 Click "Next" → vamos a crear los ads de este ad set
-
-### Paso 6: Crear Ads del Ad Set 1 — Botox
-
-Crearemos **3 ads** (TOFU + MOFU + BOFU). Cada ad va a usar 3 aspect ratios (1:1, 4:5, 9:16) — Meta los serve según placement.
-
-#### 6.1 Ad 1 — Botox TOFU
-
-##### Ad name
+##### Nombre del anuncio
 ```
-Botox-TOFU-DM2026
+TOFU-Landing-DM2026
 ```
 
-##### Identity
-- Facebook Page: Livskin
-- Instagram account: vinculada (auto)
+##### Identidad
+- Página de Facebook: **Livskin**
+- Cuenta de Instagram: vinculada (auto)
 
-##### Format
-- **Single image or video** (no carousel)
+##### Formato
+- **Imagen única** (Single image)
 
-##### Media
-- Click "Add media" → "Add image"
-- Upload los 3 banners de TOFU Botox:
-  - `tofu-1x1.png` (de docs/campaigns/2026-05-dia-madre/botox/banners/)
-  - `tofu-4x5.png`
-  - `tofu-9x16.png`
-- En la sección "Customize media for placement":
-  - 1:1 → asignar `tofu-1x1.png` para "Feed" placements
-  - 4:5 → asignar para "Mobile Feed" + "Instagram Feed" placements
-  - 9:16 → asignar para "Stories" + "Reels" placements
+##### Medio (imagen)
+- Subir: `tofu.png` (de docs/campaigns/2026-05-dia-madre/armonizacion-facial/banners/tofu.png)
+- Si Meta sugiere "Customize media for placement": dejar la 9:16 para todos los placements (Meta hace crop automático)
 
-##### Primary text (Above image)
+##### Texto principal (sobre la imagen)
 ```
-Tu rostro, tus reglas. Una hora para ti este Día de la Madre. Aplicación médica con criterio.
+Tu rostro, a tu manera. Una pausa para verte como te ves cuando nadie te mira. Sin permisos, sin explicaciones.
 ```
-(125 chars máx ideal — esta tiene 105, OK)
 
-##### Headline (under image)
+##### Título (debajo de la imagen)
 ```
 Decide por ti
 ```
 
-##### Description (smaller text, optional)
+##### Descripción (texto pequeño, opcional)
 ```
 Livskin Cusco
 ```
 
-##### Call to action
-- Seleccionar **"Send Message"** del dropdown
+##### Llamada a la acción
+- Seleccionar **"Más información"** (Learn More)
 
-##### Customize message (pre-poblado)
-- Toggle "**Customize message**" ON
+##### URL del sitio web
+```
+https://campanas.livskin.site/dia-madre-armonizacion-2026/?src=tofu&utm_source=facebook&utm_medium=paid&utm_campaign=arm-may-2026&utm_content=tofu
+```
+
+##### Click "Guardar borrador" → seguir con Ad MOFU
+
+---
+
+#### 6.2 Ad MOFU → Landing
+
+##### Nombre del anuncio
+```
+MOFU-Landing-DM2026
+```
+
+##### Mismo Identity, formato, página
+
+##### Medio
+- Subir: `mofu.png`
+
+##### Texto principal
+```
+Sin perder naturalidad. Cada rostro tiene su propia forma de armonizar. Conoce el tuyo, sin presión.
+```
+
+##### Título
+```
+Conoce tu enfoque
+```
+
+##### Descripción
+```
+Livskin Cusco
+```
+
+##### Llamada a la acción
+- **"Más información"**
+
+##### URL del sitio web
+```
+https://campanas.livskin.site/dia-madre-armonizacion-2026/?src=mofu&utm_source=facebook&utm_medium=paid&utm_campaign=arm-may-2026&utm_content=mofu
+```
+
+##### Click "Guardar borrador" → vamos al Ad Set 2
+
+---
+
+### Paso 7: Volver al nivel campaña + crear Ad Set 2 — "WhatsApp directo"
+
+1. Click "← Volver a la campaña" o navegar arriba al nivel campaña
+2. Click **"+ Crear"** → **"Conjunto de anuncios"**
+
+#### 7.1 Nombre
+```
+WhatsApp directo - Cusco F30-55 - Armonización Facial
+```
+
+#### 7.2 Conversion Location
+- Seleccionar: **"Aplicaciones de mensajería"** (Messaging apps)
+- App: ✅ **WhatsApp**
+- ❌ Messenger (no marcar)
+- ❌ Instagram (no marcar)
+
+#### 7.3 Performance goal
+- "Maximizar el número de conversaciones" (Maximize conversations)
+
+#### 7.4 Facebook Page + WhatsApp number
+- Page: Livskin
+- WhatsApp: `+51980727888`
+
+#### 7.5 Budget & schedule
+- Spend limits del ad set:
+  - Mínimo: **30** USD
+  - Máximo: **50** USD
+- Schedule: idéntico al Ad Set 1 (5/5 06:00 → 9/5 23:59)
+
+#### 7.6 Audience
+- **EXACTAMENTE LA MISMA AUDIENCE QUE EL AD SET 1**
+- Tip: en el Ad Set 1 (Landing) puedes hacer "Save audience" con un nombre antes de salir, y luego en este ad set "Use saved audience"
+- O re-introduce manualmente: ubicaciones, edad, género, idiomas, las 4 CAs, los 6 intereses
+
+#### 7.7 Placements
+- Advantage+ placements
+
+#### 7.8 Click "Siguiente"
+
+---
+
+### Paso 8: Crear Ad del Ad Set "WhatsApp" (1 ad)
+
+#### 8.1 Ad BOFU → WhatsApp
+
+##### Nombre del anuncio
+```
+BOFU-WhatsApp-DM2026
+```
+
+##### Identidad
+- Page Livskin + Instagram
+
+##### Formato
+- Imagen única
+
+##### Medio
+- Subir: `bofu.png`
+
+##### Texto principal
+```
+Inicia tu Armonización Facial. Definimos la combinación ideal para ti, con criterio profesional.
+```
+
+##### Título
+```
+Agenda tu evaluación
+```
+
+##### Descripción
+```
+Livskin Cusco
+```
+
+##### Llamada a la acción
+- **"Enviar mensaje"** (Send Message)
+
+##### Customize message (mensaje pre-poblado)
+- Toggle **"Personalizar mensaje"** ON
 - Pegar exacto:
   ```
-  Hola, vengo del aviso de Livskin Día de la Madre [BTX-MAY-FB]
+  Hola, vengo del aviso de Livskin Día de la Madre [ARM-MAY-FB-BOFU]
   ```
 
-##### URL parameters (para tracking)
-Sí: muchas veces "URL parameters" aparece para ads de tipo Conversation. Pegar:
-```
-utm_source=facebook&utm_medium=paid&utm_campaign=dia-madre-2026&utm_content=botox-tofu&utm_term={{adset.id}}
-```
-(Meta auto-rellena `{{adset.id}}` con el ID del ad set)
+##### Click "Guardar borrador"
 
-##### Click "Save and finish ad" → seguir con Ad 2 (MOFU)
+---
 
-#### 6.2 Ad 2 — Botox MOFU
+### Paso 9: Review + publish (5 min)
 
-Idéntico al Ad 1 con cambios:
-- Ad name: `Botox-MOFU-DM2026`
-- Media: mofu-1x1.png + mofu-4x5.png + mofu-9x16.png
-- Primary text:
-  ```
-  Cada rostro tiene su propia forma de armonizar. Conoce el tuyo con criterio médico, sin presión.
-  ```
-- Headline: `La armonía que tú decides`
-- Description: `Livskin Cusco`
-- CTA: Send Message
-- Customize message: mismo `[BTX-MAY-FB]`
-- URL parameters: `utm_content=botox-mofu` (resto igual)
-
-#### 6.3 Ad 3 — Botox BOFU
-
-- Ad name: `Botox-BOFU-DM2026`
-- Media: bofu-1x1.png + bofu-4x5.png + bofu-9x16.png
-- Primary text:
-  ```
-  Una hora, una conversación, una evaluación con criterio. La doctora te escucha y propone con criterio médico.
-  ```
-- Headline: `Tu hora, tu decisión`
-- Description: `Livskin Cusco`
-- CTA: Send Message
-- Customize message: mismo `[BTX-MAY-FB]`
-- URL parameters: `utm_content=botox-bofu`
-
-### Paso 7: Volver al nivel campaign + crear Ad Set 2 — Acido Hialurónico
-
-1. Click "Back to Campaign" o navegar arriba
-2. Click "+ Create" → "Ad set"
-3. Repetir todos los pasos del Paso 5 PERO con:
-   - Ad set name: `Acido Hialuronico - Día de la Madre 2026 - Cusco F30-55`
-   - **Misma audience exacta** (copiar la del Ad Set 1 si Meta permite, o re-seleccionar)
-   - Misma WhatsApp number
-4. Crear 3 ads (TOFU + MOFU + BOFU) usando los **banners de Ácido Hialurónico**:
-   - Mensaje pre-poblado: `Hola, vengo del aviso de Livskin Día de la Madre [AH-MAY-FB]`
-   - utm_content: `ah-tofu` / `ah-mofu` / `ah-bofu`
-   - Copies específicos (ver `acido-hialuronico/copies.md`)
-
-### Paso 8: Budget allocation 60/40 entre ad sets (3 min)
-
-CBO con lifetime budget reparte automáticamente PERO podemos influenciar:
-
-**Opción A — dejar Meta decidir** (recomendado para learning):
-- No tocar nada. Meta optimiza basándose en performance early.
-
-**Opción B — forzar split 60/40**:
-- Ir a Ad Set Botox → Budget → "Set ad set spend limits"
-  - Min: 50 USD, Max: 70 USD
-- Ir a Ad Set Acido Hialurónico → Budget → "Set ad set spend limits"
-  - Min: 30 USD, Max: 50 USD
-
-**Mi recomendación**: Opción B (forzar 60/40) para esta primera campaña. Si Meta tuviera infinita data podríamos confiar en optimización, pero $100/5 días es poco data → mejor controlar.
-
-### Paso 9: Review + submit (5 min)
-
-1. Click "Review" arriba a la derecha
-2. Verificar pantalla "Campaign overview":
-   - Campaign: "Livskin — Día de la Madre 2026" ✅
+1. Click **"Revisar"** (arriba a la derecha)
+2. Verificar pantalla "Resumen de la campaña":
+   - Campaign: "Livskin — Día de la Madre 2026 — Armonización Facial" ✅
    - Budget: $100 lifetime CBO ✅
    - Ad sets: 2 ✅
-   - Ads: 6 ✅
+   - Ads: 3 ✅
    - Schedule: 5/5 06:00 → 9/5 23:59 ✅
-3. Si todo OK: click "**Publish**"
+   - Spend limits: AS1 50-70, AS2 30-50 ✅
+3. Si todo OK: click **"Publicar"**
 4. Meta envía a review (4-24h)
-5. Status: cambiará de "In review" → "Active" cuando Meta apruebe
+5. Status: cambiará de "En revisión" → "Activo" cuando aprueben
 
-### Paso 10: Verificación post-publish (cuando Meta apruebe)
+---
 
-1. Status del Campaign = "Active" ✅
-2. Status de cada Ad = "Active" ✅
+### Paso 10: Verificación post-publish
+
+Cuando Meta apruebe:
+
+1. Status del Campaign = "Activo" ✅
+2. Status de cada Ad = "Activo" ✅
 3. Si algún Ad rechazado:
-   - Ver razón en Ads Manager
-   - Si es Health-related issue → ajustar copy + resubmit
+   - Ver razón en Ads Manager (columna "Estado")
+   - Si es Health-related → ajustar copy + resubmit
    - Si es image issue → cambiar banner + resubmit
 
 ---
 
-## Smoke test pre-launch (cuando Meta apruebe pero antes de gastar mucho)
+## 4. Smoke test pre-spend significativo
 
-### Acción Dario:
-1. Desde tu celular (NO desde la cuenta admin), navegá a Facebook/Instagram
-2. Buscá manualmente alguno de los ads (puede tardar un tiempo en mostrarse)
-3. Click en "Send message"
-4. Verificá:
-   - WhatsApp se abre con `+51980727888`
-   - Mensaje pre-poblado: "Hola, vengo del aviso de Livskin Día de la Madre [BTX-MAY-FB]" o `[AH-MAY-FB]`
-5. **NO mandes el mensaje** (sería un lead test que ensucia data). Solo verificá.
+Cuando Meta apruebe pero ANTES de gastar mucho:
 
-### Acción Claude:
-1. Pixel Test Events: confirmar que "Click" event firea cuando alguien clickea Send Message
-2. Verificar Pixel "Lead" event si Custom Conversion está mapeada
+### Tu acción (Dario):
+1. Desde tu celular (NO admin), navegá a Facebook/Instagram
+2. Buscá manualmente alguno de los ads (puede tardar)
+3. Para los Ads de Landing (TOFU/MOFU):
+   - Click en "Más información"
+   - Verificar que abre `campanas.livskin.site/dia-madre-armonizacion-2026/?src=tofu` (o `mofu`)
+   - Aceptar consent modal
+   - Click en cualquier botón WhatsApp del landing
+   - Verificar que el mensaje pre-poblado contiene `[ARM-MAY-FB-TOFU-WEB]` (o `MOFU-WEB`)
+4. Para el Ad de WhatsApp (BOFU):
+   - Click en "Enviar mensaje"
+   - Verificar que abre WhatsApp con `+51980727888`
+   - Mensaje pre-poblado: `Hola, vengo del aviso de Livskin Día de la Madre [ARM-MAY-FB-BOFU]`
+5. **NO mandes el mensaje** (sería test que ensucia data). Solo verificá.
 
----
-
-## Daily checks durante campaña (5 min cada mañana)
-
-1. Abrir Ads Manager → "Livskin — Día de la Madre 2026"
-2. Sacar screenshot de:
-   - Vista de campaña con métricas (impresiones, spend, mensajes, CPM, CTR)
-   - Vista de cada ad set
-   - Top 3 ads + bottom 3 ads por CTR
-3. Pasar screenshots a Claude vía chat
-4. Claude actualiza `daily-reports/YYYY-MM-DD.md` con análisis + recomendaciones
-5. Si Claude recomienda pause/swap → ejecutás con un click
+### Mi acción (Claude):
+- Pixel Test Events: confirmar PageView desde el landing
+- Verificar audit log ERP por si hay events fluyendo
 
 ---
 
-## Checklist consolidado
+## 5. Daily checks durante campaña (5 min cada mañana)
+
+1. Abrir Ads Manager → "Livskin — Día de la Madre 2026 — Armonización Facial"
+2. Sacar screenshots de:
+   - Campaña: impresiones, gasto, clics, mensajes, CPM, CTR
+   - Cada ad set (cómo está distribuyendo CBO)
+   - Cada ad: CTR + reach
+3. Pasar screenshots al chat
+4. Yo armo `daily-reports/YYYY-MM-DD.md` con análisis + recomendaciones
+5. Si recomiendo pause/swap → vos lo ejecutás con un click
+
+---
+
+## 6. Checklist consolidado
 
 ### Pre-launch (Día -1)
-
 - [ ] Account Quality verificado (Excellent/Good)
 - [ ] Pixel firea events recientes
-- [ ] Custom Conversion "WhatsApp Lead" creada
-- [ ] FB Page tiene WhatsApp +51980727888 conectado
-- [ ] Custom Audience procesada (status Ready)
-- [ ] Lookalike Audience procesada (status Ready)
-- [ ] Banners 18 disponibles en docs/campaigns/2026-05-dia-madre/<treatment>/banners/
-- [ ] Copies aprobados (botox/copies.md + acido-hialuronico/copies.md)
-- [ ] Compliance review por Claude hecho
+- [ ] FB Page tiene WhatsApp `+51980727888` conectado
+- [ ] Banners 9:16 disponibles (TOFU, MOFU, BOFU) en `armonizacion-facial/banners/`
+- [ ] Landing PREVIEW + STABLE validados (consent modal aparece, shortcode injection funciona)
+- [ ] Cheat sheet doctora impreso
 
 ### Launch (Día 1)
-
-- [ ] Paso 1-9 ejecutados
+- [ ] Pasos 1-9 ejecutados
 - [ ] Review final ✅
 - [ ] Publish ✅
-- [ ] Meta review submitted
-- [ ] (esperar aprobación)
+- [ ] (esperar aprobación Meta)
 
 ### Smoke test (post-aprobación, pre-spend significativo)
-
-- [ ] Test desde celular: ad → Send Message → WhatsApp abre con shortcode correcto
+- [ ] Test desde celular: ad → URL/Send Message correcto
 - [ ] Pixel events fluyendo
-- [ ] No spend rate anormal (>$5 primeras 6h = ok)
+- [ ] Shortcodes correctos en mensajes WA
+- [ ] Spend rate normal (<$5 primeras 6h)
 
 ### Durante campaña (Día 2-5)
-
 - [ ] Daily check 1 (martes)
 - [ ] Daily check 2 (miércoles)
 - [ ] Daily check 3 (jueves)
@@ -409,25 +455,25 @@ CBO con lifetime budget reparte automáticamente PERO podemos influenciar:
 - [ ] Doctora llena tracking sheet diariamente
 
 ### Post-campaña (Día 7-8)
-
 - [ ] Spend final = $100 (o cercano)
-- [ ] Pause campaign manualmente si quedó budget remaining
+- [ ] Pause campaña manualmente si quedó budget
 - [ ] Export final metrics CSV de Ads Manager
 - [ ] Sesión post-mortem 2-3h
-- [ ] Llenar post-mortem.md
-- [ ] Procesar _doctrine-feedback.md
+- [ ] Llenar `post-mortem.md`
+- [ ] Procesar `_doctrine-feedback.md`
 - [ ] Cierre del modo bootstrap (principio #13)
 
 ---
 
-## Recursos rápidos
+## 7. Recursos rápidos
 
-- Ads Manager: https://www.facebook.com/adsmanager/manage/campaigns?act=2885433191763149
-- Events Manager: https://business.facebook.com/events_manager2/list/pixel
-- Account Quality: https://business.facebook.com/accountquality
-- Audiences: https://business.facebook.com/asset_library/audiences
-- Page Settings: https://business.facebook.com/settings/pages
-- Billing: https://business.facebook.com/billing
+- **Ads Manager**: https://www.facebook.com/adsmanager/manage/campaigns?act=2885433191763149
+- **Events Manager**: https://business.facebook.com/events_manager2/list/datasets
+- **Account Quality**: https://business.facebook.com/accountquality
+- **Audiences**: https://business.facebook.com/asset_library/audiences
+- **Page Settings**: https://business.facebook.com/settings/pages
+- **Billing**: https://business.facebook.com/billing
+- **Landing PREVIEW URL**: https://campanas.livskin.site/dia-madre-armonizacion-2026/
 
 ---
 
