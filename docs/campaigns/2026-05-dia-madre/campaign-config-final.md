@@ -137,7 +137,10 @@ Conversion location: Aplicaciones de mensajería
    App: ✅ WhatsApp
    ❌ Messenger
    ❌ Instagram
-Performance goal: Maximizar el número de conversaciones
+Performance goal: Maximizar clics en el enlace
+   (Nota: "Conversaciones" no se puede seleccionar cuando el objetivo
+    de campaña es Tráfico. Optimizamos por Link Clicks; la atribución
+    de mensajes reales se hace manual via shortcode.)
 
 Page: Livskin
 WhatsApp: +51 980 727 888
@@ -222,7 +225,10 @@ Hola, vengo del aviso de Livskin Día de la Madre [ARM-MAY-FB-BOFU-COLDWA]
 ```
 Nombre: Warm - Reactivación Histórica - Armonización Facial
 Conversion location: Aplicaciones de mensajería → WhatsApp
-Performance goal: Maximizar el número de conversaciones
+Performance goal: Maximizar clics en el enlace
+   (Nota: "Conversaciones" no se puede seleccionar cuando el objetivo
+    de campaña es Tráfico. Optimizamos por Link Clicks; la atribución
+    de mensajes reales se hace manual via shortcode.)
 
 Page: Livskin
 WhatsApp: +51 980 727 888
