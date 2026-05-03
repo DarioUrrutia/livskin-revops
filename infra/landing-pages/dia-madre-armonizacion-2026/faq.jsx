@@ -3,7 +3,7 @@ const FAQ = ({ accent }) => {
   const items = [
     {
       q: "¿Qué es la Armonización Facial?",
-      a: "Es un enfoque médico que combina ácido hialurónico y toxina botulínica para mejorar la proporción y expresión del rostro de forma natural. No es un tratamiento estándar: cada plan se define después de evaluar tu estructura facial, tu dinámica muscular y lo que tú buscas. El objetivo no es transformarte, es que tu rostro se vea más en armonía consigo mismo."
+      a: "Es un enfoque que combina ácido hialurónico y toxina botulínica para mejorar la proporción y expresión del rostro de forma natural. No es un tratamiento estándar: cada plan se define después de evaluar tu estructura facial, tu dinámica muscular y lo que tú buscas. El objetivo no es transformarte, es que tu rostro se vea más en armonía consigo mismo."
     },
     {
       q: "¿Se va a notar? ¿Voy a perder mis expresiones?",
@@ -23,11 +23,11 @@ const FAQ = ({ accent }) => {
     },
     {
       q: "¿Qué productos usan?",
-      a: "Trabajamos exclusivamente con productos originales aprobados por DIGEMID: ácido hialurónico de marcas reconocidas mundialmente y toxina botulínica de laboratorios certificados. Cada caja viene con su número de lote y su trazabilidad — puedes verla antes de la aplicación. El procedimiento lo realiza un médico especialista en un ambiente clínico controlado."
+      a: "Trabajamos exclusivamente con productos originales aprobados por DIGEMID: ácido hialurónico de marcas reconocidas mundialmente y toxina botulínica de laboratorios certificados. El procedimiento se realiza en un ambiente clínico controlado, con criterio profesional en cada decisión."
     },
     {
       q: "¿Tiene riesgos o efectos secundarios?",
-      a: "Aplicada por un médico con criterio, es uno de los procedimientos estéticos más seguros. Puede haber leve enrojecimiento, pequeña inflamación o hematomas que desaparecen en horas o pocos días. Por eso la evaluación previa no es opcional: define qué se aplica, dónde, cuánto y si hay algo que contraindique el procedimiento ese día."
+      a: "Aplicada con criterio profesional, es uno de los procedimientos estéticos más seguros. Puede haber leve enrojecimiento, pequeña inflamación o hematomas que desaparecen en horas o pocos días. Por eso la evaluación previa no es opcional: define qué se aplica, dónde, cuánto y si hay algo que contraindique el procedimiento ese día."
     },
     {
       q: "¿Cuánto cuesta?",

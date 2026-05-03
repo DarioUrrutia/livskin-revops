@@ -136,7 +136,7 @@ const Process = ({ accent }) => {
           <div className="eyebrow" style={{ color: accent, marginBottom: 14, fontSize: 11, letterSpacing: "0.32em" }}>SOBRE EL TRATAMIENTO</div>
           <h2 className="display-bold" style={{ fontSize: "clamp(24px, 4.5vw, 38px)", fontWeight: 700, letterSpacing: "0.02em", marginBottom: 16, color: "var(--ink)" }}>LA ARMONIZACIÓN FACIAL, EXPLICADA CON CRITERIO.</h2>
           <p style={{ maxWidth: 620, margin: "0 auto", fontSize: "clamp(13px, 2vw, 14.5px)", color: "var(--ink-soft)", lineHeight: 1.75 }}>
-            Combinación médica de ácido hialurónico y toxina botulínica, definida según tu rostro. No es una fórmula estándar: evaluamos estructura, expresión y proporciones para decidir qué aplicar, dónde y cuánto. Productos originales, sesión personalizada, resultado natural. Sin congelar, sin perder tu expresión.
+            Combinación de ácido hialurónico y toxina botulínica, definida según tu rostro. No es una fórmula estándar: evaluamos estructura, expresión y proporciones para decidir qué aplicar, dónde y cuánto. Productos originales, sesión personalizada, resultado natural. Sin congelar, sin perder tu expresión.
           </p>
         </div>
         <div className="proceso-grid" style={{ maxWidth: 1180, margin: "0 auto" }}>
@@ -239,7 +239,7 @@ const Booking = ({ accent }) => {
         <div>
           <div className="eyebrow" style={{ color: accent, marginBottom: 14, fontSize: 11, letterSpacing: "0.3em" }}>EDICIÓN DÍA DE LA MADRE · MAYO</div>
           <h2 className="display-bold" style={{ fontSize: "clamp(26px, 5vw, 42px)", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.005em", marginBottom: 16, lineHeight: 1.15 }}>Agenda tu evaluación de Armonización Facial.</h2>
-          <p style={{ fontSize: "clamp(13px, 2vw, 14.5px)", color: "var(--ink-soft)", marginBottom: 22, lineHeight: 1.7 }}>Una conversación con criterio médico antes de cualquier aplicación. Sin compromiso, sin presión.</p>
+          <p style={{ fontSize: "clamp(13px, 2vw, 14.5px)", color: "var(--ink-soft)", marginBottom: 22, lineHeight: 1.7 }}>Una conversación con criterio profesional antes de cualquier aplicación. Sin compromiso, sin presión.</p>
           <a href="#" style={{ display: "inline-block", borderBottom: "1.5px solid var(--ink)", color: "var(--ink)", paddingBottom: 4, fontSize: 13, fontWeight: 600, fontFamily: "Montserrat, sans-serif", marginBottom: 28 }}>Atención previa cita</a>
           <div style={{ display: "flex", flexDirection: "column", gap: 22, marginTop: 24 }}>
             <div>
