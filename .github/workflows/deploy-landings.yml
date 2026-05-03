@@ -102,11 +102,19 @@ jobs:
           # account_id es identificador publico (no sensible); hardcoded para evitar
           # dependencia de secret que ha probado ser fragil de configurar en GH UI.
           CLOUDFLARE_ACCOUNT_ID: 5c8c8d42417a0c5c0ae4640a392ebc8f
+          # Pasar commit message por env var para que el shell escape comillas + multilínea correctamente.
+          # Workaround para fallo 2026-05-03 ("Unknown arguments: Facial") — commit messages largos
+          # con paréntesis, acentos, comillas o newlines rompían el wrangler arg parsing.
+          COMMIT_MSG_RAW: ${{ github.event.head_commit.message }}
         run: |
+          # Tomar solo la primera línea + sanitizar comillas + truncar a 200 chars
+          # (wrangler no necesita el body completo del commit, solo título legible)
+          COMMIT_MSG=$(printf '%s' "$COMMIT_MSG_RAW" | head -n1 | tr -d '"' | cut -c1-200)
+          echo "Deploying with commit message: $COMMIT_MSG"
           wrangler pages deploy _build \
             --project-name=livskin-campanas \
             --branch=main \
-            --commit-message="${{ github.event.head_commit.message }}" \
+            --commit-message="$COMMIT_MSG" \
             --commit-hash="${{ github.sha }}"
 
       - name: Audit event ERP (post-deploy)
