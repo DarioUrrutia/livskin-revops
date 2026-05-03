@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: **2026-05-03 v3.0 (PIVOT ESTRATÉGICO — Doctrina "deterministic backbone first" elevada a principio operativo #11; audit honesto reduce scope agentes 5→1+2 scripts; Bridge Episode primera campaña paga FB Ads insertado entre Fase 3 cerrada y Fase 4 reescrita; ADR-0034 Conversation Agent IA → 💤 diferida)**
+> Última actualización: **2026-05-04 v3.1 (DOCTRINA DE MARCA + GOBERNANZA DE CONTEXTOS — Principios #12 (modo declarado proyecto/campaña) y #13 (modo bootstrap único hasta post-mortem 1ª campaña) agregados; doctrina de marca v0.1 BORRADOR en `docs/brand/`; primera campaña pivota a "Día de la Madre 2026" como test del sistema; runbook de modos en `docs/runbooks/sesion-modo-proyecto-vs-campana.md`)**
 
 ---
 
@@ -48,6 +48,8 @@ Lee en este orden antes de cualquier tarea sustantiva:
 9. **Antes de implementar, definir.** Dossier aprobado + dependencies resueltas + exit criteria.
 10. **Responder a la profundidad pedida.** Táctica → concisa. Estratégica → comprehensiva.
 11. **Deterministic backbone first — IA es capa aditiva, no foundational.** El sistema debe operar 100% sin agentes IA. Si todos los agentes se apagan, la operación sigue. La IA se agrega sobre infraestructura validada con datos de campañas reales, no sobre hipótesis. Antes de aprobar un agente: aplicar filtro de 6 checks (memoria `project_agent_scope_audit_2026_05_03`). Articulado por Dario el 2026-05-03 tras audit honesto que reveló sobre-engineering del agent design original (5 agentes → 1 agente real + 2 scripts).
+12. **Modo de trabajo declarado por sesión.** Cada sesión declara explícitamente al iniciar: **modo PROYECTO** (toca sistema durable: master plan, ADRs, memorias críticas, infra core) o **modo CAMPAÑA** (toca solo `docs/campaigns/<actual>/` + `infra/landing-pages/<slug>/` + `infra/ad-creatives/<actual>/`). Las modificaciones se restringen al modo. Mezclar requiere división explícita en bloques con commit de barrera entre ellos. Sin modo declarado → la sesión deriva y contamina contextos. Articulado por Dario el 2026-05-04 tras detectar que sesiones largas mezclan tactical de campaña con doctrina durable. Workflow detallado en `docs/runbooks/sesion-modo-proyecto-vs-campana.md`.
+13. **Modo BOOTSTRAP — régimen único transitorio para construcción del sistema.** Aplica SOLO mientras la doctrina de marca + el primer ciclo completo de campaña están siendo construidos en paralelo. Permite feedback bidireccional doctrina ↔ campaña con disciplina especial: doctrina vive en estado borrador versionado (`v0.X`), refinamientos a doctrina por aprendizajes de campaña requieren commit separado con prefix `docs(brand)` y comentario explícito del insight, memorias 🔥 CRÍTICAS de marca se crean al cierre del bootstrap (no durante). **Trigger de cierre formal**: post-mortem de la primera campaña paga (estimado 2026-05-12/13). Al cierre: doctrina asciende `v0.X → v1.0`, eliminamos header BORRADOR, creamos memorias críticas, principio #13 marca el bootstrap como cerrado. A partir de ahí, modos PROYECTO/CAMPAÑA son separados estrictos sin excepciones.
 
 ---
 

@@ -97,6 +97,12 @@ build/
 _build/
 .wrangler/
 
+# --- Pending uploads — staging local de fotos pre-procesado ---
+# Dario deja fotos aquí entre sesiones; Claude las consume + mueve a infra/landing-pages/<slug>/uploads/
+# Ver docs/brand/image-guidelines.md § "Mecánica de upload"
+_pending-uploads/*
+!_pending-uploads/README.md
+
 # --- Coverage / testing ---
 .coverage
 htmlcov/

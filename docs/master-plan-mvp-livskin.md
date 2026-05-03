@@ -131,7 +131,7 @@ Si una decisión favorece a uno pero perjudica al otro, **gana el operacional**.
 
 ---
 
-## 4. Filosofía operativa — 11 principios
+## 4. Filosofía operativa — 13 principios
 
 Rigen cada decisión técnica y estratégica. No son aspiracionales — son vinculantes.
 
@@ -146,6 +146,8 @@ Rigen cada decisión técnica y estratégica. No son aspiracionales — son vinc
 9. **Antes de implementar, definir.** Cada construcción requiere dossier aprobado + dependencies resueltas + exit criteria.
 10. **Responder a la profundidad pedida.** Conversación táctica → respuesta concisa. Conversación estratégica → respuesta comprehensiva con estructura.
 11. **Deterministic backbone first — IA es capa aditiva, no foundational.** El sistema debe operar 100% sin agentes IA. Si todos los agentes se apagan, la operación sigue. La IA se agrega sobre infraestructura validada con datos de campañas reales, no sobre hipótesis. Antes de aprobar un agente IA, aplicar el filtro de 6 checks (memoria `project_agent_scope_audit_2026_05_03`). Articulado por Dario el 2026-05-03 tras audit honesto que reveló sobre-engineering del agent design original.
+12. **Modo de trabajo declarado por sesión.** Cada sesión declara explícitamente al iniciar: **modo PROYECTO** (toca sistema durable) o **modo CAMPAÑA** (toca solo `docs/campaigns/<actual>/` + `infra/landing-pages/<slug>/`). Modificaciones restringidas al modo. Mezclar requiere división explícita en bloques con commit de barrera. Sin modo declarado → la sesión deriva y contamina. Articulado por Dario el 2026-05-04. Workflow en `docs/runbooks/sesion-modo-proyecto-vs-campana.md`.
+13. **Modo BOOTSTRAP — régimen único transitorio.** Aplica SOLO mientras la doctrina de marca + el primer ciclo completo de campaña están construyéndose en paralelo. Permite feedback bidireccional doctrina ↔ campaña con disciplina: doctrina vive en estado borrador versionado (`v0.X`), refinamientos requieren commit separado con prefix `docs(brand)`, memorias 🔥 CRÍTICAS de marca se crean al cierre del bootstrap. Trigger de cierre formal: post-mortem de la primera campaña paga (estimado 2026-05-12/13). A partir de ahí, modos PROYECTO/CAMPAÑA son separados estrictos sin excepciones.
 
 ---
 
@@ -764,6 +766,8 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 
 ### 11.5b Interludio estratégico — Definición de estrategia, segmentos y plan de negocio (entre Fase 3 y Fase 4)
 
+> **⚠️ ACTUALIZACIÓN 2026-05-04 — parcialmente cumplido en modo BOOTSTRAP:** Dario pasó documento "Guidelines de Campañas Livskin" que destila la metodología creativa (decoded + nudge + predictably irrational + funnel TOFU/MOFU/BOFU + filosofía + checklist 4 preguntas). Esto cubre el componente **brand voice** del interludio. Ha sido capturado en `docs/brand/` v0.1 BORRADOR (modo bootstrap principio operativo #13). Asciende a v1.0 firmada al cierre del post-mortem de la primera campaña paga (Día de la Madre 2026-05). **Componentes pendientes del interludio**: arquetipos detallados (3-5 perfiles), posicionamiento competitivo formal, plan estratégico 6-12-24 meses. Estos esperan a la sesión estratégica organizacional dedicada (~4-8h) post-Bridge Episode.
+
 **Objetivo:** producir el input narrativo que los agentes de Fases 4-5 van a consumir como contexto de prompt.
 
 **Por qué aquí y no antes o después:**
@@ -1327,6 +1331,17 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 - **ADR-0034 v1.0** (Conversation Agent IA Foundation, escrita 2026-05-02) → marcada 💤 Diferida con header explicativo
 - **Auto-crítica de Claude documentada**: 4 fallas en colaboración previa (no empujar customer development, aceptar premisa "5 agentes" sin friction, sumarse al sobre-engineering Bloque 0 v2, demasiados ADRs)
 - **Razón del cambio**: Dario detectó en sesión que las decisiones sobre agentes se estaban escalando críticamente sin haberlas estructurado. Articuló doctrina rectora: el sistema debe operar 100% sin agentes; la IA se suma sobre infraestructura validada con datos de campañas reales.
+
+### v1.5 — 2026-05-04 — DOCTRINA DE MARCA + GOBERNANZA DE CONTEXTOS
+
+- **Documento "Guidelines de Campañas Livskin"** pasado por Dario como destilación de la metodología creativa (Decoded + Nudge + Predictably Irrational + funnel TOFU/MOFU/BOFU + filosofía + checklist 4 preguntas).
+- **`docs/brand/` creado en v0.1 BORRADOR** (5 archivos): brand-system, copy-principles, design-principles, image-guidelines, campaign-brief-template + README. Estructura modular para que subagentes futuros del Brand Orchestrator consuman partes específicas.
+- **Principio operativo #12 nuevo**: modo de trabajo declarado por sesión (PROYECTO vs CAMPAÑA). Las modificaciones se restringen al modo. Mezclar requiere división explícita en bloques con commit de barrera.
+- **Principio operativo #13 nuevo**: modo BOOTSTRAP — régimen único transitorio para construcción del sistema. Permite feedback bidireccional doctrina ↔ campaña con disciplina especial. Cierra al post-mortem de la primera campaña paga (~2026-05-12/13). A partir de ahí, modos PROYECTO/CAMPAÑA son separados estrictos sin excepciones.
+- **§ 11.5b actualizado**: interludio estratégico parcialmente cumplido (brand voice ✅ vía doctrina v0.1, arquetipos + posicionamiento + plan estratégico aún pendientes).
+- **Runbook nuevo**: `docs/runbooks/sesion-modo-proyecto-vs-campana.md` documenta los 3 modos + workflow + anti-patrones + cierre formal del bootstrap.
+- **Bridge Episode pivota**: campaña "primera campaña paga" se reframea como "Día de la Madre 2026-05". Misma fecha de lanzamiento (~5 may), mismo budget, misma metodología. La fecha del 11 de mayo (Día de la Madre Perú) es el frame contextual que activa identidad alineado al doc de Guidelines.
+- **Razón del cambio**: Dario detectó que las decisiones de campaña estaban contaminando memorias críticas durables. Articuló necesidad de gobernanza de contextos. Pasó documento de Guidelines como input crítico que el master plan tenía diferido al "interludio estratégico". El timing del Día de la Madre + tener el doc de Guidelines convergen en este reframe estratégico.
 
 ---
 
