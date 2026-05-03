@@ -1,234 +1,234 @@
-# Plan Bridge Episode — Primera campaña paga FB Ads (2026-05-03)
+# Plan Operativo — Campaña Día de la Madre 2026
 
-> **Status:** 🚀 ARRANCANDO
-> **Tipo:** Episodio puente entre Fase 3 (cerrada) y Fase 4 (reescrita post-audit 2026-05-03)
-> **Doctrina rectora:** principio operativo #11 — *"Deterministic backbone first — IA es capa aditiva"*
-> **Memoria efímera:** `project_first_paid_campaign_2026_05_03.md` — archivar tras post-mortem
-> **Audit que precedió:** `docs/audits/agent-scope-audit-2026-05-03.md`
+> **Status:** 🚀 EN PREPARACIÓN — pendiente aprobación brief.md
+> **Frame contextual:** Día de la Madre Perú (Domingo 11 de mayo 2026)
+> **Tipo:** Bridge Episode entre Fase 3 (cerrada) y Fase 4 (reescrita post-audit)
+> **Doctrina rectora:** principio operativo #11 (deterministic backbone first) + #13 (modo bootstrap)
+> **Brief:** ver [`brief.md`](brief.md) — gate de aprobación
+> **Configuración técnica detallada:** ver [`campaign-config-draft.md`](campaign-config-draft.md)
+> **Checklist Ads Manager UI:** ver [`ads-manager-checklist.md`](ads-manager-checklist.md)
 
 ---
 
-## 1. Objetivo REAL (no es generar leads — es generar data)
+## 1. Objetivo REAL
 
-| Pregunta que la campaña responde | Cómo se mide | Decisión que informa |
+**Maximizar contactos directos a WhatsApp de la doctora durante la ventana del Día de la Madre.**
+
+NO es solo generar data (eso era el Bridge Episode genérico). Esta campaña tiene un objetivo comercial directo:
+- Aprovechar el momento contextual (DM peruano)
+- Activar identidad de "madre que decide cuidarse"
+- Llegar a WhatsApp directo donde la doctora cierra la conversación
+
+Data secundaria que aprendemos (hipótesis del brief):
+- ¿Cost-per-message viable en Cusco?
+- ¿Botox vs AH cuál mueve más?
+- ¿Audience F30-55 Cusco radio 5-8km es suficiente?
+- ¿LAL 2-3% mejora performance vs interest-based puro?
+
+---
+
+## 2. Decisión arquitectónica — Opción A (todo Click-to-WhatsApp)
+
+```
+Campaign: Livskin — Día de la Madre 2026
+   Objective: Engagement → Maximize messages (Click-to-WhatsApp)
+   Budget: $100 USD lifetime CBO
+   Schedule: 2026-05-05 → 2026-05-09 (5 días corridos)
+   Ad account: 2885433191763149 (Business Manager Livskin Perú)
+   Pixel: 4410809639201712 (Livskin 2026)
+
+   ├─ Ad Set 1: BOTOX
+   │  Budget allocation: 60% (~$60 lifetime)
+   │  Audience: ver § 3
+   │  Optimization: Lead conversation (WhatsApp)
+   │  Placements: Advantage+ (Meta auto-optimiza)
+   │  Frequency cap: 3-4 (audience chica de Cusco)
+   │  Banners: 9 (3 ideas × 3 aspect ratios)
+   │  Destination: WhatsApp con shortcode [BTX-MAY-FB]
+   │
+   └─ Ad Set 2: ÁCIDO HIALURÓNICO
+      Budget allocation: 40% (~$40 lifetime)
+      Audience: idéntica a Botox
+      Banners: 9 (idem)
+      Destination: WhatsApp con shortcode [AH-MAY-FB]
+```
+
+**Por qué 60/40 Botox/AH:**
+Datos históricos del Excel productivo (`Datos_Livskin_2026-04-25.xlsx`):
+- Botox: 25 ventas históricas
+- Ácido Hialurónico: 4 ventas históricas
+- Botox tiene 6× más historial → mayor probabilidad de conversión → más budget
+
+Ratio 60/40 da a AH suficiente budget para validar (~$40 / 5 días = $8/día → 4-8 messages esperados, suficiente para learning).
+
+---
+
+## 3. Audience
+
+**Geografía (Cusco-only, radio 5-8 km desde Wanchaq):**
+
+```
+Ubicación principal: Wanchaq (donde está la clínica)
+Radio: 5-8 km
+   ├─ Wanchaq ✅
+   ├─ Cercado de Cusco ✅
+   ├─ San Sebastián ✅
+   └─ Santiago ✅
+
+Excluido:
+   ❌ San Jerónimo (10-15 km, lejos)
+   ❌ Saylla (12-18 km, lejos)
+   ❌ Provincias lejanas (Quillabamba, Espinar)
+```
+
+**Demografía:**
+- Mujeres
+- 30-55 años
+- Idioma: Spanish
+
+⚠️ **Plan B si Meta marca "Special Ad Category — Health"**: ampliar a 18-65, ambos géneros (Meta optimiza por Pixel events).
+
+**Detailed targeting (intereses):**
+- Skincare, Beauty
+- Cosmetic procedures
+- Anti-aging
+- Aesthetic medicine
+- Mother's Day (si Meta lo expone para Perú)
+
+**Behavior:** Engaged shoppers (proxy de poder adquisitivo).
+
+**Custom Audiences:**
+- 131 clientes activos del ERP → CSV hasheado en `_pending-uploads/livskin-clientes-CA-20260504.csv`
+- Subir a Meta Business Manager → Audiences → Customer file
+- Meta tarda 24-48h en procesar
+- Después: crear Lookalike Audience 2-3% en Cusco → ~10-15K personas similares en el radio
+
+**Audience size esperado** (post-filtros):
+- Cusco metro radio 5-8 km: ~280-300K personas
+- Mujeres 30-55: ~45-55K
+- Tras intereses + behavior: ~10-18K alcanzables
+- Con LAL 2-3% adicional: ~25-30K efectivos
+
+---
+
+## 4. Métricas esperadas y targets
+
+| Métrica | Target / Benchmark | Notas |
 |---|---|---|
-| ¿Funciona el tracking end-to-end con tráfico real? | Leads en ERP con `utm_source=facebook` correctamente atribuidos | Si NO funciona → priorizar fix tracking sobre cualquier otra cosa de Fase 4 |
-| ¿Botox vs PRP cuál convierte mejor? | Conversion rate por landing | Priorización landings futuras + ad budgets |
-| ¿WA directo, landing, o site convierte mejor? | Costo / lead por destino | Decide próxima inversión: chatbot WA priority OR landing optimization |
-| ¿El ICP F25-55 Cusco/Lima funciona? | Demographics de clickers en FB Ads Manager | Validación segmentación |
-| ¿CAC sostenible para tratamientos $300-800? | Spend / clientes pagantes | Go/no-go de campañas a escala |
-| ¿Las creatividades generadas por Dario+Claude convierten? | CTR + cost per lead por anuncio | Decide urgencia construir Brand Orchestrator IA |
+| **CPM** (cost per mille) | $7-15 USD | Audience chica → más caro que mercados grandes |
+| **Impresiones totales** | 7-14K con $100 lifetime | Función de CPM |
+| **Frequency** | 2-3 promedio (cap 3-4) | Audience chica → frequency sube rápido |
+| **CTR** | 1-2% | Benchmark medicina estética LATAM |
+| **Cost per message** | $5-15 USD | Si <$10 → muy bueno; si >$15 → revisar segmentación |
+| **Mensajes WhatsApp totales esperados** | 6-15 | Realista para $100/5 días en Cusco |
+| **Conversion mensaje → consulta agendada** | 30-50% | Depende de qué tan rápido responde la doctora |
+| **Conversion consulta → cliente pagante** | 20-40% | Depende de cierre comercial doctora |
+| **Clientes pagantes esperados (post-DM)** | 1-4 | Es validación, no growth |
+| **Revenue esperado** | S/. 800-3.200 PEN | Si tratamiento promedio S/. 800 |
 
-**Lo que NO es objetivo:**
-- ❌ Maximizar conversiones (no hay sistema optimizado todavía)
-- ❌ Generar revenue inmediato (es validación, no growth)
-- ❌ Probar todos los tratamientos (solo top 2 por revenue: Botox + PRP)
+**ROI mínimo aceptable**: $100 USD ≈ S/. 380. Con 1 cliente que pague S/. 600+ ya es break-even directo. Con 2+ es campaña ganadora.
 
----
-
-## 2. Setup
-
-### 2.1 Budget + duración
-
-- **Budget total:** $100 USD lifetime (no daily)
-- **Duración:** 5 días corridos
-- **Distribución sugerida (Ads Manager auto-optimizes):**
-  - Ad set 1 — Landing Botox: ~$35
-  - Ad set 2 — Landing PRP: ~$35
-  - Ad set 3 — Click-to-WhatsApp: ~$30
-
-### 2.2 Audiencia
-
-- **Locations:** Cusco (Perú) + Lima (Perú)
-- **Demographics:** Mujeres, edad 25-55
-- **Detailed targeting (intereses):** Skincare, Beauty, Aesthetic Medicine, Anti-aging, Cosmetic procedures
-- **Placements:** Advantage+ (FB optimiza automáticamente — Feed/Stories/Reels)
-- **Optimization for delivery:** Conversions → "Lead" event
-
-### 2.3 Pixel + CAPI
-
-- Pixel `4410809639201712` ya healthy ✅
-- CAPI server-side via n8n G3 ya activo ✅
-- Pre-launch verificar en Events Manager que "Lead" event aparece como activo
-
-### 2.4 Creative count
-
-- **3-4 ads mínimo** (FB hace A/B test automático)
-- Distribución sugerida:
-  - 1 imagen + caption "Renová tu mirada con Botox profesional" → landing botox-mvp
-  - 1 imagen + caption "PRP capilar y facial — resultados en 30 días" → landing prp-mvp
-  - 1 carousel "Antes/Después" → WhatsApp directo
-  - Opcional 1 video corto (15-30s) → si Dario tiene material
-
-### 2.5 Constraints Meta importantes a verificar pre-launch
-
-- ⚠️ **Categoría especial restringida**: si Meta marca tu ad account como "salud/bienestar", podría limitar targeting (no edad/género específico). Verificar al armar campaña — si aparece flag, hablar.
-- ⚠️ **Compliance médico**: ads de medicina estética pasan revisión Meta más estricta. NO prometer resultados específicos, NO usar antes/después si Meta lo restringe en tu mercado, NO mencionar "rejuvenecer" o claims clínicos sin disclaimer.
+⚠️ **Pero el ROI directo NO es el único output**: aprendizajes de tracking + audience + creative son input crítico para próxima campaña.
 
 ---
 
-## 3. 3 destinos del tráfico
+## 5. Cronograma operativo día por día
 
-### Destino 1 — Landing botox-mvp ✅ (existente)
-
-**URL:** `https://campanas.livskin.site/botox-mvp/`
-
-**Estado:** Ya construido (Mini-bloque 3.6, mayo 2026). Captura form completa con UTMs + fbclid + event_id → Vtiger Lead → ERP via B3 cron en <2 min.
-
-**Pre-launch checklist:**
-- [ ] Submit form fake con UTMs falsos para verificar end-to-end
-- [ ] Confirmar que llega a Vtiger con todos los campos UTM
-- [ ] Confirmar sync a ERP funciona (LIVLEAD#### nuevo)
-- [ ] Verificar Pixel "Lead" event dispara en navegador con FB Pixel Helper
-- [ ] Verificar CAPI server-side dispara en Events Manager (server-side dedup)
-
-**UTMs del ad → landing:**
-```
-?utm_source=facebook&utm_medium=paid&utm_campaign=botox-mayo-2026&utm_content=ad-botox-1
-```
-
-### Destino 2 — Landing prp-mvp ⏳ (a crear esta sesión)
-
-**URL target:** `https://campanas.livskin.site/prp-mvp/`
-
-**Plan:** copia exacta de `botox-mvp/` con 3 cambios mínimos:
-1. Hero copy cambiado a PRP
-2. Hero photo cambiada (foto PRP genérica si no hay material)
-3. Tratamiento `tratamiento_interes` hidden field cambiado a "PRP"
-
-**Construcción estimada:** 30-60 min (clonar template existente + commit + push → Cloudflare Pages auto-deploy en ~3 min).
-
-**Pre-launch checklist:**
-- [ ] DNS apunta correctamente
-- [ ] Form submit funciona end-to-end (mismo verifier que botox-mvp)
-- [ ] Pixel + CAPI funcionan idéntico
-
-**UTMs del ad → landing:**
-```
-?utm_source=facebook&utm_medium=paid&utm_campaign=prp-mayo-2026&utm_content=ad-prp-1
-```
-
-### Destino 3 — WhatsApp directo doctora (manual tracking)
-
-**Phone:** `+51982732978` (número actual de la doctora — fuera del sistema)
-
-**Mecanismo:** mensajes pre-poblados con shortcodes embedded para atribución manual.
-
-**Links:**
-
-```
-Botox FB:
-https://wa.me/51982732978?text=Hola%2C%20vi%20su%20anuncio%20de%20Botox%20%5BBTX-MAY-FB%5D
-
-PRP FB (si aplica):
-https://wa.me/51982732978?text=Hola%2C%20vi%20su%20anuncio%20de%20PRP%20%5BPRP-MAY-FB%5D
-
-Genérico (si linkeás site):
-https://wa.me/51982732978?text=Hola%2C%20vi%20su%20p%C3%A1gina%20web%20%5BGEN-MAY-FB%5D
-```
-
-**Cuando alguien clickea el ad de FB:**
-1. WhatsApp se abre con texto pre-poblado: *"Hola, vi su anuncio de Botox [BTX-MAY-FB]"*
-2. La mayoría manda tal cual (sin editar)
-3. Doctora ve el shortcode `[BTX-MAY-FB]` en el primer mensaje
-4. Doctora copia número + shortcode + interés a tracking sheet manual (`tracking-sheet-template.md`)
-
-**Atribución resultante:** 100% capturada manualmente, cruzable con cost data de Ads Manager para CAC por shortcode.
+| Día | Fecha | Acciones |
+|-----|-------|----------|
+| **Día -1 (prep)** | 2026-05-04 (hoy) | • Brief aprobado<br>• Custom Audience subida<br>• Lookalike creada (24-48h procesamiento Meta)<br>• Banners producidos por Dario en Canva<br>• Copies refinados bajo doctrina<br>• Pre-flight smoke E2E |
+| **Día 0 (pre-launch)** | 2026-05-04 noche / 2026-05-05 mañana | • Configurar campaña en Ads Manager (siguiendo `ads-manager-checklist.md`)<br>• Verificar Pixel + UTMs<br>• Submit a Meta review |
+| **Día 1 (launch)** | 2026-05-05 (lunes) | • Meta aprueba ads (puede tardar 4-24h)<br>• Monitor primeras 6h |
+| **Día 2-4** | 2026-05-06 a 2026-05-08 | • Daily check Ads Manager 1× día<br>• Doctora llena tracking sheet WA<br>• Pause/swap creatives si performance baja |
+| **Día 5 (cierre)** | 2026-05-09 (viernes) | • Last-day spend<br>• Pre-DM final push si budget remaining |
+| **Día 6 (Día de la Madre)** | 2026-05-11 (domingo) | • Doctora atiende citas presenciales<br>• Tracking de quiénes vinieron por la campaña |
+| **Día 7-8 (post-mortem)** | 2026-05-12 a 2026-05-13 | • Análisis completo en `post-mortem.md`<br>• Cierre del modo bootstrap (principio #13)<br>• Doctrina v0.X → v1.0 |
 
 ---
 
-## 4. Cronograma operativo
+## 6. Tracking + monitoring (sin Marketing API token)
 
-| Día | Actividad | Tiempo | Responsable |
+**Sin Marketing API token disponible** (decisión 2026-05-04 — no repetir el camino fallido del 27/4). Monitoring 100% manual:
+
+### Daily checklist Dario (5 min cada mañana)
+
+1. Abrir Ads Manager → ad account `2885433191763149`
+2. Filtrar campaña "Livskin Día de la Madre 2026"
+3. Screenshot o copia de las métricas clave:
+   - Impresiones, alcance, frequency
+   - CTR, CPM, costo por mensaje
+   - Mensajes recibidos por ad set
+4. Pasar screenshot/CSV a Claude vía chat
+5. Claude genera análisis + recomendaciones en `daily-reports/YYYY-MM-DD.md`
+
+### Tracking manual WhatsApp doctora
+
+- Doctora con cheat sheet impreso de shortcodes
+- Anota cada mensaje nuevo en Google Sheet con: fecha, hora, número, shortcode visto, tratamiento_interés, status
+- Al final de la campaña, cruzar sheet con métricas Meta para CAC real
+
+### Tracking automático (lo que sí funciona sin Marketing API)
+
+- ✅ Pixel + CAPI ya operativos: cada click-to-WhatsApp dispara Pixel "Lead" event si configuramos Custom Conversion para detectar clicks
+- ✅ Vtiger sigue capturando leads de form orgánico (NO de esta campaña, esta es solo WhatsApp directo)
+- ✅ Audit log ERP: registra cada lead
+
+---
+
+## 7. Risk + mitigación
+
+| Riesgo | Probabilidad | Impacto | Mitigación |
 |---|---|---|---|
-| 2026-05-03 noche | Tarea 1 — Verificar end-to-end botox-mvp | 30 min | Claude + Dario |
-| 2026-05-03 noche | Tarea 2 — Crear landing prp-mvp clonando botox-mvp | 1h | Claude |
-| 2026-05-03 noche | Tarea 3 — Generar 3 links WA con shortcodes | 15 min | Claude |
-| 2026-05-03 noche | Tarea 4 — (Opcional) hotfix B3 race | 30 min | Claude |
-| 2026-05-04 mañana | Tarea 5 — Setup FB Ads Manager (juntos paso a paso) | 1h | Dario + Claude guía |
-| 2026-05-04 mañana | Tarea 6 — Crear creatividades (3-4 ads) | 1h | Dario + Claude |
-| 2026-05-04 mañana | Tarea 7 — Cheat sheet impreso/digital para doctora | 15 min | Dario |
-| 2026-05-04 mañana | Tarea 8 — Google Sheet tracking inicializado | 15 min | Dario |
-| 2026-05-04 tarde | Tarea 9 — LANZAR campaña | 15 min | Dario |
-| 2026-05-04 a 2026-05-09 | Campaña corre. Chequeo diario | ~10 min/día | Dario |
-| 2026-05-09 o 10 | Post-mortem session — leer la data | 2h | Claude + Dario |
+| Meta marca "Special Ad Category — Health" | Media | Audience más amplia (no F35-55) | Plan B: ajustar a 18-65 ambos géneros |
+| Compliance ad rejection por copy | Baja-Media | Retraso de aprobación 24-48h | Pre-validar copy contra políticas Meta |
+| Audience Cusco demasiado chica | Baja | CPM alto, low impresiones | Ampliar radio a 10 km en plan B |
+| Doctora no llena tracking sheet | Media | Pérdida de atribución manual | Cheat sheet impreso + WhatsApp recordatorio cada mañana |
+| Banners no se aprueban a tiempo | Media | Lanzamiento tardío | Submit ads el viernes 4 noche para aprobación lunes mañana |
+| Budget se gasta antes de día 5 | Baja | Campaña termina antes del DM | Lifetime budget evita esto, Meta distribuye |
+| Pixel no firea correctamente | Baja | Pérdida de optimization signal | Smoke E2E pre-launch (ya validado 2026-05-03) |
+| Custom Audience tarda >48h en procesar | Media | LAL no disponible al lanzamiento | Subir CA hoy mismo (Meta procesa 24-48h) |
 
 ---
 
-## 5. Lo que NO se hace en este Bridge Episode (resistir FOMO)
+## 8. Lo que NO se hace en esta campaña (resistir FOMO)
 
-**Documentado para no escalar el episodio más de lo planeado:**
+❌ Landings de Día de la Madre (decisión Opción A — todo Click-to-WhatsApp)
+❌ Marketing API token (queda en backlog post-Bridge Episode)
+❌ Banners para 3+ tratamientos (solo Botox + AH)
+❌ Targeting fuera de Cusco
+❌ Promociones / descuentos / "antes del 11"
+❌ Múltiples objectives en 1 campaña (solo Engagement→Messages)
 
-- ❌ Chatbot WhatsApp rule-based (Fase 4A, post-campaña)
-- ❌ Módulo Agenda en ERP (Fase 4A)
-- ❌ Notificaciones automáticas a doctora (Fase 4A)
-- ❌ Brand voice formal documento (en paralelo, no bloquea esta campaña)
-- ❌ Customer development entrevistas a 135 clientes (en paralelo)
-- ❌ Metabase dashboard de campaña (se construye DESPUÉS con data en mano)
-- ❌ Brand Orchestrator subagentes (Fase 4B post-validación)
-- ❌ ADR-0035 VPS dedicado de agentes (no es momento)
-
-**Si alguno de estos genera tentación durante los 5 días, la respuesta es:** *"Excelente idea — agendarla para post-mortem. Hoy enfocados en data real."*
+Si emerge alguna tentación de estas durante la producción → al `_doctrine-feedback.md` para procesar post-mortem, no se cambia campaña corriendo.
 
 ---
 
-## 6. Definition of Done — exit criteria
+## 9. Definition of Done
 
-**El Bridge Episode se considera cerrado cuando:**
+**La campaña se considera cerrada cuando:**
 
-- [ ] Campaña corrió 5 días + Ads Manager muestra al menos 100 impresiones + clicks reales
-- [ ] Vtiger tiene leads con `utm_source=facebook` correctamente atribuidos (mínimo 1 si la campaña funciona)
-- [ ] Doctora llenó al menos 5 entradas en tracking sheet (combinación landing + WA directo)
-- [ ] Post-mortem session ejecutada con data real
-- [ ] Aprendizajes durables migrados a memorias permanentes (`feedback_*.md` o `project_*.md`)
-- [ ] Memoria efímera `project_first_paid_campaign_2026_05_03` archivada
-- [ ] Decisión de próxima fase tomada con datos en mano
-
----
-
-## 7. Plan B — qué pasa si algo sale mal
-
-| Escenario | Plan B |
-|---|---|
-| FB Ads rechaza la creative por compliance médico | Suavizar copy, evitar antes/después, agregar disclaimer "consulta médica requerida" |
-| Pixel no dispara con tráfico real | Verificar bloqueadores ad-blocker, confirmar CAPI fallback funciona, debuggear con FB Pixel Helper |
-| Cero conversiones después de día 3 | Pausar, ajustar audience o creative, no quemar todo el budget en algo que no funciona |
-| Doctora se ve abrumada con WA leads | Pausar el ad set 3 (WA directo), redirigir budget a landings |
-| Tracking shows desconexión Vtiger ↔ ERP | Hotfix urgente del sync, pero la data del Ads Manager sigue siendo válida |
-| Account FB Ads marcado como "high-risk health" | Stop, hablar con soporte Meta antes de seguir invirtiendo |
+- [ ] Campaña corrió 5 días + Ads Manager muestra impresiones + clicks reales
+- [ ] Mínimo 5 mensajes WhatsApp recibidos por la doctora con shortcodes anotados
+- [ ] Tracking sheet manual llenado por doctora con al menos 5 entradas
+- [ ] Daily reports de Claude por cada día de campaña
+- [ ] Post-mortem ejecutado con data real
+- [ ] Decisión consciente del cierre del modo bootstrap (doctrina v0.1 → v1.0)
+- [ ] Aprendizajes durables migrados a memorias permanentes
+- [ ] Carpeta `2026-05-dia-madre/` movida a `_archive/` post-cierre
 
 ---
 
-## 8. Aprendizajes durables esperados (post-mortem)
+## 10. Cross-link
 
-Tras el post-mortem, los aprendizajes irán a:
-
-**Si surgen reglas operativas nuevas** → memorias `feedback_*.md`:
-- Ej: "Para FB Ads de medicina estética, evitar palabras X, Y, Z"
-- Ej: "Doctora prefiere recibir leads via X, no Y"
-
-**Si afectan arquitectura del proyecto** → memorias `project_*.md`:
-- Ej: "Botox convierte 3x mejor que PRP — priorizar landings de Botox en Fase 4A"
-- Ej: "WA directo gana sobre landing → priorizar chatbot rule-based"
-
-**Si generan decisiones irreversibles** → ADR nuevo:
-- Ej: ADR-0036 — Decisión sobre prioridad Conversation Agent vs Brand Orchestrator basada en data Bridge Episode
+- `brief.md` — gate de aprobación + las 4 preguntas
+- `tracking.md` — cheat sheet shortcodes consolidado
+- `campaign-config-draft.md` — config técnica exhaustiva
+- `ads-manager-checklist.md` — paso a paso UI manual
+- `botox/copies.md` — copies bajo doctrina
+- `acido-hialuronico/copies.md` — idem
+- `_doctrine-feedback.md` — bootstrap insights
+- `post-mortem.md` — llenar al cerrar
 
 ---
 
-## 9. Cross-link
-
-- **Doctrina rectora**: `feedback_deterministic_backbone_first.md` (memoria 🔥 CRÍTICA)
-- **Audit que precedió**: `docs/audits/agent-scope-audit-2026-05-03.md`
-- **Memoria efímera**: `project_first_paid_campaign_2026_05_03.md`
-- **Session log**: `docs/sesiones/2026-05-03-strategic-pivot-and-first-campaign.md`
-- **Tracking sheet template**: `docs/campaigns/2026-05-first-campaign/tracking-sheet-template.md`
-- **Landing botox-mvp**: `infra/cloudflare-pages/livskin-landings/botox-mvp/`
-- **Pixel Meta**: `4410809639201712` (único activo)
-
----
-
-**Notas:**
-- Plan vivo — refinable iterativamente durante la campaña sin re-aprobación
-- Cualquier decisión que afecte budget o creative requiere OK explícito de Dario
-- Post-mortem es OBLIGATORIO antes de Fase 4 — no skippear
+**Plan vivo.** Refinable antes del lanzamiento. Una vez la campaña corre, NO se modifican estructura/budget/audience sin OK explícito de Dario.
