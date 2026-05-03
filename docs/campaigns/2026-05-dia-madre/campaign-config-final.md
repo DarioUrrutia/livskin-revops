@@ -63,7 +63,7 @@ INTERESES (Include - Detailed targeting):
    • Mother's Day (si aparece para Perú)
 
 CUSTOM AUDIENCES — INCLUDE:
-   • LAL 0-3% Peru — TODO COMPLETO FB (si Meta acepta crearla)
+   (ninguno — esta corrida sin LAL, recolectamos data para siguiente campaña)
 
 CUSTOM AUDIENCES — EXCLUDE (clave):
    • TODO COMPLETO FB
@@ -153,8 +153,8 @@ EXACTAMENTE LA MISMA QUE COLD-LANDING:
    • Cusco · 8km · F 30-55 · Spanish
    • Intereses: Skincare, Beauty, Aesthetic medicine,
                 Cosmetic procedures, Anti-aging, Mother's Day
-   • LAL 0-3% Peru — TODO COMPLETO FB (si está disponible)
    • EXCLUDE las 4 CAs históricas
+   • Sin LAL (esta corrida la recolecta para la próxima)
 
 Tip: en Ad Set 1 antes de salir → "Save audience" → reusar acá.
 
@@ -371,9 +371,17 @@ TOTAL: 1 campaign · 3 ad sets · 6 ads · 3 banners únicos
 - [x] Banners disponibles en `armonizacion-facial/banners/`
 - [x] Landing live con consent modal funcionando (validado en incógnito)
 - [x] Shortcode injection funcionando (parámetro `?src=tofu|mofu` reescribe WA links)
-- [ ] **PENDIENTE**: crear LAL "0-3% Peru — TODO COMPLETO FB" (12-24h en procesar)
+- [x] **DESCARTADO**: LAL — decisión 2026-05-04: esta corrida recolecta seed para LAL futura (objetivo 100+ leads). Cuando tengamos esa seed, LAL en la siguiente campaña.
 - [ ] **PENDIENTE**: verificar WhatsApp Business app conectado a FB Page (al crear ad set 2 y 3 confirmamos)
 - [ ] **PENDIENTE**: cheat sheet doctora impreso
+
+### 🎯 Objetivo secundario de esta corrida (post-mortem)
+
+Recolectar **mínimo 100 leads/contactos** para tener seed sólida de LAL en la siguiente campaña. Cada lead que entre por:
+- Form del landing → guardado en sistema
+- WhatsApp con shortcode → guardado en cheat sheet doctora
+
+→ alimenta la base. Post-campaña esos 100+ se convierten en una nueva Custom Audience por phone hash + las CAs Pixel filtradas por UTM. Esa será la seed limpia que falta hoy.
 
 ---
 
