@@ -2,36 +2,36 @@
 const FAQ = ({ accent }) => {
   const items = [
     {
-      q: "¿El Botox se nota? ¿Voy a perder mis expresiones?",
-      a: "No, si está bien aplicado. Trabajamos con microdosis y puntos precisos para suavizar líneas sin congelar el rostro. Sigues moviéndote, sigues expresándote. Solo se ve más descansado."
+      q: "¿Qué es la Armonización Facial?",
+      a: "Es un enfoque médico que combina ácido hialurónico y toxina botulínica para mejorar la proporción y expresión del rostro de forma natural. No es un tratamiento estándar: cada plan se define después de evaluar tu estructura facial, tu dinámica muscular y lo que tú buscas. El objetivo no es transformarte, es que tu rostro se vea más en armonía consigo mismo."
+    },
+    {
+      q: "¿Se va a notar? ¿Voy a perder mis expresiones?",
+      a: "No, si está bien aplicada. Trabajamos con microdosis y puntos precisos: el ácido hialurónico aporta volumen donde tu rostro lo necesita, y la toxina botulínica suaviza líneas sin congelar la expresión. Sigues moviéndote, sigues expresándote. La gente nota que estás distinta, pero no sabe exactamente qué."
     },
     {
       q: "¿En cuánto tiempo veo el resultado y cuánto dura?",
-      a: "El efecto comienza a notarse entre el día 3 y 5, y se asienta por completo a los 14 días. La duración promedio es de 4 a 6 meses, dependiendo del metabolismo de cada paciente y la zona aplicada."
+      a: "El ácido hialurónico se ve desde el primer día y se asienta entre la primera y segunda semana; dura de 9 a 18 meses según la zona. La toxina botulínica empieza a notarse entre el día 3 y 5, y se asienta a los 14 días; dura de 4 a 6 meses. Es normal que ambos componentes se combinen en un plan que se ajusta con el tiempo."
     },
     {
       q: "¿Es doloroso? ¿Necesito reposo después?",
-      a: "Las microinyecciones son rápidas y muy tolerables. Aplicamos frío local y, si lo prefieres, anestesia tópica. La sesión dura 15 a 20 minutos y puedes retomar tu día con normalidad. Solo evitamos ejercicio intenso y masajes faciales por 24 horas."
+      a: "Las microinyecciones son tolerables. Aplicamos anestesia tópica antes de empezar y frío local durante el procedimiento. La sesión completa dura entre 30 y 60 minutos según las zonas a trabajar. Puedes retomar tu día con normalidad; solo evitamos ejercicio intenso, masajes faciales y exposición al sol fuerte por 24 a 48 horas."
     },
     {
       q: "¿Desde qué edad se recomienda?",
-      a: "No hay una edad fija. Lo evaluamos por la calidad de la piel, la dinámica muscular y los objetivos personales. En algunos casos se aplica de forma preventiva desde los 28–30, en otros como tratamiento correctivo más adelante. Lo definimos en la evaluación."
+      a: "No hay una edad fija. Lo evaluamos por la calidad de tu piel, tu dinámica muscular y tus objetivos. En algunos casos se trabaja de forma preventiva desde los 28–30, en otros como armonización correctiva más adelante. Lo definimos contigo en la evaluación."
     },
     {
-      q: "¿Qué producto usan?",
-      a: "Trabajamos exclusivamente con toxina botulínica original aprobada por DIGEMID, de laboratorios certificados. La aplicación la realiza un médico especialista, en un ambiente clínico controlado."
+      q: "¿Qué productos usan?",
+      a: "Trabajamos exclusivamente con productos originales aprobados por DIGEMID: ácido hialurónico de marcas reconocidas mundialmente y toxina botulínica de laboratorios certificados. Cada caja viene con su número de lote y su trazabilidad — puedes verla antes de la aplicación. El procedimiento lo realiza un médico especialista en un ambiente clínico controlado."
     },
     {
       q: "¿Tiene riesgos o efectos secundarios?",
-      a: "Aplicado por un médico con criterio, es uno de los procedimientos estéticos más seguros. Puede haber un leve enrojecimiento o pequeños hematomas que desaparecen en horas. Por eso la evaluación previa no es opcional: define qué se aplica, dónde y cuánto."
-    },
-    {
-      q: "¿Puedo combinarlo con otros tratamientos?",
-      a: "Sí. El Botox suele combinarse con ácido hialurónico, bioestimuladores o skinbooster según la armonización que tu rostro requiera. Esa combinación se decide en la evaluación, no antes."
+      a: "Aplicada por un médico con criterio, es uno de los procedimientos estéticos más seguros. Puede haber leve enrojecimiento, pequeña inflamación o hematomas que desaparecen en horas o pocos días. Por eso la evaluación previa no es opcional: define qué se aplica, dónde, cuánto y si hay algo que contraindique el procedimiento ese día."
     },
     {
       q: "¿Cuánto cuesta?",
-      a: "El precio depende de las zonas a tratar y la cantidad de unidades necesarias. Por eso no damos un monto único en redes: te lo confirmamos en la evaluación, que es sin costo y sin compromiso."
+      a: "El precio depende de las zonas a trabajar, las unidades necesarias y los productos que usemos. Por eso no damos un monto único en redes: te lo confirmamos en la evaluación, que es sin costo y sin compromiso. Tú decides hasta dónde avanzar y a qué ritmo."
     },
   ];
 

@@ -27,42 +27,79 @@ const TimePill = ({ label, active, onClick }) => {
   );
 };
 
-// ============== ANTES / DESPUÉS ==============
-const BeforeAfter = ({ accent }) => {
+// ============== ANTES / DESPUÉS — slider individual ==============
+const BeforeAfterSlider = ({ before, after, caption, accent }) => {
   const [pos, setPos] = React.useState(50);
   const ref = React.useRef(null);
   const dragging = React.useRef(false);
-  const handleMove = (x) => { if (!ref.current) return; const r = ref.current.getBoundingClientRect(); setPos(Math.max(0, Math.min(100, ((x - r.left) / r.width) * 100))); };
+  const handleMove = (x) => {
+    if (!ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    setPos(Math.max(0, Math.min(100, ((x - r.left) / r.width) * 100)));
+  };
   React.useEffect(() => {
     const up = () => (dragging.current = false);
     const mv = (e) => { if (dragging.current) handleMove(e.clientX || (e.touches && e.touches[0].clientX)); };
     window.addEventListener("mouseup", up); window.addEventListener("touchend", up);
     window.addEventListener("mousemove", mv); window.addEventListener("touchmove", mv);
-    return () => { window.removeEventListener("mouseup", up); window.removeEventListener("touchend", up); window.removeEventListener("mousemove", mv); window.removeEventListener("touchmove", mv); };
+    return () => {
+      window.removeEventListener("mouseup", up); window.removeEventListener("touchend", up);
+      window.removeEventListener("mousemove", mv); window.removeEventListener("touchmove", mv);
+    };
   }, []);
   return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+      <div ref={ref}
+        onMouseDown={(e) => { dragging.current = true; handleMove(e.clientX); }}
+        onTouchStart={(e) => { dragging.current = true; handleMove(e.touches[0].clientX); }}
+        style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", cursor: "ew-resize", userSelect: "none", borderRadius: 8, boxShadow: "0 20px 50px -25px rgba(0,0,0,0.18)", touchAction: "none", width: "100%", maxWidth: 540 }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img src={after} alt="Después" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <div className="eyebrow" style={{ position: "absolute", left: 14, top: 14, padding: "5px 10px", background: "var(--ink)", color: "#FFF", fontSize: 9, borderRadius: 999 }}>Después</div>
+        </div>
+        <div style={{ position: "absolute", inset: 0, clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
+          <img src={before} alt="Antes" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <div className="eyebrow" style={{ position: "absolute", left: 14, top: 14, padding: "5px 10px", background: "rgba(255,255,255,0.92)", color: "var(--ink)", fontSize: 9, borderRadius: 999 }}>Antes</div>
+        </div>
+        <div style={{ position: "absolute", top: 0, bottom: 0, left: `${pos}%`, width: 2, background: "#FFF", boxShadow: "0 0 12px rgba(0,0,0,0.2)", transform: "translateX(-1px)" }}>
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 44, height: 44, borderRadius: "50%", background: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(0,0,0,0.25)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.5" strokeLinecap="round"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg>
+          </div>
+        </div>
+      </div>
+      {caption && (
+        <p className="eyebrow" style={{ fontSize: 10.5, letterSpacing: "0.22em", color: "var(--ink-mute)" }}>
+          {caption}
+        </p>
+      )}
+    </div>
+  );
+};
+
+// ============== ANTES / DESPUÉS — sección completa con múltiples casos ==============
+const BeforeAfter = ({ accent }) => {
+  const cases = [
+    { before: "images/antes.jpg",   after: "images/despues.jpg",   caption: "Caso 1 · Armonización facial completa" },
+    { before: "images/antes-2.jpg", after: "images/despues-2.jpg", caption: "Caso 2 · Próximamente" },
+    { before: "images/antes-3.jpg", after: "images/despues-3.jpg", caption: "Caso 3 · Próximamente" },
+  ];
+  return (
     <section id="resultados" className="sec" style={{ background: "var(--bg)" }}>
-      <div style={{ maxWidth: 1180, margin: "0 auto", textAlign: "center" }}>
+      <style>{`
+        .ba-grid { display: grid; grid-template-columns: 1fr; gap: 48px; max-width: 540px; margin: 0 auto; }
+        @media (min-width: 900px) { .ba-grid { grid-template-columns: repeat(2, 1fr); max-width: 1140px; gap: 40px; } }
+        @media (min-width: 1280px) { .ba-grid { grid-template-columns: repeat(3, 1fr); max-width: 1400px; gap: 36px; } }
+      `}</style>
+      <div style={{ maxWidth: 1400, margin: "0 auto", textAlign: "center" }}>
         <div className="eyebrow" style={{ color: accent, marginBottom: 16, fontSize: 11, letterSpacing: "0.3em" }}>NATURALIDAD QUE SE NOTA SIN NOTARSE</div>
         <h2 className="display-bold" style={{ fontSize: "clamp(26px, 5vw, 44px)", fontWeight: 700, marginBottom: 12, letterSpacing: "-0.005em", color: "var(--ink)", lineHeight: 1.15 }}>Sigues siendo tú.</h2>
-        <p style={{ fontSize: "clamp(13px, 2vw, 15px)", color: "var(--ink-soft)", marginBottom: 40 }}>Desliza para ver el cambio. La diferencia está en cómo te sientes, no en cómo te ves.</p>
-        <div ref={ref}
-          onMouseDown={(e) => { dragging.current = true; handleMove(e.clientX); }}
-          onTouchStart={(e) => { dragging.current = true; handleMove(e.touches[0].clientX); }}
-          style={{ position: "relative", aspectRatio: "4/5", overflow: "hidden", cursor: "ew-resize", userSelect: "none", borderRadius: 8, boxShadow: "0 20px 50px -25px rgba(0,0,0,0.18)", touchAction: "none", maxWidth: 540, margin: "0 auto" }}>
-          <div style={{ position: "absolute", inset: 0 }}>
-            <img src="images/despues.jpg" alt="Después" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            <div className="eyebrow" style={{ position: "absolute", left: 14, top: 14, padding: "5px 10px", background: "var(--ink)", color: "#FFF", fontSize: 9, borderRadius: 999 }}>Después</div>
-          </div>
-          <div style={{ position: "absolute", inset: 0, clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-            <img src="images/antes.jpg" alt="Antes" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            <div className="eyebrow" style={{ position: "absolute", left: 14, top: 14, padding: "5px 10px", background: "rgba(255,255,255,0.92)", color: "var(--ink)", fontSize: 9, borderRadius: 999 }}>Antes</div>
-          </div>
-          <div style={{ position: "absolute", top: 0, bottom: 0, left: `${pos}%`, width: 2, background: "#FFF", boxShadow: "0 0 12px rgba(0,0,0,0.2)", transform: "translateX(-1px)" }}>
-            <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 44, height: 44, borderRadius: "50%", background: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(0,0,0,0.25)" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.5" strokeLinecap="round"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></svg>
-            </div>
-          </div>
+        <p style={{ fontSize: "clamp(13px, 2vw, 15px)", color: "var(--ink-soft)", marginBottom: 48, maxWidth: 620, marginLeft: "auto", marginRight: "auto", lineHeight: 1.7 }}>
+          Desliza cada imagen para ver el cambio. La diferencia está en cómo te sientes, no en cómo te ves.
+        </p>
+        <div className="ba-grid">
+          {cases.map((c, i) => (
+            <BeforeAfterSlider key={i} before={c.before} after={c.after} caption={c.caption} accent={accent} />
+          ))}
         </div>
       </div>
     </section>
@@ -97,9 +134,9 @@ const Process = ({ accent }) => {
       <section id="proceso" className="sec" style={{ background: "#FFFFFF", color: "var(--ink)" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", textAlign: "center", marginBottom: 48 }}>
           <div className="eyebrow" style={{ color: accent, marginBottom: 14, fontSize: 11, letterSpacing: "0.32em" }}>SOBRE EL TRATAMIENTO</div>
-          <h2 className="display-bold" style={{ fontSize: "clamp(24px, 4.5vw, 38px)", fontWeight: 700, letterSpacing: "0.02em", marginBottom: 16, color: "var(--ink)" }}>EL BOTOX, EXPLICADO CON CRITERIO.</h2>
+          <h2 className="display-bold" style={{ fontSize: "clamp(24px, 4.5vw, 38px)", fontWeight: 700, letterSpacing: "0.02em", marginBottom: 16, color: "var(--ink)" }}>LA ARMONIZACIÓN FACIAL, EXPLICADA CON CRITERIO.</h2>
           <p style={{ maxWidth: 620, margin: "0 auto", fontSize: "clamp(13px, 2vw, 14.5px)", color: "var(--ink-soft)", lineHeight: 1.75 }}>
-            Aplicación médica de toxina botulínica para suavizar líneas de expresión sin congelar el rostro. Producto original, microdosis precisas, sesión de 15–20 minutos. Resultado visible a los 7 días, duración de 4 a 6 meses. Sin baja, sin marcas, sin perder tu expresión.
+            Combinación médica de ácido hialurónico y toxina botulínica, definida según tu rostro. No es una fórmula estándar: evaluamos estructura, expresión y proporciones para decidir qué aplicar, dónde y cuánto. Productos originales, sesión personalizada, resultado natural. Sin congelar, sin perder tu expresión.
           </p>
         </div>
         <div className="proceso-grid" style={{ maxWidth: 1180, margin: "0 auto" }}>
@@ -169,8 +206,25 @@ const Testimonials = ({ accent }) => {
 
 // ============== RESERVAR ==============
 const Booking = ({ accent }) => {
-  const [name, setName] = React.useState(""); const [phone, setPhone] = React.useState(""); const [email, setEmail] = React.useState(""); const [time, setTime] = React.useState("Mañana");
-  const waLink = `https://wa.me/51980727888?text=${encodeURIComponent(`Hola Livskin, soy ${name || "[nombre]"}, mi número es ${phone || "[tel]"}, email: ${email || "[email]"}. Me gustaría agendar una valoración de Botox en horario de ${time}.`)}`;
+  const [name, setName] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [consent, setConsent] = React.useState(false);
+  const [touched, setTouched] = React.useState(false);
+
+  const nameOk = name.trim().length >= 2;
+  const phoneOk = phone.trim().length >= 7;
+  const canSubmit = nameOk && phoneOk && consent;
+
+  const waLink = `https://wa.me/51980727888?text=${encodeURIComponent(`Hola Livskin, soy ${name || "[nombre]"}, mi número es ${phone || "[tel]"}${email ? `, email: ${email}` : ""}. Me gustaría agendar una valoración de Armonización Facial.`)}`;
+
+  const handleClick = (e) => {
+    if (!canSubmit) {
+      e.preventDefault();
+      setTouched(true);
+    }
+  };
+
   return (
     <section id="reservar" className="sec" style={{ background: "var(--bg-pink)" }}>
       <style>{`
@@ -184,7 +238,7 @@ const Booking = ({ accent }) => {
       <div style={{ maxWidth: 1100, margin: "0 auto" }} className="booking-grid">
         <div>
           <div className="eyebrow" style={{ color: accent, marginBottom: 14, fontSize: 11, letterSpacing: "0.3em" }}>EDICIÓN DÍA DE LA MADRE · MAYO</div>
-          <h2 className="display-bold" style={{ fontSize: "clamp(26px, 5vw, 42px)", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.005em", marginBottom: 16, lineHeight: 1.15 }}>Agenda tu evaluación de Botox.</h2>
+          <h2 className="display-bold" style={{ fontSize: "clamp(26px, 5vw, 42px)", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.005em", marginBottom: 16, lineHeight: 1.15 }}>Agenda tu evaluación de Armonización Facial.</h2>
           <p style={{ fontSize: "clamp(13px, 2vw, 14.5px)", color: "var(--ink-soft)", marginBottom: 22, lineHeight: 1.7 }}>Una conversación con criterio médico antes de cualquier aplicación. Sin compromiso, sin presión.</p>
           <a href="#" style={{ display: "inline-block", borderBottom: "1.5px solid var(--ink)", color: "var(--ink)", paddingBottom: 4, fontSize: 13, fontWeight: 600, fontFamily: "Montserrat, sans-serif", marginBottom: 28 }}>Atención previa cita</a>
           <div style={{ display: "flex", flexDirection: "column", gap: 22, marginTop: 24 }}>
@@ -207,20 +261,50 @@ const Booking = ({ accent }) => {
         <div className="booking-card">
           <div style={{ width: 30, height: 2, background: accent, marginBottom: 20 }} />
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Field label="Nombres *" value={name} onChange={setName} />
-            <Field label="Email *" value={email} onChange={setEmail} type="email" />
-            <Field label="Teléfono *" value={phone} onChange={setPhone} type="tel" />
-            <div>
-              <label style={{ display: "block", fontSize: 13, color: "var(--ink)", marginBottom: 8, fontWeight: 600 }}>Horario preferido</label>
-              <div style={{ display: "flex", gap: 8 }}>
-                {["Mañana", "Tarde", "Sábado"].map(t => (
-                  <TimePill key={t} label={t} active={time === t} onClick={() => setTime(t)} accent={accent} />
-                ))}
-              </div>
+            <Field label="Nombres" value={name} onChange={setName} required error={touched && !nameOk} />
+            <Field label="Teléfono" value={phone} onChange={setPhone} type="tel" required error={touched && !phoneOk} />
+            <Field label="Email" hint="(opcional)" value={email} onChange={setEmail} type="email" />
+
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 4 }}>
+              <input
+                id="consent"
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                style={{ marginTop: 4, width: 16, height: 16, accentColor: accent, flexShrink: 0, cursor: "pointer" }}
+              />
+              <label htmlFor="consent" style={{
+                fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)", cursor: "pointer",
+                fontFamily: "'Open Sans', sans-serif",
+              }}>
+                Acepto que Livskin me contacte por WhatsApp o teléfono para coordinar mi evaluación. He leído y acepto la{" "}
+                <a href="legal/privacidad.html" target="_blank" rel="noopener" style={{ color: "var(--ink)", borderBottom: `1px solid ${accent}` }}>Política de Privacidad</a>{" "}y los{" "}
+                <a href="legal/terminos.html" target="_blank" rel="noopener" style={{ color: "var(--ink)", borderBottom: `1px solid ${accent}` }}>Términos y Condiciones</a>.
+              </label>
             </div>
-            <window.PinkCTA href={waLink} target="_blank" rel="noreferrer" size="lg" style={{ marginTop: 6 }}>
-              <Icon name="wa" size={15} color="#FFF" /> Agendar evaluación de Botox
+
+            {touched && !canSubmit && (
+              <div style={{ fontSize: 12, color: "#B91C1C", lineHeight: 1.5, marginTop: -4 }}>
+                {!nameOk && <div>• Necesitamos tu nombre.</div>}
+                {!phoneOk && <div>• Necesitamos un teléfono válido.</div>}
+                {!consent && <div>• Debes aceptar la política de privacidad para continuar.</div>}
+              </div>
+            )}
+
+            <window.PinkCTA
+              href={canSubmit ? waLink : "#"}
+              target={canSubmit ? "_blank" : undefined}
+              rel={canSubmit ? "noreferrer" : undefined}
+              onClick={handleClick}
+              size="lg"
+              style={{ marginTop: 6, opacity: canSubmit ? 1 : 0.55 }}
+            >
+              <Icon name="wa" size={15} color="#FFF" /> Agendar evaluación
             </window.PinkCTA>
+
+            <p style={{ fontSize: 11.5, color: "var(--ink-mute)", lineHeight: 1.6, marginTop: 4, textAlign: "center" }}>
+              Tus datos solo se usan para coordinar tu cita. No los compartimos con terceros.
+            </p>
           </div>
         </div>
       </div>
@@ -228,10 +312,25 @@ const Booking = ({ accent }) => {
   );
 };
 
-const Field = ({ label, value, onChange, placeholder, type = "text" }) => (
+const Field = ({ label, value, onChange, placeholder, type = "text", required, hint, error }) => (
   <div>
-    <label style={{ display: "block", fontSize: 13, color: "var(--ink)", marginBottom: 8, fontWeight: 600 }}>{label}</label>
-    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={{ width: "100%", padding: "13px 14px", border: "1px solid var(--line)", borderRadius: 4, background: "#FFF", fontFamily: "'Open Sans', sans-serif", fontSize: 15, color: "var(--ink)", outline: "none" }} />
+    <label style={{ display: "block", fontSize: 13, color: "var(--ink)", marginBottom: 8, fontWeight: 600 }}>
+      {label}
+      {hint && <span style={{ fontWeight: 400, color: "var(--ink-mute)", marginLeft: 6, fontSize: 12 }}>{hint}</span>}
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      required={required}
+      style={{
+        width: "100%", padding: "13px 14px",
+        border: `1px solid ${error ? "#B91C1C" : "var(--line)"}`,
+        borderRadius: 4, background: "#FFF",
+        fontFamily: "'Open Sans', sans-serif", fontSize: 15, color: "var(--ink)", outline: "none",
+      }}
+    />
   </div>
 );
 
@@ -239,13 +338,23 @@ const Field = ({ label, value, onChange, placeholder, type = "text" }) => (
 const Footer = () => (
   <footer style={{ padding: "36px 20px 28px", background: "var(--bg)", borderTop: "1px solid var(--line)" }}>
     <style>{`
-      .footer-inner { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
-      @media (min-width: 720px) { .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; } }
+      .footer-inner { display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; }
+      @media (min-width: 720px) { .footer-inner { flex-direction: row; justify-content: space-between; text-align: left; align-items: center; } }
+      .footer-legal { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+      @media (min-width: 720px) { .footer-legal { justify-content: flex-end; } }
     `}</style>
     <div style={{ maxWidth: 1280, margin: "0 auto" }} className="footer-inner">
       <Logo size={22} showTagline={true} />
       <div className="eyebrow" style={{ fontSize: 10, color: "var(--ink-mute)", letterSpacing: "0.2em" }}>© 2026 LIVSKIN · CUSCO, PERÚ</div>
-      <div style={{ display: "flex", gap: 20 }}>{["Instagram", "Facebook", "WhatsApp"].map(l => <a key={l} href="#" className="eyebrow" style={{ fontSize: 10, color: "var(--ink-soft)", letterSpacing: "0.2em" }}>{l}</a>)}</div>
+      <div className="footer-legal">
+        <a href="https://www.instagram.com/livskin.peru/" target="_blank" rel="noopener" className="eyebrow" style={{ fontSize: 10, color: "var(--ink-soft)", letterSpacing: "0.2em" }}>Instagram</a>
+        <a href="https://www.facebook.com/livskinperu" target="_blank" rel="noopener" className="eyebrow" style={{ fontSize: 10, color: "var(--ink-soft)", letterSpacing: "0.2em" }}>Facebook</a>
+        <a href="https://wa.me/51980727888" target="_blank" rel="noopener" className="eyebrow" style={{ fontSize: 10, color: "var(--ink-soft)", letterSpacing: "0.2em" }}>WhatsApp</a>
+        <span style={{ color: "var(--line)" }}>·</span>
+        <a href="legal/privacidad.html" target="_blank" rel="noopener" className="eyebrow" style={{ fontSize: 10, color: "var(--ink-soft)", letterSpacing: "0.2em" }}>Privacidad</a>
+        <a href="legal/terminos.html" target="_blank" rel="noopener" className="eyebrow" style={{ fontSize: 10, color: "var(--ink-soft)", letterSpacing: "0.2em" }}>Términos</a>
+        <a href="legal/cookies.html" target="_blank" rel="noopener" className="eyebrow" style={{ fontSize: 10, color: "var(--ink-soft)", letterSpacing: "0.2em" }}>Cookies</a>
+      </div>
     </div>
   </footer>
 );

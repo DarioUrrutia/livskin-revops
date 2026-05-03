@@ -3,7 +3,7 @@ const NAV_BLUE = "#5BB5D6";
 const NAV_PINK = "#F4A6BB";
 
 // Reusable pink CTA button — hover turns blue, with subtle lift
-const PinkCTA = ({ href, children, target, rel, style = {}, size = "md" }) => {
+const PinkCTA = ({ href, children, target, rel, style = {}, size = "md", onClick }) => {
   const [hover, setHover] = React.useState(false);
   const padding = size === "lg" ? "18px 34px" : size === "sm" ? "12px 22px" : "16px 30px";
   const fontSize = size === "lg" ? 12.5 : size === "sm" ? 11 : 12;
@@ -12,6 +12,7 @@ const PinkCTA = ({ href, children, target, rel, style = {}, size = "md" }) => {
       href={href}
       target={target}
       rel={rel}
+      onClick={onClick}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
