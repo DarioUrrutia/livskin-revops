@@ -45,6 +45,35 @@ Plan táctico completo: [docs/campaigns/2026-05-first-campaign/plan.md](campaign
 5. Lanzar campaña + Google Sheet tracking
 6. Post-mortem ~2026-05-09 con data real
 
+### 🤖 Decidir trigger de migración Manual UI → Marketing API (gradual)
+
+**Contexto:** la campaña Día de la Madre 2026 está corriendo 100% manual UI (Dario click-a-click siguiendo `docs/runbooks/meta-ads-configuracion.md`). El proyecto debe migrar gradualmente a modos más automatizados conforme madura, pero NO de un solo salto.
+
+**Modos de ejecución a habitar progresivamente:**
+1. **Manual UI** (actual) → 2. **Híbrido** → 3. **API Automatizada**
+
+**Pre-requisitos para subir a Híbrido:**
+1. Marketing API token funcional → resolver bloqueos del 2026-04-27 (App Review formal puede tardar 1-3 semanas — ver doc `docs/sesiones/2026-04-27-acceso-programatico-google-y-audit.md`)
+2. Crear runbook paralelo `docs/runbooks/meta-ads-hybrid.md` (cuáles pasos Claude vía API, cuáles Dario vía UI)
+3. Al menos 1 campaña Manual UI con post-mortem cerrado validando el approach (Día de la Madre 2026 es la primera)
+
+**Pre-requisitos para subir a API Automatizada:**
+1. Modo Híbrido validado en 2-3 campañas
+2. Brand Orchestrator (Fase 4B) operativo como agente que opera la API
+3. Dashboards de monitoreo en tiempo real (extensión de Mini-bloque 3.5)
+4. Kill-switch documentado para abortar campaña activa
+
+**Decisión a tomar en post-mortem 2026-05-12/13**:
+- Si campaña Día de la Madre cumple targets (5+ leads) → próxima piloto Híbrido
+- Si no cumple → otra Manual UI con ajustes antes de subir
+- Si Marketing API sigue bloqueado → seguir Manual UI hasta resolver
+
+**Beneficio cuando se complete:** Claude ejecuta el grueso del setup y daily monitoring; Dario solo aprueba propuestas estratégicas y modifica creatividades. Reduce tiempo Dario por campaña de ~6h (actual) a ~30 min (estado objetivo).
+
+**Prioridad:** alta para Q3 2026, no urgente.
+
+---
+
 ### 📊 Agregar GA4 + GTM a landings (cross-domain tracking) — post-Día de la Madre 2026
 
 **Detectado:** 2026-05-04 al lanzar campaña Día de la Madre.

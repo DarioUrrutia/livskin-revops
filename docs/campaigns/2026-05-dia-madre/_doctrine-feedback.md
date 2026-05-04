@@ -319,6 +319,50 @@ Cualquier insight del tipo *"esto debería ir en la doctrina porque..."* se anot
 
 **Implicación**: para audiences <1.000 personas, frecuencia llega a 3-4x en 5 días. Saturación temprana esperada. Para futuras campañas con CAs históricas chicas: presupuesto Warm ≤ 15% del total (no 25%).
 
+### Primeros leads reales (tracking)
+
+#### [INS-014] (2026-05-04, Dario) — Primer lead real validó hipótesis del Ad Set Cold-WA
+
+**Contexto**: ~9:41 a.m. del 2026-05-04 (día 1 de campaña), la doctora recibió el primer mensaje WhatsApp con shortcode correctamente.
+
+**Lead detail**:
+- Origen: `[ARM-MAY-FB-BOFU-COLDWA]`
+- Teléfono: +51 968 322 731
+- Temperatura: 🟥 Frío (cold prospección + ad BOFU + sin pasar por landing)
+- Tiempo de respuesta doctora: **7 minutos** (excelente)
+- Tiempo a oferta de cita: **16 minutos totales** desde primer mensaje
+
+**Hipótesis VALIDADA**: el experimento del Ad Set 2 "Cold-WA" — *"¿la doctora puede convertir leads cold sin que pasen por landing?"* — recibió primera evidencia positiva. Persona NUEVA (Cold), de un ad de DECISIÓN (BOFU), fue directo a chat sin contexto previo, y la doctora la engagó correctamente en 7 minutos.
+
+**Análisis del copy de respuesta de la doctora vs doctrina**:
+
+✅ **Bueno**:
+- *"Tratamientos estéticos avanzados"* — sin nombrar Botox/AH directo (✅ doctrina)
+- *"Realzar tu belleza de forma natural y sofisticada"* — alineado con código "naturalidad"
+- Pregunta abierta sin presión: *"¿qué te gustaría mejorar o potenciar en ti?"*
+- *"Cita sin costo"* + *"evaluarte"* — alineado con CTA "Agenda tu evaluación"
+
+🟡 **Para refinar (post-mortem)**:
+- 5 emojis en 4 líneas (💫🌸✨ + checkmarks en cita) — quizás demasiados para mantener tono "premium con criterio". La doctrina v0.1 (`copy-principles.md`) no menciona emojis explícitamente. Trade-off: WhatsApp + audiencia femenina LATAM toleran emojis bien, pero "demasiados" pueden bajar percepción premium.
+
+**Refinamiento propuesto a v0.2**: agregar a `copy-principles.md` una sección "Tono en chat (WhatsApp manual)":
+- Emojis: máximo 2 por mensaje, idealmente 1 por bloque temático
+- Saludo con 1 emoji (💫) → OK, marca cordialidad
+- Cierre/oferta sin emojis → mantiene seriedad de la propuesta
+- Reglas distintas para chat vs landing (chat acepta más calidez, landing más editorial)
+
+**Estado**: 🟡 pendiente promoción a v0.2 al cierre del bootstrap
+
+**Acción inmediata recomendada**: la doctora debe anotar este lead en el sheet de tracking (cuando esté creado) con todos los campos:
+- Fecha + hora: 2026-05-04 09:41
+- Nombre: (preguntar en próximo intercambio)
+- Teléfono: +51 968 322 731
+- Shortcode: ARM-MAY-FB-BOFU-COLDWA
+- Vino del web: NO (cold-WA directo)
+- Status: Contactado (esperando respuesta)
+- Tratamiento expresó: aún no especificó
+- Notas: respondió bien el saludo, pendiente respuesta a "¿qué te gustaría mejorar?"
+
 ### Creatives que rompen la doctrina pero performean (paradojas)
 
 (a llenar conforme corre)

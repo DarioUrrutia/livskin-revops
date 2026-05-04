@@ -13,6 +13,37 @@ last_validated: 2026-05-04 (campaña Día de la Madre 2026)
 
 ---
 
+## 0. Modo de operación al que aplica este runbook
+
+> **Este runbook aplica al modo "Manual UI" — humano hace clicks, Claude guía paso a paso.**
+
+El proyecto Livskin tiene **3 modos de ejecución de campañas Meta Ads** que conviven y cambian gradualmente:
+
+| Modo | Quién ejecuta | Quién aprueba | Cuándo usar |
+|---|---|---|---|
+| **Manual UI** ← este runbook | Dario click-a-click siguiendo runbook | Dario (auto-aprueba al hacer cada click) | Inicio del proyecto, no hay Marketing API token, decisiones críticas que requieren control granular |
+| **Híbrido** | Algunos pasos Claude (vía API) + otros Dario (UI) | Dario aprueba bloques | Transición gradual, validar API en fragmentos antes de full-auto |
+| **API Automatizada** | Claude ejecuta vía Marketing API token | Dario aprueba propuesta antes y revisa post-publish | Maduro, campañas estandarizadas, escala que justifica automatización |
+
+**Pre-requisitos para subir un escalón:**
+
+```
+Manual UI  →  Híbrido:
+  • Marketing API token funcional (resolver bloqueos 2026-04-27)
+  • Runbook paralelo `meta-ads-hybrid.md` para mapear qué pasos automatizar
+  • 1+ campaña Manual UI exitosa para validar el approach
+
+Híbrido  →  API Automatizada:
+  • Runbook `meta-ads-automation-api.md` con specs completas de propuesta + aprobación
+  • Brand Orchestrator agente (Fase 4B) opera la API
+  • Dashboards de monitoreo en tiempo real
+  • Kill-switch documentado
+```
+
+**Trigger de migración**: se decide en el post-mortem de cada campaña. Si la corrida actual valida la estrategia, próxima campaña puede piloto al modo siguiente.
+
+---
+
 ## 1. Comportamientos no obvios de Meta Ads UI
 
 ### 1.1 "Público Advantage+" NO permite EXCLUDE de Custom Audiences
