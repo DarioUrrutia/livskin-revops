@@ -15,8 +15,8 @@ const App = () => {
       <Nav accent={accent} />
       <Hero eyebrow={tweaks.eyebrow} headline={tweaks.headline} sub={tweaks.sub} accent={accent} />
       <Marquee accent={accent} />
-      <Benefits accent={accent} />
       <BeforeAfter accent={accent} />
+      <Benefits accent={accent} />
       <Process accent={accent} />
       <Testimonials accent={accent} />
       <window.FAQ accent={accent} />

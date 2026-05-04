@@ -84,7 +84,7 @@ const BeforeAfter = ({ accent }) => {
     { before: "images/antes-3.jpg", after: "images/despues-3.jpg", caption: "Caso 3 · Armonización de frente" },
   ];
   return (
-    <section id="resultados" className="sec" style={{ background: "var(--bg)" }}>
+    <section id="resultados" className="sec" style={{ background: "var(--bg-pink)" }}>
       <style>{`
         .ba-grid { display: grid; grid-template-columns: 1fr; gap: 48px; max-width: 540px; margin: 0 auto; }
         @media (min-width: 900px) { .ba-grid { grid-template-columns: repeat(2, 1fr); max-width: 1140px; gap: 40px; } }

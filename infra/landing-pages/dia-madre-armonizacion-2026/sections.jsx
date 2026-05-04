@@ -276,7 +276,7 @@ const Benefits = ({ accent }) => {
     { icon: "sparkle", title: "Tu propio criterio",   desc: "Evaluamos tu rostro, no aplicamos fórmulas." },
   ];
   return (
-    <section id="beneficios" className="sec" style={{ background: "var(--bg-pink)" }}>
+    <section id="beneficios" className="sec" style={{ background: "var(--bg)" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
         <div className="eyebrow" style={{ color: accent, marginBottom: 18, fontSize: 11, letterSpacing: "0.3em" }}>NUESTRA FILOSOFÍA</div>
         <h2 className="display-bold" style={{ fontSize: "clamp(26px, 5vw, 44px)", fontWeight: 700, color: "var(--ink)", marginBottom: 40, letterSpacing: "-0.005em", lineHeight: 1.15 }}>
