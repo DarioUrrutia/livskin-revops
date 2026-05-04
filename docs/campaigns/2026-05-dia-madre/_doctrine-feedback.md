@@ -219,25 +219,113 @@ Cualquier insight del tipo *"esto debería ir en la doctrina porque..."* se anot
 
 ---
 
+### Tipo de cambio: refinamientos al copy-principles.md por feedback en producción
+
+#### [INS-010] (2026-05-04, Dario) — "Médico/a" como palabra a evitar en copy de landing
+
+**Contexto**: la doctrina v0.1 (`copy-principles.md`) lista "médico/médica" como palabra ✅ permitida bajo "Seguridad". Durante revisión del landing, Dario explícitamente pidió evitarla.
+
+**Cita literal Dario 2026-05-04**: *"con que evites usar la palabra medico, y dejar de lado eso de mencionar que se mostraran los productos para trazabilidad estaba regularmente bien"*
+
+**Razón inferida**: "médico" puede percibirse como muy clínico/frío en copy de landing. Alternativas que sí preservan autoridad:
+- "criterio profesional" (lo que usamos como fix)
+- "evaluación profesional"
+- "criterio especializado"
+
+**Archivo afectado**: `docs/brand/copy-principles.md` § "Glosario operativo" → mover "médico/a" de ✅ permitidas a 🟡 contextual ("preservar para legal docs y FAQ técnico, evitar en hero/CTAs/copy emocional").
+
+**Refinamiento propuesto a v0.2**:
+- Crear categoría 🟡 "Contextual" en el glosario (entre ✅ permitidas y ❌ prohibidas)
+- "Médico/a" entra ahí con regla: usar en docs legales (privacidad, términos, consentimiento) + FAQ donde aplique técnicamente. Evitar en copy de marca emocional.
+
+**Estado**: 🟡 pendiente promoción a v0.2 al cierre del bootstrap
+
+---
+
+#### [INS-011] (2026-05-04, Dario) — Mostrar trazabilidad de productos genera ruido innecesario
+
+**Contexto**: en el FAQ del landing, la pregunta "¿Qué productos usan?" tenía respuesta que mencionaba "Cada caja viene con su número de lote y su trazabilidad — puedes verla antes de la aplicación". Dario pidió quitarlo.
+
+**Razón**: la transparencia de trazabilidad puede sonar a defensividad excesiva en marca premium. Asume que el cliente está preocupado por autenticidad — si no estaba pensándolo, ahora lo plantamos.
+
+**Archivo afectado**: `docs/brand/copy-principles.md` § principios o nuevo "Reglas de FAQ médico"
+
+**Refinamiento propuesto a v0.2**:
+- Principio nuevo: *"En medicina estética, la mención de evidencia técnica (lotes, trazabilidad, certificados) genera defensividad percibida. La autoridad se transmite por **CRITERIO**, no por **PRUEBA**."*
+- Confianza ≠ exposición de pruebas. Confianza = consistencia de criterio.
+
+**Estado**: 🟡 pendiente promoción a v0.2 al cierre del bootstrap
+
+---
+
+### Tipo de cambio: estructura del landing
+
+#### [INS-012] (2026-05-04, Dario) — BeforeAfter arriba de Filosofía es jugada de prueba social temprana
+
+**Contexto**: orden inicial del landing: Hero → Filosofía → BeforeAfter (orden "natural" del funnel TOFU→MOFU). Dario propuso subir BeforeAfter justo después del Hero. Razón explícita: enganchar a la persona con prueba social visual antes de pedirle que lea copy.
+
+**Cita literal Dario 2026-05-04**: *"estoy pensando que es mejor subir todo el bloque de los antes y despues uno encima, para enganchar con la gente que llega"*
+
+**Tensión doctrinal**: la doctrina v0.1 (`brand-system.md` § 3.1 TOFU) dice "Hablar de problemas físicos: prohibido" en TOFU. BeforeAfter como segundo bloque (arriba) toca tangencialmente "problema → solución" — pero las imágenes son sutiles, no son "antes feo / después linda".
+
+**Resolución observada**: el BeforeAfter como prueba social NO viola la doctrina si las imágenes son sutiles + el copy del slot dice "Sigues siendo tú" (mantiene identidad, no transformación).
+
+**Archivo afectado**: `docs/brand/brand-system.md` § 3 funnel + posible `docs/brand/landing-structure-principles.md` (nuevo)
+
+**Refinamiento propuesto a v0.2**:
+- Aclaración: *"En landings, la prueba social visual (antes/después sutil) puede ir cerca del top SI: (1) imágenes preservan identidad de paciente; (2) copy mantiene 'sigues siendo tú', no transformación; (3) hay caption que enmarca como evidencia, no promesa."*
+- Regla nueva: orden recomendado del landing → Hero (identidad) → Prueba Visual (BeforeAfter) → Filosofía (criterio) → Tratamiento (consecuencia) → Testimonios (autoridad) → FAQ → CTA
+
+**Estado**: 🟡 pendiente promoción a v0.2 al cierre del bootstrap — **valida con métricas post-corrida** (¿el reorden mejoró tiempo en página / scroll depth?)
+
+---
+
+#### [INS-013] (2026-05-04, Claude) — Banners de pacientes reales con pixelados son válidos para BOFU
+
+**Contexto**: los 3 casos antes/después que Dario aportó son fotos clínicas reales con pixelado de ojos (privacidad). Estética distinta al resto del landing (que es editorial limpio). La preocupación inicial era si "rompía" la coherencia visual.
+
+**Resolución observada**: las fotos clínicas reales **funcionan** porque:
+1. Son evidencia médica auténtica (no stock photography)
+2. Los pixelados protegen privacidad (Ley 29733 Perú + ética)
+3. El encuadre clínico (cofias, fondos blancos, headbands) comunica seguridad
+4. Diversificación de pacientes (mujer/hombre, edades distintas) refuerza autoridad amplia
+
+**Archivo afectado**: `docs/brand/image-guidelines.md` § "Tipos de imagen"
+
+**Refinamiento propuesto a v0.2**:
+- Sección nueva "Fotos clínicas vs editoriales": cuándo y cómo usar cada una
+- Regla: editoriales para Hero/Filosofía/Testimonios, clínicas reales para BeforeAfter (con pixelados obligatorios + consent firmado)
+
+**Estado**: 🟡 pendiente promoción a v0.2 al cierre del bootstrap
+
+---
+
 ## Insights post-monitoring (a llenar durante días 1-5 de campaña)
 
 > Esta sección se llena conforme corre la campaña.
 
-### Patrones de performance
+### Patrones de performance — primeras horas (4 mayo, ~7 horas de corrida)
 
-- (a llenar)
+| Métrica | Valor observado | Benchmark esperado | Comentario |
+|---|---|---|---|
+| CPM promedio | S/ 1.56 | $7-15 USD = S/26-56 | **Mucho más barato de lo esperado**. Audiencia Cusco poco competida en Meta. |
+| CTR promedio | 1.81% | 1-2% | Saludable, dentro del rango. |
+| Click→PageView rate | 28/65 = 43% | 70-90% | **Más bajo de lo esperado** — leak por consent modal + AdBlockers + bounce. Trade-off de compliance. |
+| Spend en 7h | S/8.71 de S/296 (3%) | proporcional a 7/144h ≈ 5% | Pacing un poco lento, normal por learning phase. |
 
 ### Sorpresas en audience
 
-- (a llenar)
+**Audience Warm fatigue rápida**: las 4 CAs históricas (<1.000 personas) ya alcanzaron frecuencia 2.0+ en 7 horas — Meta está re-mostrando ads a las mismas personas porque la audiencia es chica. CPM Warm S/4.96 (3x más caro que Cold S/1.30-1.70).
+
+**Implicación**: para audiences <1.000 personas, frecuencia llega a 3-4x en 5 días. Saturación temprana esperada. Para futuras campañas con CAs históricas chicas: presupuesto Warm ≤ 15% del total (no 25%).
 
 ### Creatives que rompen la doctrina pero performean (paradojas)
 
-- (a llenar)
+(a llenar conforme corre)
 
 ### Refinamientos a copy-principles.md sugeridos por data real
 
-- (a llenar)
+(a llenar al post-mortem cuando tengamos data de mensajes WhatsApp recibidos por shortcode)
 
 ---
 

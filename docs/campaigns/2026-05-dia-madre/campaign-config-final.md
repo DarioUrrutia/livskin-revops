@@ -29,7 +29,7 @@ campaign: 2026-05-dia-madre
 | **CBO** | ON ✅ |
 | **Bid strategy** | Mayor volumen (default) |
 | **A/B test** | NO |
-| **Schedule** | Inicio: 2026-05-05 06:00 (Lima) · Fin: 2026-05-09 23:59 |
+| **Schedule** | Inicio: 2026-05-04 06:00 (Lima) · Fin: 2026-05-09 23:59 |
 
 ---
 
@@ -45,7 +45,7 @@ Spend limits:
    Mínimo: S/ 100
    Máximo: S/ 175
 
-Schedule: 2026-05-05 06:00 → 2026-05-09 23:59 (mismo que campaña)
+Schedule: 2026-05-04 06:00 → 2026-05-09 23:59 (mismo que campaña)
 
 UBICACIÓN
    Cusco, Perú · radio 8 km · "Personas que viven en este lugar"

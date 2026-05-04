@@ -45,6 +45,46 @@ Plan táctico completo: [docs/campaigns/2026-05-first-campaign/plan.md](campaign
 5. Lanzar campaña + Google Sheet tracking
 6. Post-mortem ~2026-05-09 con data real
 
+### 📊 Agregar GA4 + GTM a landings (cross-domain tracking) — post-Día de la Madre 2026
+
+**Detectado:** 2026-05-04 al lanzar campaña Día de la Madre.
+**Síntoma:** las landings de campañas (`campanas.livskin.site/*`) tienen Meta Pixel + UTM persistence pero NO tienen GTM container ni GA4. Solo el sitio principal (`livskin.site`) tiene esa instrumentación. Resultado: no vemos data de las landings en GA4 → Behavior flow + engagement metrics quedan invisibles.
+
+**Por qué NO es bloqueante para esta campaña:** Meta Pixel + shortcode manual de la doctora cubren la atribución. GA4 sería bonus, no esencial.
+
+**Trabajo a hacer (post-mortem):**
+1. Agregar GTM snippet en `infra/landing-pages/_template/index.html`
+2. Configurar cross-domain tracking en GA4 admin: dominios `livskin.site` + `campanas.livskin.site`
+3. Modificar `livskin-tracking.js` para disparar eventos GA4 paralelos al Pixel
+4. Smoke test: visitar landing → verificar PageView en ambos GA4 + Pixel
+5. Documentar en `infra/landing-pages/_shared/conventions.md`
+
+**Beneficio:** Behavior flow, engagement detail, scroll depth, audiencias para Google Ads futuros.
+
+**Prioridad:** alta para próxima campaña paga, no urgente.
+
+---
+
+### 🐞 Bug workflow CF Pages — sed inyección livskin-tracking.js falla con CRLF (2026-05-04)
+
+**Detectado:** durante config Día de la Madre 2026.
+**Síntoma:** el step "Build deployment artifact" del workflow `deploy-landings.yml` corre `sed -i 's|</body>|...<script src="/livskin-tracking.js"...</body>|'` para inyectar el script si existe `livskin-config.json`. Falla silenciosamente (log dice "✓ tracking.js linkeado" pero el HTML servido NO tiene el tag). Resultado: consent modal no aparece + tracking inactivo.
+
+**Root cause probable:** los `index.html` se commitan desde Windows con CRLF endings; el `sed` en runner Ubuntu busca pattern `</body>` con LF. El `\r` antes de `</body>` rompe el match.
+
+**Workaround actual:** inyecté el `<script src="/livskin-tracking.js" defer></script>` directamente en `index.html` del landing dia-madre-armonizacion-2026 (commit `4b440b2`). Esto bypassa el sed completamente.
+
+**Soluciones permanentes (cualquiera basta):**
+1. **Más simple**: dejar de depender del sed. Que cada `index.html` tenga el `<script>` hardcoded. El workflow valida que existe pero no inyecta. Cambiar `_template/index.html` para que ya lo traiga.
+2. **Más robusta**: agregar `.gitattributes` con `*.html text eol=lf` para forzar LF en repo + `dos2unix` antes del sed en el workflow.
+3. **Más defensiva**: cambiar el sed pattern para tolerar `\r?` antes del `</body>` (ej: `sed -i 's|\(\r\?\)</body>|...<script>...\1</body>|'`).
+
+**Impact si no se resuelve:** cada landing nueva pasará por este bug → modal consent + tracking inactivos hasta que alguien manualmente meta el `<script>`. Bloquea automatización futura del sistema de convenciones.
+
+**Prioridad:** resolver antes de la próxima landing nueva (post-Día de la Madre).
+
+---
+
 ### 🟡 Hallazgos operacionales registrados 2026-05-03 (audit integral)
 
 Follow-ups del reconocimiento real de los 3 VPS — no bloquean Bridge Episode.
