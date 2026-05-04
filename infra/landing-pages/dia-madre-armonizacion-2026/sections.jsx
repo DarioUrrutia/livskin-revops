@@ -153,7 +153,7 @@ const Nav = ({ accent }) => {
                   : "0 6px 16px -10px rgba(244,166,187,0.6)",
                 transition: "all .28s cubic-bezier(.65,0,.35,1)",
               }}
-            >Descubre más</a>
+            >Agenda tu evaluación</a>
           </div>
           {/* Mobile hamburger */}
           <button
@@ -212,7 +212,7 @@ const Nav = ({ accent }) => {
               fontFamily: "Montserrat, sans-serif", fontWeight: 600,
               fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase",
             }}
-          >Reserva aquí</a>
+          >Agenda tu evaluación</a>
         </div>
       )}
     </>
