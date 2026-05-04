@@ -183,7 +183,7 @@ const Process = ({ accent }) => {
 const Testimonials = ({ accent }) => {
   const items = [
     { quote: "Yo inicialmente quería hacerme solo botox, pero en la evaluación me explicaron que lo mejor era trabajar la armonización facial. Al final decidí hacerlo así y el resultado fue mucho más natural y completo. Valió totalmente la pena.", name: "BRENDA" },
-    { quote: "Me gustó que no me ofrecieran algo por ofrecer. Evaluaron mi rostro y me recomendaron lo que realmente necesitaba. Se nota el cambio, pero sigo viéndome yo.", name: "MARYORI", role: "San Francisco" },
+    { quote: "Me gustó que no me ofrecieran algo por ofrecer. Evaluaron mi rostro y me recomendaron lo que realmente necesitaba. Se nota el cambio, pero sigo viéndome yo.", name: "MARYORI" },
   ];
   return (
     <section className="sec" style={{ background: "var(--bg)" }}>
