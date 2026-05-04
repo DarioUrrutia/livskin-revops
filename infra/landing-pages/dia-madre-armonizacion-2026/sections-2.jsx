@@ -79,9 +79,9 @@ const BeforeAfterSlider = ({ before, after, caption, accent }) => {
 // ============== ANTES / DESPUÉS — sección completa con múltiples casos ==============
 const BeforeAfter = ({ accent }) => {
   const cases = [
-    { before: "images/antes.jpg",   after: "images/despues.jpg",   caption: "Caso 1 · Armonización facial completa" },
-    { before: "images/antes-2.jpg", after: "images/despues-2.jpg", caption: "Caso 2 · Próximamente" },
-    { before: "images/antes-3.jpg", after: "images/despues-3.jpg", caption: "Caso 3 · Próximamente" },
+    { before: "images/antes.jpg",   after: "images/despues.jpg",   caption: "Caso 1 · Armonización integral" },
+    { before: "images/antes-2.jpg", after: "images/despues-2.jpg", caption: "Caso 2 · Definición de líneas" },
+    { before: "images/antes-3.jpg", after: "images/despues-3.jpg", caption: "Caso 3 · Armonización de frente" },
   ];
   return (
     <section id="resultados" className="sec" style={{ background: "var(--bg)" }}>
