@@ -1,8 +1,14 @@
 # Convenciones HTML para landings — contrato con `livskin-tracking.js`
 
-**Última actualización:** 2026-05-01
-**Versión:** 1.0
+**Última actualización:** 2026-05-05
+**Versión:** 1.1
 **Aplica a:** cualquier landing en `infra/landing-pages/<name>/`
+
+## ⚠️ Cambios v1.1 (2026-05-05)
+
+- Eliminada inyección automática del script tag por workflow (sed fallaba con CRLF de Windows).
+- **Cada landing DEBE incluir manualmente** el `<script src="/livskin-tracking.js" defer></script>` en su `index.html` antes de `</body>`. El template `_template/index.html` ya lo trae como referencia.
+- El workflow `deploy-landings.yml` ahora **valida** que el script esté presente y **falla el build** si falta.
 
 ---
 

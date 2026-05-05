@@ -58,14 +58,16 @@ jobs:
             mkdir -p "_build/$slug"
             cp -r "$dir"/* "_build/$slug/"
 
-            # Si la landing tiene livskin-config.json, leer + inyectar tracking script
+            # Validar que el livskin-tracking.js está linkeado en index.html.
+            # CONVENCIÓN: cada landing debe tener <script src="/livskin-tracking.js" defer></script>
+            # hardcoded en su index.html (ver _template/index.html como referencia).
+            # Antes intentábamos inyectar con sed pero fallaba con CRLF endings de Windows.
             cfg="$dir/livskin-config.json"
             if [ -f "$cfg" ]; then
-              # Asegurar que el script livskin-tracking.js esté linkeado
-              # (los index.html del template ya lo tienen — esta es safety net si falta)
               if ! grep -q "livskin-tracking.js" "_build/$slug/index.html"; then
-                # Inyectar antes de </body>
-                sed -i 's|</body>|  <script src="/livskin-tracking.js" defer></script>\n</body>|' "_build/$slug/index.html"
+                echo "  ❌ ERROR: livskin-config.json existe pero index.html NO tiene <script src=\"/livskin-tracking.js\">"
+                echo "  ❌ Agregar el script tag antes de </body> en infra/landing-pages/$slug/index.html"
+                exit 1
               fi
               echo "  ✓ tracking.js linkeado"
             fi

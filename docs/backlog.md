@@ -94,7 +94,19 @@ Plan táctico completo: [docs/campaigns/2026-05-first-campaign/plan.md](campaign
 
 ---
 
-### 🐞 Bug workflow CF Pages — sed inyección livskin-tracking.js falla con CRLF (2026-05-04)
+### ✅ RESUELTO 2026-05-05 — Bug workflow CF Pages CRLF/sed
+
+**Resolución aplicada (Opción 1 del propuesto):**
+1. Se eliminó la inyección por sed del workflow `.github/workflows/deploy-landings.yml`
+2. El workflow ahora **valida** que cada `index.html` incluya el `<script src="/livskin-tracking.js" defer></script>` y **falla el build** si falta
+3. `_template/index.html` ya tenía el script tag hardcoded (validado: `botox-mvp`, `dia-madre-armonizacion-2026` también lo tienen)
+4. `infra/landing-pages/_shared/conventions.md` v1.1 documenta la nueva regla
+
+**Trade-off:** se pierde la "comodidad" de la auto-inyección pero se gana fiabilidad cross-platform. Toda landing nueva debe partir desde `_template` (que ya cumple la regla).
+
+---
+
+### ~~🐞 Bug workflow CF Pages — sed inyección livskin-tracking.js falla con CRLF (2026-05-04)~~
 
 **Detectado:** durante config Día de la Madre 2026.
 **Síntoma:** el step "Build deployment artifact" del workflow `deploy-landings.yml` corre `sed -i 's|</body>|...<script src="/livskin-tracking.js"...</body>|'` para inyectar el script si existe `livskin-config.json`. Falla silenciosamente (log dice "✓ tracking.js linkeado" pero el HTML servido NO tiene el tag). Resultado: consent modal no aparece + tracking inactivo.
