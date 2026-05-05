@@ -27,7 +27,12 @@ fail() {
 
 audit_event() {
     local action="$1"
-    local metadata_json="${2:-{}}"
+    # Bug fix 2026-05-05: la sintaxis "${2:-{}}" producia JSON malformed
+    # ({"...":"..."}}) cuando $2 estaba seteado, porque bash interpretaba el
+    # primer "}" como cierre del "${...}" y el segundo "}" como literal extra.
+    # Workaround: setear default explicito si vacio.
+    local metadata_json="${2:-}"
+    [ -z "$metadata_json" ] && metadata_json='{}'
     if [ -z "${AUDIT_INTERNAL_TOKEN:-}" ]; then
         log "WARNING: AUDIT_INTERNAL_TOKEN no seteado — skip audit"
         return 0

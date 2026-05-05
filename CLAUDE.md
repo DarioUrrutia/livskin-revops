@@ -268,6 +268,36 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
+## 📝 Estado al 2026-05-05 cierre (Bloque 0.5 Backups daily ACTIVADO + smoke integral 9 capas + auto-correcciones de proceso)
+
+### Sesión 2026-05-05 — modo PROYECTO declarado (#12)
+
+**Trabajos durables completados en esta sesión** (~6h, sin interferir Bridge Episode en curso):
+
+1. **Smoke test integral 9 capas** ejecutado: VPS healthy, endpoints públicos 200, certs válidos 38-86d, DBs intactas (134 clientes / 88 ventas / 84 pagos / brain 1765 chunks), n8n cron jobs activos (5124 executions/7d en B3+E1+E2 con 100% success), audit log freshness OK, sensors recolectando 5min via VPC. **Resultado: sistema sano, sin issues críticos**.
+
+2. **🔴 Bloque 0.5 Backups daily ACTIVADO** (resuelve el 🔴 CRÍTICO #1 del audit 2026-04-29):
+   - Cron `/etc/cron.d/livskin-backups` instalado en los 3 VPS (02:00 backup, 04:00 verify, 05:00 cleanup)
+   - SSH keys dedicadas `~/.ssh/backup-target` regeneradas en VPS1+VPS2 (las viejas se habían perdido)
+   - User `backup` en destinos + dirs `/srv/backups/{local,vps1,vps2,vps3}/` con permisos correctos
+   - AUDIT_INTERNAL_TOKEN distribuido a `/srv/livskin-revops/keys/.audit-internal-token` en los 3 VPS
+   - **Bug fix**: `common.sh` línea `${2:-{}}` producía JSON malformed → fix `${2:-}` + default explícito (commit `ab38c6c`)
+   - **Validación end-to-end 2026-05-05 19:43-19:44 UTC**: 6 audit events (`infra.backup_started/completed` x 3 VPS) registrados en livskin_erp.audit_log + archivos transferidos cross-VPS via VPC. Total 309MB respaldados (5.5M wp_db + 278M wp_files + 132K vtiger_db + 44K analytics + 856K metabase + 12M n8n_data + 141K erp_db + 2.7M brain_db).
+   - Próximo cron run automático: 2026-05-06 02:00 UTC
+
+3. **Eliminado Sub-bloque 3.2 Agenda backend** (12 archivos, escrito sin preflight el 2026-05-05 mañana). Decisión Dario: rebuild en Fase 4A post-Bridge con preflight estricto.
+
+4. **VPS3 sync con main** — branch `chore/foundation-cross-vps` avanzada de `60b609d` a `e1ee4dd` via fast-forward. VPS1+VPS2 jalaron main también (pendiente desde commit `370ee37` que deshabilitó deploy automático).
+
+**Auto-crítica documentada**: en esta sesión inicialmente fallé al no leer system-map ANTES de hacer audit infra (inventé `datos.livskin.site`, conté 66 leads sin filtrar `deleted=0`, marqué CRÍTICO un 403 que yo mismo causé, marqué backups "rotos" cuando estaban declarados pendientes en system-map §7). Tras corrección de Dario, leí los 140+ archivos del proyecto sistemáticamente. **Memoria nueva 🔥 a crear mañana (Bloque B endurecimiento)**: `feedback_session_warmup_obligatorio.md` + hook UserPromptSubmit que verifique lectura previa.
+
+**Próxima sesión propuesta** (mañana 2026-05-06):
+- Mañana: Bloque B endurecimiento de proceso (memoria warmup + hook + brain re-index)
+- Tarde + 2026-05-07/08: ADRs refinamiento gobierno datos (rol Vtiger narrow) + GA4 cleanup
+- 2026-05-09 fin Bridge Episode + 2026-05-12/13 post-mortem + cierre bootstrap (#13)
+
+---
+
 ## 📝 Estado al 2026-05-03 cierre (PIVOT ESTRATÉGICO — doctrina #11 + audit agentes + Bridge Episode)
 
 ### Sesión 2026-05-03 — Re-articulación estratégica del proyecto

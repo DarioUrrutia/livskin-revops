@@ -1,9 +1,9 @@
 ---
 type: system-map
-version: 1.1
-last_updated: 2026-05-03
+version: 1.2
+last_updated: 2026-05-05
 authoritative: true
-description: Mapa exhaustivo machine-readable del sistema Livskin. Source of truth para humanos y agentes IA. Indexed en pgvector (brain Layer 2). Verificado contra estado real de los 3 VPS el 2026-05-03 — agregada §2.5 (n8n workflows) + campanas.livskin.site en §6 + nota erp-staging eliminado 2026-04-26.
+description: Mapa exhaustivo machine-readable del sistema Livskin. Source of truth para humanos y agentes IA. Indexed en pgvector (brain Layer 2). v1.2 — Bloque 0.5 backups daily ACTIVADO en los 3 VPS (cron 02:00 UTC + verify 04:00 + cleanup 05:00, cross-VPS via VPC + audit events).
 ---
 
 # 🗺️ Livskin — System Map
@@ -616,48 +616,71 @@ public_urls:
 
 ---
 
-## §7 Backups (estado al 2026-04-26)
+## §7 Backups (estado al 2026-05-05 — Bloque 0.5 ACTIVADO)
 
 ```yaml
 backups:
+  # Cron sistema /etc/cron.d/livskin-backups en los 3 VPS
+  # 02:00 UTC daily — backup-vps[1|2|3].sh
+  # 04:00 UTC daily — verify-backup.sh + verify-vps2-backups.sh
+  # 05:00 UTC daily — cleanup local files >30 dias
+  # Cada operacion emite audit_event a https://erp.livskin.site/api/internal/audit-event
+  # SSH key dedicada ~/.ssh/backup-target (cada origen) + user 'backup' en cada destino
+  cron_status: ACTIVE (instalado 2026-05-05 en los 3 VPS)
+  first_validation: 2026-05-05 19:43-19:44 UTC — los 3 backups completaron exitosamente
+                    con audit events infra.backup_started + infra.backup_completed
+
   - component: WordPress files (/var/www/livskin/)
     vps: livskin-wp
     method: tarball
-    frequency: pendiente Bloque 0.5
-    retention: 30 dias planeado
-    destination: cross-VPS livskin-ops /backups/vps1/
-    verification: pendiente
-    runbook: docs/runbooks/backup-wp.md
+    frequency: daily 02:00 UTC
+    retention: 30 dias
+    destination: cross-VPS livskin-ops:/srv/backups/vps1/ (rsync via VPC)
+    verification: tar -tf integridad (verify-backup.sh en VPS2 04:00)
+    last_validated: 2026-05-05 19:34 UTC (278M)
 
   - component: livskin_wp (MariaDB)
     vps: livskin-wp
-    method: mariadb-dump
-    frequency: pendiente Bloque 0.5
-    retention: 30 dias planeado
-    verification: restore a temp DB + count check
+    method: mariadb-dump --single-transaction --quick
+    frequency: daily 02:00 UTC
+    retention: 30 dias
+    destination: cross-VPS livskin-ops:/srv/backups/vps1/
+    verification: restore a temp DB (planned)
+    last_validated: 2026-05-05 19:34 UTC (5.5M gzipped)
 
   - component: livskin_erp + livskin_brain (Postgres)
     vps: livskin-erp
-    method: pg_dump
-    frequency: pendiente Bloque 0.5
-    retention: 30 dias planeado
-    destination: cross-VPS livskin-ops /backups/vps3/
+    method: pg_dump (con pgvector embeddings)
+    frequency: daily 02:00 UTC
+    retention: 30 dias
+    destination: cross-VPS livskin-ops:/srv/backups/vps3/
+    verification: pg_restore + count (planned)
+    last_validated: 2026-05-05 19:43 UTC (141K erp + 2.7M brain)
 
   - component: analytics + metabase (Postgres)
     vps: livskin-ops
     method: pg_dump
-    frequency: pendiente Bloque 0.5
+    frequency: daily 02:00 UTC
+    retention: 30 dias
+    destination: cross-VPS livskin-erp:/srv/backups/vps2/
+    last_validated: 2026-05-05 19:34 UTC (44K analytics + 856K metabase)
 
   - component: livskin_db (MariaDB Vtiger)
     vps: livskin-ops
     method: mariadb-dump
-    frequency: pendiente Bloque 0.5
+    frequency: daily 02:00 UTC
+    retention: 30 dias
+    destination: cross-VPS livskin-erp:/srv/backups/vps2/
+    last_validated: 2026-05-05 19:34 UTC (132K)
 
   - component: n8n workflows (sqlite + filesystem)
     vps: livskin-ops
-    method: tarball ./n8n/data/
-    frequency: pendiente Bloque 0.5
+    method: tarball /home/livskin/apps/n8n/data/
+    frequency: daily 02:00 UTC
+    retention: 30 dias
+    destination: cross-VPS livskin-erp:/srv/backups/vps2/
     critical: yes  # workflows perdidos = recreación manual
+    last_validated: 2026-05-05 19:34 UTC (12M)
 
   - component: DO Snapshots (pre-deploy)
     method: doctl snapshot
@@ -795,6 +818,7 @@ ai_agent_consumption:
 |---|---|---|
 | 2026-04-26 | v1.0 — creación inicial post-Bloque 0.3 | TBD |
 | 2026-04-26 | v1.1 — Bloque 0 activado en producción: sensors live VPS 1 (systemd) + VPS 2 (container) + VPS 3 (endpoint), recolector cron 5min + tabla `infra_snapshots` con data real, agent_budgets seedados $134/mes, audit_internal_token deployed, UFW puerto 9100 abierto cross-VPS | 4adfc79 |
+| 2026-05-05 | v1.2 — Bloque 0.5 backups daily ACTIVADO. Crons en /etc/cron.d/livskin-backups en los 3 VPS (02:00 backup, 04:00 verify, 05:00 cleanup). Cross-VPS rsync via VPC con SSH key dedicada `backup-target` + user `backup` en destinos. Audit events `infra.backup_started/completed` validados contra DB. Bug fix common.sh `${2:-{}}` → JSON malformed corregido. | TBD |
 
 ---
 
