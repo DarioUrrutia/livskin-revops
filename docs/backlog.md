@@ -21,6 +21,26 @@
 
 ---
 
+## 🆕 Prioridad sesión 2026-05-06
+
+### 🔴 Bloque B — endurecimiento de proceso (modo PROYECTO, ~3h)
+
+**Trigger**: auto-crítica documentada en sesión 2026-05-05 — al inicio de la sesión hice "audit infra" sin leer system-map autoritativo, generando 7 falsos positivos (datos.livskin.site inventado, 66 leads sin filtrar deleted, 403 propio marcado crítico, etc.). El sistema tiene herramientas anti-alucinación pero el ritual de arranque era soft, no hard.
+
+**Pasos** (referencia: memoria efímera `project_session_handoff_2026_05_06.md`):
+
+1. Memoria 🔥 CRÍTICA `feedback_session_warmup_obligatorio.md` (protocolo: leer system-map §1-§6 + MEMORY.md + git log + identificar modo + preflight si ≥2 sistemas)
+2. Hook `UserPromptSubmit` en `.claude/settings.json` que valide lectura previa
+3. Re-index brain pgvector (`brain-index.sh`) — pull docs post-2026-04-29
+4. Crear `docs/runbooks/arranque-sesion.md` complementario al cierre-sesion.md
+5. Update CLAUDE.md "Rituales de sesión" con referencia hook + runbook nuevo
+
+**Después**: ADRs gobierno datos refinement (Vtiger narrow) + GA4 cleanup + daily reports Bridge.
+
+**Agregado por**: Claude Code · 2026-05-05 (cierre sesión)
+
+---
+
 ## 🆕 Prioridad post-pivot estratégico 2026-05-03
 
 **Ver `docs/sesiones/2026-05-03-strategic-pivot-and-first-campaign.md` + `docs/audits/agent-scope-audit-2026-05-03.md` para razonamiento.**
@@ -603,7 +623,9 @@ Esto requiere App Review formal (a iniciar antes de Fase 5).
 
 ---
 
-### 🟡 Re-indexing automático de brain Layer 2 (project_knowledge) — antes de Fase 4
+### 🟡 Re-indexing automático de brain Layer 2 (project_knowledge) — Bloque B 2026-05-06
+
+> **Movido a Bloque B** (sesión 2026-05-06) — el manual re-index forma parte del endurecimiento de proceso. La automatización (webhook GH push + cron) queda para después si lo amerita post-Bridge.
 **Estado actualizado 2026-04-29:** re-index manual ejecutado hoy (1,765 chunks actualizados con docs de la última semana — runbooks, ADRs, sesiones, mini-bloques 3.1+3.2). La urgencia bajó de 🔴 a 🟡 porque la brain está al día. Pero la **automatización sigue pendiente**: si en próximas sesiones se generan nuevos docs y nadie corre `brain-index.sh` manualmente, volveremos a desincronizar.
 
 **Riesgo restante:** cuando arranque Conversation Agent (Fase 4) y consulte la brain semanas después de la última re-indexación manual, no sabrá de decisiones recientes.
@@ -952,6 +974,14 @@ Condiciona si necesitamos módulo PDF/impresión en ERP.
 ## Hecho (historial)
 
 <!-- Los items completados se mueven aquí para mantener historial. No se borran. -->
+
+### ✅ Bloque 0.5 — Backups daily ACTIVADO en los 3 VPS (2026-05-05)
+
+Resuelve 🔴 CRÍTICO #1 del audit `2026-04-29-audit-organizacion-integridad-seguridad`. Cron `/etc/cron.d/livskin-backups` instalado en VPS1+VPS2+VPS3 (02:00 backup, 04:00 verify, 05:00 cleanup). SSH keys dedicadas `~/.ssh/backup-target` regeneradas en VPS1+VPS2 (las del Bloque 0 v2 se habían perdido). User `backup` + dirs `/srv/backups/{local,vps1,vps2,vps3}/` operacionales. AUDIT_INTERNAL_TOKEN distribuido. Bug fix `common.sh ${2:-{}}` JSON malformed corregido. Validación E2E 19:43-19:44 UTC: 6 audit events `infra.backup_started/completed` registrados, 309 MB de data crítica respaldada cross-VPS via VPC. Próximo cron run: 2026-05-06 02:00 UTC. Commit `8f8129d`. Session log: `docs/sesiones/2026-05-05-bloque-0-5-backups-activacion.md`.
+
+### ✅ Sub-bloque 3.2 Agenda backend ELIMINADO (2026-05-05)
+
+Escrito el 2026-05-05 mañana sin aplicar `runbook/preflight-cross-system.md`. Eliminado el mismo día por decisión Dario. Rebuild en Fase 4A post-Bridge Episode con preflight estricto + ADR-0035 línea por línea. ADR-0035 sigue ✅ Aprobada para implementación futura.
 
 ### ✅ Fase 3 Mini-bloque 3.3 REWRITE — Pipeline form → Vtiger → ERP completo (2026-04-29 → 2026-05-01)
 
