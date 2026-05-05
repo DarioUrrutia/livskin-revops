@@ -1,7 +1,8 @@
 # ADR-0035 — Módulo Agenda Mínima en ERP
 
-**Estado:** 📝 Borrador
+**Estado:** ✅ Aprobada
 **Fecha:** 2026-05-05
+**Fecha de aprobación:** 2026-05-05 por Dario (cita: "OK APROBADO")
 **Autor propuesta:** Claude Code
 **Decisor final:** Dario
 **Fase del roadmap:** Fase 4A — Bloque puente backbone determinístico (post-Bridge Episode)
@@ -371,7 +372,4 @@ Sin cambios a otros ADRs.
 ## 13. Changelog de esta ADR
 
 - 2026-05-05 — v1.0 — Borrador creado tras pre-flight + lectura de memorias y ADRs relacionados (ADR-0011, ADR-0033, memorias de agenda + acquisition flow + surgical precision)
-
----
-
-**Este ADR es BORRADOR.** No se inicia implementación (sub-bloques 3.2, 3.3, 3.4) hasta que Dario apruebe explícitamente y cambie status a ✅ Aprobada.
+- 2026-05-05 — Aprobada por Dario ("OK APROBADO"). Implementación arranca con sub-bloque 3.2 una vez resuelta la autorización para tocar `erp/`.
