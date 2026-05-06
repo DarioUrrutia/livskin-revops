@@ -221,7 +221,7 @@ Ver [memoria persistente vps_access](~/.claude/projects/.../memory/vps_access.md
 
 ### Rituales de sesión
 
-**Arranque (mío, 2 min):** leo CLAUDE.md + `docs/backlog.md` + `notes/compartido/` + última sesión + memoria, te digo en 3 líneas dónde quedamos, qué hay en backlog relevante, y qué propongo hacer.
+**Arranque (mío, 5-7 min — OBLIGATORIO desde Bloque B 2026-05-06):** ejecuto runbook estandarizado [docs/runbooks/arranque-sesion.md](docs/runbooks/arranque-sesion.md). 5 pasos: git status + leer `docs/sistema-mapa.md` §1+§2+§6 + leer `MEMORY.md` (incluye episodios efímeros `project_session_handoff_*`) + identificar modo (#12: PROYECTO/CAMPAÑA/BOOTSTRAP) + preflight cross-system si la tarea toca ≥2 sistemas. STOP hard si falta cualquiera. Doctrina: memoria 🔥 [`feedback_session_warmup_obligatorio.md`](~/.claude/projects/.../memory/feedback_session_warmup_obligatorio.md) + hook `UserPromptSubmit` en `.claude/settings.json` que valida lectura previa con telemetría tool-use.
 
 **Cierre (mío, 5-15 min):** ejecuto runbook estandarizado [docs/runbooks/cierre-sesion.md](docs/runbooks/cierre-sesion.md). 11 pasos: session log + ADRs + CLAUDE.md + master plan + backlog + memoria + capacidades agentes + git commit/push. Incluye filosofía + checklist + cuándo NO ejecutar completo. Es runbook vivo, evoluciona con cada sesión que descubra fricción nueva.
 

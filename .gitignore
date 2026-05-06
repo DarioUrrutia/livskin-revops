@@ -78,8 +78,18 @@ Untitled*.canvas
 notes/privado/*
 !notes/privado/README.md
 
-# --- Claude Code local config ---
-.claude/
+# --- Claude Code config ---
+# Whitelist pattern: ignorar todo en .claude/ excepto settings.json + hooks/
+# (Bloque B endurecimiento 2026-05-06) para que el hard guard del warmup
+# viaje con el repo. settings.local.json sigue gitignored (perms por máquina).
+# IMPORTANTE: usar .claude/* (no .claude/) para permitir re-include con !
+.claude/*
+!.claude/settings.json
+!.claude/hooks
+.claude/hooks/*
+!.claude/hooks/*.sh
+!.claude/hooks/*.py
+!.claude/hooks/README.md
 
 # --- Python ---
 __pycache__/

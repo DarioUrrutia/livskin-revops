@@ -1,0 +1,58 @@
+{
+  "permissions": {
+    "additionalDirectories": [],
+    "deny": [
+      "Read(//**)",
+      "Edit(//**)",
+      "Write(//**)",
+      "Read(./erp/**)",
+      "Edit(./erp/**)",
+      "Write(./erp/**)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ./*)",
+      "Bash(git clone:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git push origin main --force:*)"
+    ],
+    "_audit_note": "Reglas erp/ activas. El path ./erp/ no existe en repo (ERP refactor vive en infra/docker/erp-flask/). Estas reglas son guardrail por si en el futuro se clona el ERP Render ahí. Sub-bloque 3.2 (Agenda backend) fue eliminado el 2026-05-05 por decisión Dario; rebuild en Fase 4A post-Bridge Episode con preflight estricto.",
+    "allow": [
+      "Read(./**)",
+      "Edit(./**)",
+      "Write(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git remote -v)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(ls:*)",
+      "Bash(pwd)",
+      "Bash(mkdir:*)",
+      "Bash(cat ./*)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/warmup-check.sh\"",
+        "timeout": 5
+      }
+    ]
+  },
+  "_hooks_audit_note": "UserPromptSubmit hook 'warmup-check.sh' instalado el 2026-05-06 (Bloque B endurecimiento de proceso). Verifica si en el session se ha invocado Read sobre docs/sistema-mapa.md o MEMORY.md. Si NO + tarea no-trivial → inyecta system-reminder con los 5 pasos del warmup (memoria 🔥 feedback_session_warmup_obligatorio.md + runbook arranque-sesion.md). Resuelve el meta-bug del 2026-05-05 (7 falsos positivos por inspeccionar sin warmup)."
+}
