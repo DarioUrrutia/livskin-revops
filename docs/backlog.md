@@ -21,9 +21,69 @@
 
 ---
 
-## 🆕 Prioridad sesión 2026-05-06
+## 🆕 Prioridad sesión 2026-05-09 — Arranque Fase 4A (post-cierre Bridge Episode)
 
-### 🔴 Bloque B — endurecimiento de proceso (modo PROYECTO, ~3h)
+### 🔴 Fase 4A — Backbone determinístico end-to-end (modo PROYECTO, 10-15h en 3-5 sesiones)
+
+**Trigger**: Bridge Episode cerrado anticipadamente 2026-05-08. Doctrina rectora #11 confirmada (deterministic backbone primero). Doctora articuló necesidad operacional clara: "solo uso el ERP, necesito poder marcar cuando un cliente vino o no a la cita". Estructura comercial NO cambia (WhatsApp + landings) — falta cerrar el flujo end-to-end automatizado.
+
+**Sub-bloques**:
+
+1. **4A.1 — Módulo Agenda en ERP** (4-6h, ADR-0035 aprobado, rebuild post-D1 con preflight estricto)
+   - Tabla `appointments` (Alembic migration 0007)
+   - Pestaña "Agenda" en ERP UI (formulario.html)
+   - Botones doctora: "marcó asistencia" / "no_show" / "canceló" / "reagendó"
+   - Endpoints `/api/appointments` CRUD + `/api/appointments/<id>/mark-attended`
+   - Hereda `cod_lead_origen` al convertir lead → cliente
+   - Tests pytest ≥75% coverage
+
+2. **4A.2 — WhatsApp Cloud API test number** (2-3h)
+   - **Pre-check obligatorio**: verificar acceso Meta for Developers (cuenta + app)
+   - Crear app + WhatsApp product + obtener test number gratuito
+   - Webhook config → n8n
+   - Smoke test: enviar/recibir mensaje vía test number
+   - Documentar en `integrations/whatsapp/setup.md`
+
+3. **4A.3 — Chatbot rule-based en n8n** (3-4h, deterministic, NO IA)
+   - Workflow [D1] WA inbound → parse shortcode → identify intent
+   - Si shortcode reconocido (`ARM-MAY-FB-*`) → crear/actualizar Lead Vtiger
+   - Si intent = "agendar" → escalar a doctora con context
+   - Plantillas Meta-approved para auto-replies básicas
+   - Sin IA — solo if/else + regex
+
+4. **4A.4 — Smoke E2E completo** (1-2h)
+   - Lead WA test → Vtiger → ERP → cita simulada → asistencia → cliente → venta → CAPI emit
+   - Trazable en audit_log
+   - Documentar en `docs/audits/fase-4a-smoke-e2e.md`
+
+**Pre-flight obligatorio**: aplicar `docs/runbooks/preflight-cross-system.md` antes de cada sub-bloque (toca ≥2 sistemas: ERP + Vtiger + n8n + WP).
+
+**Después de 4A**: 4B Brand Orchestrator (con material de Playwrightdemo + post-mortem) — pero eso requiere Marketing API token (App Review formal).
+
+**Agregado por**: Claude Code · 2026-05-08 (cierre campaña Día de la Madre)
+
+---
+
+### ⏳ Post-mortem campaña Día de la Madre 2026 — fecha flexible
+
+Programado original: 2026-05-12/13. Reagendable a 2026-05-09 (mañana) o 2026-05-10 según disposición de Dario al arrancar próxima sesión. Plantilla en `docs/campaigns/2026-05-dia-madre/post-mortem.md`. Daily report final en `docs/campaigns/2026-05-dia-madre/daily-report-2026-05-08.md`.
+
+---
+
+## ✅ Hecho 2026-05-08
+
+- Audit exhaustivo 12 capas del proyecto + correcciones (3 críticos resueltos: VPS sync, system-map stale, archivos huérfanos; 1 falso positivo corregido: VPS3 SSH)
+- Limpieza ownership VPS1 (`infra/scripts/backups/` + `.git/` rebajado a `livskin:livskin`)
+- Sync de los 3 VPS con `main` post Bloque 0.5 + Bloque B
+- Daily report final campaña Día de la Madre + cierre anticipado por decisión de Dario
+- Tracking sheet actualizado con 6 leads totales (3 nuevos del 2026-05-07)
+- Backlog actualizado con prioridades post-Bridge
+
+---
+
+## 🆕 Prioridad sesión 2026-05-06 (✅ EJECUTADA)
+
+### ✅ Bloque B — endurecimiento de proceso (modo PROYECTO, ~3h)
 
 **Trigger**: auto-crítica documentada en sesión 2026-05-05 — al inicio de la sesión hice "audit infra" sin leer system-map autoritativo, generando 7 falsos positivos (datos.livskin.site inventado, 66 leads sin filtrar deleted, 403 propio marcado crítico, etc.). El sistema tiene herramientas anti-alucinación pero el ritual de arranque era soft, no hard.
 
@@ -91,6 +151,14 @@ Plan táctico completo: [docs/campaigns/2026-05-first-campaign/plan.md](campaign
 **Beneficio cuando se complete:** Claude ejecuta el grueso del setup y daily monitoring; Dario solo aprueba propuestas estratégicas y modifica creatividades. Reduce tiempo Dario por campaña de ~6h (actual) a ~30 min (estado objetivo).
 
 **Prioridad:** alta para Q3 2026, no urgente.
+
+---
+
+### 💡 Material de competitor research disponible (sandbox externo de Dario) — para Brand Orchestrator futuro
+
+Dario mantiene un repo separado (`Playwrightdemo`) para investigación de competencia: scraping de Meta Ad Library + Google Trends + generación de reportes accionables (banners de competencia, patrones de copy, pain points dominantes en el nicho, CTAs ganadoras, tratamientos más anunciados). Cuando se construya el **Brand Orchestrator (Fase 4B)** o se planee la próxima campaña paga, revisar ese material como input. NO se trae nada al repo principal; el sandbox evoluciona por separado y madurará para alimentar futuras decisiones creativas.
+
+**Agregado por:** Claude Code · 2026-05-08 (cierre campaña Día de la Madre)
 
 ---
 
