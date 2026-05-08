@@ -2,9 +2,6 @@
   "permissions": {
     "additionalDirectories": [],
     "deny": [
-      "Read(//**)",
-      "Edit(//**)",
-      "Write(//**)",
       "Read(./erp/**)",
       "Edit(./erp/**)",
       "Write(./erp/**)",
