@@ -1,12 +1,14 @@
 # ADR-0035 — Módulo Agenda Mínima en ERP
 
-**Estado:** ✅ Aprobada
+**Estado:** ✅ Aprobada · 🟡 **Implementación DIFERIDA a Fase 4A post-Bridge Episode**
 **Fecha:** 2026-05-05
 **Fecha de aprobación:** 2026-05-05 por Dario (cita: "OK APROBADO")
 **Autor propuesta:** Claude Code
 **Decisor final:** Dario
 **Fase del roadmap:** Fase 4A — Bloque puente backbone determinístico (post-Bridge Episode)
 **Workstream:** Datos · ERP · Adquisición operativa
+
+> **Nota de estado 2026-05-08:** la implementación inicial (12 archivos: model + service + routes + migration 0007) fue ELIMINADA por decisión D1 de Dario el 2026-05-05 porque se escribió sin aplicar el preflight-cross-system runbook. La decisión arquitectónica de este ADR sigue válida; el rebuild se hará en Fase 4A con preflight estricto. Detalle en sesión 2026-05-05.
 
 ---
 
