@@ -1,14 +1,17 @@
 # ADR-0035 — Módulo Agenda Mínima en ERP
 
-**Estado:** ✅ Aprobada · 🟡 **Implementación DIFERIDA a Fase 4A post-Bridge Episode**
+**Estado:** ✅ Aprobada · ✅ **IMPLEMENTADA 2026-05-09 (Fase 4A.1)**
 **Fecha:** 2026-05-05
 **Fecha de aprobación:** 2026-05-05 por Dario (cita: "OK APROBADO")
+**Fecha de implementación:** 2026-05-09 (sesión Fase 4A.1, branch `feat/agenda-module-4a1`)
 **Autor propuesta:** Claude Code
 **Decisor final:** Dario
 **Fase del roadmap:** Fase 4A — Bloque puente backbone determinístico (post-Bridge Episode)
 **Workstream:** Datos · ERP · Adquisición operativa
 
-> **Nota de estado 2026-05-08:** la implementación inicial (12 archivos: model + service + routes + migration 0007) fue ELIMINADA por decisión D1 de Dario el 2026-05-05 porque se escribió sin aplicar el preflight-cross-system runbook. La decisión arquitectónica de este ADR sigue válida; el rebuild se hará en Fase 4A con preflight estricto. Detalle en sesión 2026-05-05.
+> **Histórico de implementación:**
+> - **2026-05-05 (1er intento)**: 12 archivos escritos sin preflight-cross-system → ELIMINADOS por D1 de Dario.
+> - **2026-05-09 (rebuild correcto)**: implementación completa con preflight estricto + protocolo de precisión quirúrgica + 50 tests passing + feature flag default OFF. Migration 0007 aplicada en producción. Runbook `docs/runbooks/agenda-mantenimiento.md` creado.
 
 ---
 
