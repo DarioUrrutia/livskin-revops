@@ -969,9 +969,36 @@
 
             <div style="display:flex;flex-direction:column;gap:12px;">
                 <div>
-                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Cliente o lead *</label>
-                    <input type="text" id="nueva-cita-subject" placeholder="Cliente existente (LIVCLIENT####) o lead (LIVLEAD####)" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
-                    <small style="color:#999;font-size:11px;">Pegar el código del cliente o lead. Ejemplo: LIVCLIENT0042 o LIVLEAD0010.</small>
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:6px;">Tipo de cita *</label>
+                    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+                        <label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;">
+                            <input type="radio" name="cita-tipo" value="lead" checked onchange="cambiarTipoCita()"> Lead pendiente
+                        </label>
+                        <label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;">
+                            <input type="radio" name="cita-tipo" value="cliente" onchange="cambiarTipoCita()"> Cliente existente
+                        </label>
+                    </div>
+                </div>
+
+                <!-- LEAD PENDIENTE: dropdown con leads de Vtiger en estados nuevo/contactado/agendado -->
+                <div id="campo-lead">
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Buscar lead por nombre *</label>
+                    <input type="text" id="nueva-cita-lead" list="lista-leads-agenda" placeholder="Empezá a escribir el nombre..." style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;" oninput="onLeadInput()">
+                    <datalist id="lista-leads-agenda">
+                        {% for l in leads_pendientes %}
+                        <option value="{{ l.nombre }} · {{ l.phone }} · {{ l.cod_lead }}{% if l.tratamiento_interes %} · {{ l.tratamiento_interes }}{% endif %}">{% endfor %}
+                    </datalist>
+                    <small id="lead-info" style="color:#999;font-size:11px;display:block;margin-top:4px;">{{ leads_pendientes|length }} lead(s) pendiente(s) — selecciona uno de la lista.</small>
+                </div>
+
+                <!-- CLIENTE EXISTENTE: dropdown con clientes -->
+                <div id="campo-cliente" style="display:none;">
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Buscar cliente por nombre *</label>
+                    <input type="text" id="nueva-cita-cliente" list="lista-clientes-agenda" placeholder="Empezá a escribir el nombre..." style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;" oninput="onClienteInput()">
+                    <datalist id="lista-clientes-agenda">
+                        {% for c in clientes %}<option value="{{ c }}">{% endfor %}
+                    </datalist>
+                    <small id="cliente-info" style="color:#999;font-size:11px;display:block;margin-top:4px;">{{ clientes|length }} cliente(s) registrado(s).</small>
                 </div>
                 <div>
                     <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Tratamiento *</label>
@@ -3778,6 +3805,26 @@ function formatScheduledFor(isoStr) {
     return d.toLocaleString('es-PE', opts);
 }
 
+// Mapeo nombre <-> codigo desde context Jinja (poblado al render)
+const CLIENTES_CODIGOS = {{ clientes_codigos|tojson if clientes_codigos else '{}' }};
+const LEADS_PENDIENTES = {{ leads_pendientes|tojson if leads_pendientes else '[]' }};
+// Mapeo cod_lead -> nombre (para mostrar en lista de citas)
+const LEAD_NOMBRES = LEADS_PENDIENTES.reduce((acc, l) => { acc[l.cod_lead] = l.nombre; return acc; }, {});
+// Mapeo cod_cliente -> nombre
+const CLIENTE_NOMBRES = Object.entries(CLIENTES_CODIGOS).reduce((acc, [nombre, cod]) => { acc[cod] = nombre; return acc; }, {});
+
+function resolverNombrePorAppointment(apt) {
+    if (apt.cod_cliente && CLIENTE_NOMBRES[apt.cod_cliente]) {
+        return CLIENTE_NOMBRES[apt.cod_cliente] + ' \u00b7 ' + apt.cod_cliente;
+    }
+    if (apt.cod_cliente) return apt.cod_cliente;  // cliente nuevo no en context
+    if (apt.lead_id) {
+        // Buscar por lead_id en LEADS_PENDIENTES (no tenemos id directo, fallback a "Lead #N")
+        return 'Lead #' + apt.lead_id;
+    }
+    return '\u2014';
+}
+
 async function cargarAgenda() {
     const status = document.getElementById('agenda-filtro-status').value;
     const url = '/api/appointments?limit=200' + (status ? '&status=' + status : '');
@@ -3802,7 +3849,7 @@ async function cargarAgenda() {
 
         tbody.innerHTML = data.items.map(apt => {
             const lbl = STATUS_LABELS[apt.status] || { txt: apt.status, color: '#888' };
-            const subject = apt.cod_cliente || (apt.lead_id ? 'Lead #' + apt.lead_id : '\u2014');
+            const subject = resolverNombrePorAppointment(apt);
             const buttons = botonesPorStatus(apt);
             return `
                 <tr style="border-bottom:1px solid #f0f0f0;">
@@ -3851,9 +3898,57 @@ async function accionAgenda(cod, accion) {
     }
 }
 
+function tipoActual() {
+    const r = document.querySelector('input[name="cita-tipo"]:checked');
+    return r ? r.value : 'lead';
+}
+
+function cambiarTipoCita() {
+    const tipo = tipoActual();
+    document.getElementById('campo-lead').style.display    = (tipo === 'lead'    ? 'block' : 'none');
+    document.getElementById('campo-cliente').style.display = (tipo === 'cliente' ? 'block' : 'none');
+}
+
+function onLeadInput() {
+    // Mostrar info pre-poblada del lead seleccionado
+    const valor = document.getElementById('nueva-cita-lead').value;
+    const info = document.getElementById('lead-info');
+    const lead = LEADS_PENDIENTES.find(l =>
+        valor.includes('\u00b7 ' + l.cod_lead) || l.nombre === valor
+    );
+    if (lead) {
+        info.innerHTML = `Lead seleccionado: <strong>${lead.nombre}</strong> \u00b7 ${lead.phone}` +
+                         (lead.tratamiento_interes ? ` \u00b7 interesado en ${lead.tratamiento_interes}` : '') +
+                         ` \u00b7 estado: ${lead.estado_lead}`;
+        info.style.color = '#27AE60';
+        // Auto-rellenar tratamiento si lead lo tiene
+        if (lead.tratamiento_interes && !document.getElementById('nueva-cita-treatment').value) {
+            document.getElementById('nueva-cita-treatment').value = lead.tratamiento_interes;
+        }
+    } else {
+        info.textContent = LEADS_PENDIENTES.length + ' lead(s) pendiente(s) \u2014 selecciona uno de la lista.';
+        info.style.color = '#999';
+    }
+}
+
+function onClienteInput() {
+    const valor = document.getElementById('nueva-cita-cliente').value;
+    const info = document.getElementById('cliente-info');
+    const cod = CLIENTES_CODIGOS[valor];
+    if (cod) {
+        info.innerHTML = `Cliente seleccionado: <strong>${valor}</strong> \u00b7 ${cod}`;
+        info.style.color = '#27AE60';
+    } else {
+        info.textContent = Object.keys(CLIENTES_CODIGOS).length + ' cliente(s) registrado(s).';
+        info.style.color = '#999';
+    }
+}
+
 function abrirModalNuevaCita() {
     document.getElementById('modal-nueva-cita').style.display = 'block';
     document.getElementById('nueva-cita-error').style.display = 'none';
+    cambiarTipoCita();  // sync visibilidad inicial
+
     // Default: ma\u00f1ana 10am
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -3863,16 +3958,20 @@ function abrirModalNuevaCita() {
 
 function cerrarModalNuevaCita() {
     document.getElementById('modal-nueva-cita').style.display = 'none';
-    ['subject','treatment','fecha','hora','notes'].forEach(k => {
+    ['lead','cliente','treatment','fecha','hora','notes'].forEach(k => {
         const el = document.getElementById('nueva-cita-' + k);
         if (el) el.value = '';
     });
     document.getElementById('nueva-cita-duracion').value = '60';
     document.getElementById('nueva-cita-channel').value = '';
+    // Reset radio a "lead" default
+    const r = document.querySelector('input[name="cita-tipo"][value="lead"]');
+    if (r) r.checked = true;
+    cambiarTipoCita();
 }
 
 async function crearNuevaCita() {
-    const subject = document.getElementById('nueva-cita-subject').value.trim();
+    const tipo = tipoActual();
     const treatment = document.getElementById('nueva-cita-treatment').value.trim();
     const fecha = document.getElementById('nueva-cita-fecha').value;
     const hora = document.getElementById('nueva-cita-hora').value;
@@ -3883,13 +3982,35 @@ async function crearNuevaCita() {
     const errorDiv = document.getElementById('nueva-cita-error');
     errorDiv.style.display = 'none';
 
-    if (!subject || !treatment || !fecha || !hora) {
-        errorDiv.textContent = 'Faltan campos requeridos (cliente/lead, tratamiento, fecha, hora).';
+    // Resolver cod_lead o cod_cliente segun tipo
+    let cod_lead = null, cod_cliente = null;
+    if (tipo === 'lead') {
+        const valor = document.getElementById('nueva-cita-lead').value;
+        const lead = LEADS_PENDIENTES.find(l =>
+            valor.includes('\u00b7 ' + l.cod_lead) || l.nombre === valor
+        );
+        if (!lead) {
+            errorDiv.textContent = 'Selecciona un lead de la lista (escrib\u00ed y eleg\u00ed una opci\u00f3n).';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        cod_lead = lead.cod_lead;
+    } else {
+        const nombreCliente = document.getElementById('nueva-cita-cliente').value;
+        cod_cliente = CLIENTES_CODIGOS[nombreCliente];
+        if (!cod_cliente) {
+            errorDiv.textContent = 'Selecciona un cliente de la lista (nombre exacto requerido).';
+            errorDiv.style.display = 'block';
+            return;
+        }
+    }
+
+    if (!treatment || !fecha || !hora) {
+        errorDiv.textContent = 'Faltan campos requeridos (tratamiento, fecha, hora).';
         errorDiv.style.display = 'block';
         return;
     }
 
-    // Inferir si es lead o cliente por el prefijo del codigo
     const body = {
         treatment: treatment,
         scheduled_for: new Date(fecha + 'T' + hora + ':00').toISOString(),
@@ -3897,16 +4018,8 @@ async function crearNuevaCita() {
     };
     if (channel) body.channel = channel;
     if (notes) body.notes = notes;
-
-    if (subject.toUpperCase().startsWith('LIVLEAD')) {
-        body.cod_lead = subject;
-    } else if (subject.toUpperCase().startsWith('LIVCLIENT')) {
-        body.cod_cliente = subject;
-    } else {
-        errorDiv.textContent = 'C\u00f3digo no reconocido. Usar LIVCLIENT#### o LIVLEAD####.';
-        errorDiv.style.display = 'block';
-        return;
-    }
+    if (cod_lead) body.cod_lead = cod_lead;
+    if (cod_cliente) body.cod_cliente = cod_cliente;
 
     try {
         const res = await fetch('/api/appointments', {

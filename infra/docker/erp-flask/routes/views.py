@@ -17,6 +17,7 @@ from sqlalchemy import select
 from config import settings
 from db import session_scope
 from models.cliente import Cliente
+from models.lead import Lead
 
 bp = Blueprint("views", __name__)
 
@@ -56,6 +57,31 @@ def index() -> str:
                     max_num = num
         next_client_num = max_num + 1
 
+        # ADR-0035 — Leads pendientes para dropdown de Agenda.
+        # Solo si feature flag activa, evitamos query innecesaria.
+        leads_pendientes: list[dict[str, Any]] = []
+        if getattr(settings, "agenda_feature_enabled", False):
+            leads_rows = list(
+                db.execute(
+                    select(Lead)
+                    .where(Lead.estado_lead.in_(("nuevo", "contactado", "agendado")))
+                    .order_by(Lead.fecha_captura.desc().nullslast())
+                )
+                .scalars()
+                .all()
+            )
+            leads_pendientes = [
+                {
+                    "cod_lead": l.cod_lead,
+                    "nombre": l.nombre,
+                    "phone": l.phone_e164 or "",
+                    "tratamiento_interes": l.tratamiento_interes or "",
+                    "estado_lead": l.estado_lead,
+                    "fecha_captura": l.fecha_captura.isoformat() if l.fecha_captura else "",
+                }
+                for l in leads_rows
+            ]
+
     active_tab = request.args.get("tab", "venta")
     messages = get_flashed_messages()
 
@@ -69,4 +95,5 @@ def index() -> str:
         messages=messages,
         # ADR-0035 — feature flag para mostrar/ocultar pestaña AGENDA
         agenda_feature_enabled=getattr(settings, "agenda_feature_enabled", False),
+        leads_pendientes=leads_pendientes,
     )
