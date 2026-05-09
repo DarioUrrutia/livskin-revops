@@ -1254,18 +1254,25 @@
         font-size: 11px; font-weight: bold; color: #C0392B;
         text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
     }
-    /* Wrapper scrolleable horizontal en mobile cuando la tabla excede viewport */
-    #tabla-recientes, #tabla-recientes-tipos {
+    /* Tablas Dashboard scrolleables horizontalmente en mobile.
+       Aplica al contenedor padre de cualquier .tabla-rec via :has() (CSS moderno)
+       + fallback en wrappers conocidos. */
+    #tabla-recientes, #tabla-recientes-tipos, #tabla-tipo-mes,
+    .dash-card:has(.tabla-rec), [id*="tabla-"]:has(.tabla-rec) {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         max-width: 100%;
     }
-    .tabla-rec { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 360px; }
-    .tabla-rec th { background:#f5f5f5; padding:6px 8px; text-align:left; font-size:10px; color:#888; text-transform:uppercase; border-bottom:1px solid #eee; white-space: nowrap; }
-    .tabla-rec td { padding:6px 8px; border-bottom:1px solid #f5f5f5; vertical-align:top; }
+    .tabla-rec {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        min-width: 320px; /* reducido desde 360 — encaja mejor en iPhone 13 Pro 390px */
+        display: table;
+    }
+    .tabla-rec th { background:#f5f5f5; padding:6px 6px; text-align:left; font-size:10px; color:#888; text-transform:uppercase; border-bottom:1px solid #eee; white-space: nowrap; }
+    .tabla-rec td { padding:6px 6px; border-bottom:1px solid #f5f5f5; vertical-align:top; font-size: 11px; }
     .tabla-rec tr:last-child td { border-bottom:none; }
-    /* Card "Ultimas 20 ventas" tambien scrolleable */
-    #card-ultimas-ventas { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .debe-badge { color:#C0392B; font-weight:bold; font-size:11px; }
 
     /* ── Libro de movimientos: responsive ── */
