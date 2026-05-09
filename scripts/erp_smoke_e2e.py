@@ -81,9 +81,16 @@ def main():
         check(label, ok, details)
 
     with sync_playwright() as p:
-        iphone = p.devices["iPhone 13 Pro"]
+        # Viewport iPhone 15 (393x852) — devices reales: iPhone 15/16 + Xiaomi 14T Pro.
+        iphone15 = {
+            "viewport": {"width": 393, "height": 852},
+            "device_scale_factor": 3,
+            "is_mobile": True,
+            "has_touch": True,
+            "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+        }
         browser = p.chromium.launch(headless=False, slow_mo=300)
-        context = browser.new_context(**iphone)
+        context = browser.new_context(**iphone15)
         page = context.new_page()
 
         # ═══════════════════════════════════════════════════════════════

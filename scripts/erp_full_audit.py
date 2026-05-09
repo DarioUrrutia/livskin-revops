@@ -58,9 +58,17 @@ def main():
     findings: list[str] = []
 
     with sync_playwright() as p:
-        iphone = p.devices["iPhone 13 Pro"]
+        # Viewport iPhone 15 (393x852) — alineado con devices reales del usuario:
+        # iPhone 15/16 + Xiaomi 14T Pro. Memoria: feedback_mobile_targets_layout_rules.
+        iphone15 = {
+            "viewport": {"width": 393, "height": 852},
+            "device_scale_factor": 3,
+            "is_mobile": True,
+            "has_touch": True,
+            "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+        }
         browser = p.chromium.launch(headless=False, slow_mo=350)
-        context = browser.new_context(**iphone)
+        context = browser.new_context(**iphone15)
         page = context.new_page()
 
         # Capturar console errors globales
@@ -201,7 +209,7 @@ def main():
         report_path = out_dir / "REPORT.md"
         with report_path.open("w", encoding="utf-8") as f:
             f.write(f"# ERP UI Audit — {today}\n\n")
-            f.write(f"**Viewport:** iPhone 13 Pro (390×844)\n")
+            f.write(f"**Viewport:** iPhone 15 (393×852) — alineado con devices reales (iPhone 15/16 + Xiaomi 14T Pro)\n")
             f.write(f"**Pestañas validadas:** {len(TABS)}\n\n")
             f.write("## Findings\n\n")
             if findings:
