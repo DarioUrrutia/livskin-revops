@@ -37,6 +37,7 @@ from models.base import Base  # noqa: E402
 
 # Importar todos los models para que Base.metadata los registre
 from models import agent_api_call  # noqa: F401, E402
+from models import appointment  # noqa: F401, E402
 from models import audit_log  # noqa: F401, E402
 from models import catalogo  # noqa: F401, E402
 from models import cliente  # noqa: F401, E402
@@ -176,9 +177,9 @@ def db_session(engine):
             conn.execute(
                 text(
                     "TRUNCATE TABLE agent_budget_alerts, agent_api_calls, agent_budgets, "
-                    "infra_snapshots, audit_log, user_sessions, users, pagos, ventas, "
-                    "gastos, leads, lead_touchpoints, dedup_candidates, form_submissions, "
-                    "catalogos, clientes RESTART IDENTITY CASCADE;"
+                    "infra_snapshots, audit_log, user_sessions, users, appointments, "
+                    "pagos, ventas, gastos, leads, lead_touchpoints, dedup_candidates, "
+                    "form_submissions, catalogos, clientes RESTART IDENTITY CASCADE;"
                 )
             )
 

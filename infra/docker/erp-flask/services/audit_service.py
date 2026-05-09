@@ -85,6 +85,14 @@ KNOWN_ACTIONS = {
     # Tracking (Mini-bloque 3.4) — CAPI emission server-side via n8n
     "tracking.capi_event_emitted",  # event Lead/Schedule/Purchase enviado a Meta via n8n exitosamente
     "tracking.capi_event_failed",   # n8n unreachable o Meta retornó 4xx/5xx — non-blocking
+    # Appointment (ADR-0035, Fase 4A) — modulo agenda minima ERP
+    "appointment.created",
+    "appointment.updated",
+    "appointment.confirmed",
+    "appointment.marked_attended",  # trigger crítico — crea cliente con cod_lead_origen heredado
+    "appointment.marked_no_show",
+    "appointment.cancelled",
+    "appointment.rescheduled",      # marca original como rescheduled + crea nueva con FK
 }
 
 
