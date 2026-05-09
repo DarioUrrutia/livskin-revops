@@ -1109,6 +1109,96 @@
             border-radius: 3px;
             margin-left: 6px;
         }
+
+        /* Card de "lead esperando agendar fecha" — mobile-first compacta */
+        .lead-card {
+            background: white;
+            border: 1px solid #f0d8c0;
+            border-left: 3px solid #E67E22;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+        .lead-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .lead-card-nombre {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.3;
+            flex: 1;
+            min-width: 0;
+        }
+        .lead-card-state {
+            background: #FFF3E0;
+            color: #E65100;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .lead-card-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+        .lead-phone {
+            color: #2980B9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .lead-card-cod {
+            font-size: 10px;
+            color: #aaa;
+            font-family: monospace;
+        }
+        .lead-card-meta {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .lead-card-fecha {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        .lead-btn-agendar {
+            width: 100%;
+            padding: 10px;
+            background: #27AE60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 40px;
+        }
+        .lead-btn-agendar:active { background: #229954; }
+        .lead-recurrente-pill {
+            display: inline-block;
+            background: #FFF3E0;
+            color: #E65100;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-left: 6px;
+            font-family: monospace;
+        }
     </style>
     <div id="agenda-lista">
         <div id="agenda-empty" style="background:white;border:1px solid #e8e8e8;border-radius:8px;padding:40px;text-align:center;color:#888;font-size:13px;line-height:1.6;">Cargando...</div>
@@ -4051,32 +4141,33 @@ function resolverNombrePorAppointment(apt) {
     return '\u2014';
 }
 
-// ── Render de cards "leads esperando agendar fecha" ──
+// ── Render de cards "leads esperando agendar fecha" — mobile-first compacto ──
 function renderLeadsSinCita() {
     const cont = document.getElementById('agenda-leads-pendientes');
     if (!cont || !LEADS_SIN_CITA || LEADS_SIN_CITA.length === 0) return;
 
     cont.innerHTML = LEADS_SIN_CITA.map(l => {
         const recurrenteTag = l.cod_cliente_existente
-            ? `<span class="agenda-recurrente-tag">🔁 cliente recurrente · ${l.cod_cliente_existente}</span>` : '';
+            ? `<span class="lead-recurrente-pill">🔁 ${l.cod_cliente_existente}</span>` : '';
         const fechaCap = l.fecha_captura ? l.fecha_captura.slice(0, 10) : '';
         const fechaCapPretty = fechaCap ? fmtFecha(fechaCap) : '';
-        const tratamiento = l.tratamiento_interes ? `<strong>${l.tratamiento_interes}</strong>` : '<em style="color:#aaa;">sin tratamiento especificado</em>';
-        const campana = l.utm_campaign ? `<span style="font-size:10px;color:#888;">via ${l.utm_campaign}</span>` : '';
+        const tratamiento = l.tratamiento_interes
+            ? `<span style="color:#C0392B;font-weight:600;">${l.tratamiento_interes}</span>`
+            : '<span style="color:#aaa;font-style:italic;">sin tratamiento</span>';
+        const campana = l.utm_campaign ? ` · <span style="color:#888;">${l.utm_campaign}</span>` : '';
         return `
-            <div class="agenda-card" style="border-left:3px solid #E67E22;">
-                <div>
-                    <div class="agenda-card-header">${l.nombre} ${recurrenteTag}</div>
-                    <div class="agenda-card-meta">${l.phone} · ${l.cod_lead}${fechaCapPretty ? ' · llegó ' + fechaCapPretty : ''}</div>
-                    <div class="agenda-card-status" style="background:#FFF3E020;color:#E65100;">${l.estado_lead}</div>
+            <div class="lead-card">
+                <div class="lead-card-header">
+                    <div class="lead-card-nombre">${l.nombre}${recurrenteTag}</div>
+                    <span class="lead-card-state">${l.estado_lead}</span>
                 </div>
-                <div>
-                    <div class="agenda-card-meta">${tratamiento}</div>
-                    <div style="margin-top:4px;">${campana}</div>
+                <div class="lead-card-info">
+                    <a href="tel:${l.phone}" class="lead-phone">📞 ${l.phone}</a>
+                    <span class="lead-card-cod">${l.cod_lead}</span>
                 </div>
-                <div class="agenda-card-actions">
-                    <button onclick="abrirModalAgendarLead('${l.cod_lead}')" class="agenda-btn agenda-btn-confirm">📅 Agendar fecha</button>
-                </div>
+                <div class="lead-card-meta">${tratamiento}${campana}</div>
+                ${fechaCapPretty ? `<div class="lead-card-fecha">llegó ${fechaCapPretty}</div>` : ''}
+                <button onclick="abrirModalAgendarLead('${l.cod_lead}')" class="lead-btn-agendar">📅 Agendar fecha</button>
             </div>
         `;
     }).join('');
