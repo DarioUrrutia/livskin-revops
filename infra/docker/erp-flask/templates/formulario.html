@@ -1254,21 +1254,21 @@
         font-size: 11px; font-weight: bold; color: #C0392B;
         text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
     }
-    /* Tablas Dashboard — reglas refinadas 2026-05-09 (memoria feedback_mobile_targets_layout_rules):
-       - Default: wrap NATURAL (nombres/categorias se ven completos en 2-3 lineas si hace falta)
-       - .num (precios/totales/debe/variacion): 1 linea ESTRICTA + alineacion derecha
-       - .fecha: 1 linea (formato corto, left aligned)
-       NO usar max-width ni line-clamp — la doctora prefiere ver todo el texto a un golpe.
-       NO forzar nowrap en categorias — eso desborda la tabla horizontalmente. */
+    /* Tablas Dashboard — refinadas 2026-05-09 final:
+       - Tabla NO forza width 100% ni min-width — toma ancho natural por contenido
+       - Wrapper padre tiene overflow-x: auto -> scroll horizontal cuando hace falta
+       - Default: wrap NATURAL (nombres se ven completos)
+       - .num: nowrap + right (precios, totales, debe — simbolo y numeros pegados)
+       - .fecha: nowrap left
+       Memoria: feedback_mobile_targets_layout_rules. */
     .tabla-rec {
-        width: 100%;
         border-collapse: collapse;
         font-size: 12px;
         table-layout: auto;
     }
     .tabla-rec th {
         background: #f5f5f5;
-        padding: 6px 5px;
+        padding: 6px 8px;
         text-align: left;
         font-size: 10px;
         color: #888;
@@ -1276,12 +1276,11 @@
         border-bottom: 1px solid #eee;
     }
     .tabla-rec td {
-        padding: 7px 5px;
+        padding: 7px 8px;
         border-bottom: 1px solid #f5f5f5;
         vertical-align: top;
         font-size: 11px;
         line-height: 1.35;
-        word-break: break-word;
     }
     .tabla-rec tr:last-child td { border-bottom: none; }
 
@@ -1292,9 +1291,17 @@
         font-variant-numeric: tabular-nums;
     }
 
-    /* Columnas de fecha: nowrap pero left aligned */
+    /* Columnas de fecha: nowrap left aligned */
     .tabla-rec th.fecha, .tabla-rec td.fecha {
         white-space: nowrap;
+    }
+
+    /* Wrappers padre de tablas: scroll horizontal cuando contenido excede viewport */
+    #tabla-recientes, #tabla-recientes-tipos, #tabla-tipo-mes,
+    #tabla-top20, #tabla-pagos-recientes, #tabla-aging,
+    .dash-card:has(.tabla-rec), [id*="tabla-"]:has(.tabla-rec) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     .debe-badge { color:#C0392B; font-weight:bold; font-size:11px; }
 
@@ -3194,6 +3201,11 @@ let dashCargado = false;
 const COLORES = ['#C0392B','#2980B9','#27AE60','#8E44AD','#E67E22','#16A085','#2C3E50','#D35400','#7F8C8D','#F39C12'];
 
 function fmt(n) { return 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+// Formato de porcentaje: 1 decimal para ahorrar espacio (tasa cobro, variaciones, etc.)
+function fmtPct(n) {
+    if (n === null || n === undefined || isNaN(Number(n))) return '—';
+    return Number(n).toFixed(1) + '%';
+}
 function mesLabel(ym) { const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; const[y,m]=ym.split('-'); return M[parseInt(m)-1]+' '+y.slice(2); }
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
@@ -3243,7 +3255,7 @@ function cargarDashboard() {
         document.getElementById('kpi-cobrado').textContent   = fmt(d.cobrado_total);
         document.getElementById('kpi-pendiente').textContent = fmt(d.pendiente_total);
         document.getElementById('kpi-ticket').textContent    = fmt(d.ticket_promedio);
-        document.getElementById('kpi-tasa').textContent      = d.tasa_cobro + '%';
+        document.getElementById('kpi-tasa').textContent      = fmtPct(d.tasa_cobro);
         const balEl = document.getElementById('kpi-balance'), balCard = document.getElementById('kpi-balance-card');
         balEl.textContent = fmt(d.balance_neto);
         balEl.style.color = d.balance_neto >= 0 ? '#27ae60' : '#C0392B';
@@ -3270,13 +3282,13 @@ function cargarDashboard() {
             if (val === null || val === undefined) return '<span style="font-size:11px;color:#aaa;">Sin datos anteriores</span>';
             const col = val >= 0 ? '#27ae60' : '#C0392B';
             const arrow = val >= 0 ? '▲' : '▼';
-            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(val)}%</span> <span style="font-size:11px;color:#aaa;">vs mes ant.</span>`;
+            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(Number(val).toFixed(1))}%</span> <span style="font-size:11px;color:#aaa;">vs mes ant.</span>`;
         }
         function deltaChipAño(val) {
             if (val === null || val === undefined) return '<span style="font-size:11px;color:#aaa;">Sin datos año anterior</span>';
             const col = val >= 0 ? '#27ae60' : '#C0392B';
             const arrow = val >= 0 ? '▲' : '▼';
-            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(val)}%</span> <span style="font-size:11px;color:#aaa;">vs año ant.</span>`;
+            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(Number(val).toFixed(1))}%</span> <span style="font-size:11px;color:#aaa;">vs año ant.</span>`;
         }
         document.getElementById('comp-mes-act').textContent = fmt(d.comp_mes_actual);
         document.getElementById('comp-mes-ant-lbl').textContent = 'Mes ant: ' + fmt(d.comp_mes_anterior);
@@ -3305,7 +3317,7 @@ function cargarDashboard() {
             const act = d.tipo_mes_actual[k] || 0;
             const ant = d.tipo_mes_anterior[k] || 0;
             if (act === 0 && ant === 0) return;
-            const varPct = ant > 0 ? ((act - ant) / ant * 100).toFixed(1) : null;
+            const varPct = ant > 0 ? Number(((act - ant) / ant * 100).toFixed(1)) : null;
             const varHtml = varPct === null ? '<span style="color:#aaa;">—</span>'
                 : `<span style="color:${parseFloat(varPct)>=0?'#27ae60':'#C0392B'};font-weight:bold;">${parseFloat(varPct)>=0?'▲':'▼'} ${Math.abs(varPct)}%</span>`;
             htmlTipo += `<tr>
