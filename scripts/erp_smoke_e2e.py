@@ -56,10 +56,10 @@ def get_credentials() -> tuple[str, str]:
 
 def check(label: str, condition: bool, details: str = "") -> bool:
     status = "PASS" if condition else "FAIL"
-    icon = "✓" if condition else "✗"
+    icon = "[+]" if condition else "[-]"
     line = f"  [{status}] {icon} {label}"
     if details:
-        line += f" — {details}"
+        line += f" -- {details}"
     print(line)
     return condition
 
