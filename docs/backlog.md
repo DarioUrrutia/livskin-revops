@@ -44,10 +44,25 @@
    - Smoke test: enviar/recibir mensaje vía test number
    - Documentar en `integrations/whatsapp/setup.md`
 
-3. **4A.3 — Chatbot rule-based en n8n** (3-4h, deterministic, NO IA)
-   - Workflow [D1] WA inbound → parse shortcode → identify intent
-   - Si shortcode reconocido (`ARM-MAY-FB-*`) → crear/actualizar Lead Vtiger
-   - Si intent = "agendar" → escalar a doctora con context
+3. **4A.3 — Bot-broker bidireccional WhatsApp + sync ERP→Vtiger** (8-10h, deterministic, NO IA)
+
+   **Modelo aprobado por Dario 2026-05-09**: bot Cloud API media entre lead y doctora. Lead nunca ve número doctora. Doctora opera con su WhatsApp personal habitual. Memoria completa: `project_chatbot_broker_architecture.md`.
+
+   **Componentes**:
+   - Tabla `wa_conversation_state` (Postgres ERP): tracking de conversaciones (waiting_doctora / waiting_lead / negotiating / confirmed / escalated)
+   - Parser texto libre con regex tolerante: fechas relativas/absolutas, múltiples opciones por mensaje, confirmaciones cortas
+   - Workflow [D1] WA inbound del lead → parse intent + extract fecha/hora → notifica doctora
+   - Workflow [D2] WA inbound de doctora → parse confirmación/propuestas → transmite al lead → crea appointment si confirma
+   - Workflow [D3] cron 5min → niveles de latencia (15min "te confirmamos breve" / 30min "está atendiendo" / 4h alerta Dario / 24h re-ping)
+   - Templates Meta aprobados (3-4): `new_lead_appointment_request`, `lead_confirmed`, `lead_rejected_proposal`, `lead_waiting_4h`
+   - Handoff dudas médicas: bot detecta intent "quiero hablar con doctora" → alerta ERP + mensaje a doctora con contexto
+
+   **Workflow [A2] sync ERP→Vtiger** (resuelve conflicto identificado en Fase 4A.1):
+     - Trigger: audit_log eventos `appointment.marked_attended` / `appointment.marked_no_show` / `appointment.cancelled`
+     - Action: PATCH a Vtiger REST API (`vtiger_leaddetails.leadstatus`) actualizando estado del lead
+     - Rationale: hoy el cron B3 sync es one-way (Vtiger→ERP). La doctora opera ERP, sus acciones deben propagarse a Vtiger sin que ella lo toque (memoria `feedback_doctora_solo_erp_vtiger_automatico.md`)
+
+   **Decisión clave**: NO bot propone slots (doctora horarios muy flexibles, sin tabla horarios). Lead propone fecha → doctora confirma o propone alternativas en texto libre → bot loop hasta acuerdo.
    - Plantillas Meta-approved para auto-replies básicas
    - Sin IA — solo if/else + regex
 

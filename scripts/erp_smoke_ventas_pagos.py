@@ -156,11 +156,24 @@ def main():
                 if item.get("zona"):
                     page.fill(f"input[name='zona_{idx}']", item["zona"])
                 page.fill(f"input[name='precio_orig_{idx}']", str(item["precio_orig"]))
-                time.sleep(0.3)
+                time.sleep(0.5)
+
+            # Esperar que seccion-resumen-pago aparezca (JS la muestra al detectar items+precio)
+            try:
+                page.wait_for_selector("#seccion-resumen-pago", state="visible", timeout=5000)
+            except Exception:
+                # Trigger manual del recalc disparando blur en el último input precio
+                page.evaluate(
+                    "() => { if (typeof actualizarResumen === 'function') actualizarResumen(); }"
+                )
+                time.sleep(0.6)
 
             # Pagos
             for metodo, monto in pagos.items():
                 if monto > 0:
+                    # scroll al input visible antes de fill
+                    page.locator(f"input[name='{metodo}']").scroll_into_view_if_needed()
+                    time.sleep(0.2)
                     page.fill(f"input[name='{metodo}']", str(monto))
 
             time.sleep(0.5)
