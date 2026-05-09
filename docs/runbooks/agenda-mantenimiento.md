@@ -187,8 +187,12 @@ Solo permitidos: `scheduled, confirmed, attended, no_show, cancelled, reschedule
 Si necesitamos quitar el módulo Agenda completo (ej: bug crítico):
 
 ```bash
-# 1. Apagar feature flag (efecto inmediato — UI desaparece, endpoints 404)
-ssh livskin-erp 'cd /srv/livskin-revops/infra/docker/erp-flask && sudo sed -i "s/AGENDA_FEATURE_ENABLED=1/AGENDA_FEATURE_ENABLED=0/" ../postgres-data/.env && sudo docker compose restart erp-flask'
+# 1. Apagar feature flag (efecto ~10s — UI desaparece, endpoints 404)
+# IMPORTANTE: docker compose restart NO recarga env_file. Usar up -d --force-recreate.
+ssh livskin-erp 'cd /srv/livskin-revops/infra/docker/erp-flask && sudo sed -i "s/AGENDA_FEATURE_ENABLED=1/AGENDA_FEATURE_ENABLED=0/" ../postgres-data/.env && sudo docker compose up -d --force-recreate erp-flask'
+
+# Validar que el container leyó el nuevo valor:
+ssh livskin-erp 'sudo docker exec erp-flask env | grep AGENDA_FEATURE_ENABLED'  # debe ser =0
 
 # 2. Si necesitamos rollback DB (solo si migration trajo problemas):
 ssh livskin-erp 'bash /srv/livskin-revops/infra/scripts/alembic-erp.sh downgrade -1'
