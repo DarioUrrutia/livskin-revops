@@ -3206,6 +3206,12 @@ function fmtPct(n) {
     if (n === null || n === undefined || isNaN(Number(n))) return '—';
     return Number(n).toFixed(1) + '%';
 }
+// Formato de fecha: ISO yyyy-mm-dd -> dd-mm-yyyy (Dario lo prefiere así)
+function fmtFecha(iso) {
+    if (!iso) return '';
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
+}
 function mesLabel(ym) { const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; const[y,m]=ym.split('-'); return M[parseInt(m)-1]+' '+y.slice(2); }
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
@@ -3351,7 +3357,8 @@ function cargarDashboard() {
         // ── GENERAL: atenciones recientes ──
         let htmlR='<table class="tabla-rec"><thead><tr><th class="fecha">Fecha</th><th>Cliente</th><th>Categoría</th><th class="num">Total</th><th class="num">Debe</th></tr></thead><tbody>';
         d.recientes.forEach(r => {
-            htmlR+=`<tr><td class="fecha">${r.fecha}</td><td>${r.cliente}</td><td>${r.categoria}</td><td class="num">${r.total?fmt(r.total):'—'}</td><td class="num">${r.debe>0?'<span class="debe-badge">'+fmt(r.debe)+'</span>':'—'}</td></tr>`;
+            const zonaTxt = r.zona ? `<div style="font-size:10px;color:#aaa;margin-top:2px;font-style:italic;">${r.zona}</div>` : '';
+            htmlR+=`<tr><td class="fecha">${fmtFecha(r.fecha)}</td><td>${r.cliente}</td><td>${r.categoria}${zonaTxt}</td><td class="num">${r.total?fmt(r.total):'—'}</td><td class="num">${r.debe>0?'<span class="debe-badge">'+fmt(r.debe)+'</span>':'—'}</td></tr>`;
         });
         document.getElementById('tabla-recientes').innerHTML = htmlR + '</tbody></table>';
 
@@ -3424,7 +3431,7 @@ function cargarDashboard() {
                         <td>${it.cliente}</td>
                         <td style="font-size:11px;">${it.categoria || '—'}</td>
                         <td class="num"><span class="debe-badge">${fmt(it.debe)}</span></td>
-                        <td class="fecha" style="font-size:11px;color:#aaa;">${it.fecha}</td>
+                        <td class="fecha" style="font-size:11px;color:#aaa;">${fmtFecha(it.fecha)}</td>
                         <td class="num" style="color:#888;font-size:11px;">${it.dias}d</td>
                     </tr>`;
                 });
@@ -3460,7 +3467,7 @@ function cargarDashboard() {
         } else {
             d.pagos_recientes.forEach(c => {
                 htmlCR+=`<tr>
-                    <td class="fecha">${c.fecha}</td>
+                    <td class="fecha">${fmtFecha(c.fecha)}</td>
                     <td>${c.cliente}</td>
                     <td>${c.categoria || '—'}${c.cod_item ? '<br><small style="color:#bbb">'+c.cod_item+'</small>' : ''}</td>
                     <td class="num">${fmt(c.monto)}</td>
