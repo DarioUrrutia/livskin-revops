@@ -1254,55 +1254,47 @@
         font-size: 11px; font-weight: bold; color: #C0392B;
         text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
     }
-    /* Tablas Dashboard — reglas mobile-first per memoria feedback_mobile_targets_layout_rules:
-       - Nombres / categorías / textos largos: hasta 2 líneas (line-clamp)
-       - Precios / montos / fechas / códigos: 1 línea estricta (nowrap)
-       Wrappers scrolleables horizontalmente como fallback de seguridad. */
-    #tabla-recientes, #tabla-recientes-tipos, #tabla-tipo-mes,
-    .dash-card:has(.tabla-rec), [id*="tabla-"]:has(.tabla-rec) {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        max-width: 100%;
-    }
+    /* Tablas Dashboard — reglas refinadas 2026-05-09 (memoria feedback_mobile_targets_layout_rules):
+       - Default: wrap NATURAL (nombres/categorias se ven completos en 2-3 lineas si hace falta)
+       - .num (precios/totales/debe/variacion): 1 linea ESTRICTA + alineacion derecha
+       - .fecha: 1 linea (formato corto, left aligned)
+       NO usar max-width ni line-clamp — la doctora prefiere ver todo el texto a un golpe.
+       NO forzar nowrap en categorias — eso desborda la tabla horizontalmente. */
     .tabla-rec {
         width: 100%;
         border-collapse: collapse;
         font-size: 12px;
-        min-width: 320px;
-        display: table;
         table-layout: auto;
     }
-    .tabla-rec th { background:#f5f5f5; padding:6px 6px; text-align:left; font-size:10px; color:#888; text-transform:uppercase; border-bottom:1px solid #eee; white-space: nowrap; }
-    .tabla-rec td { padding:7px 6px; border-bottom:1px solid #f5f5f5; vertical-align:middle; font-size: 11px; line-height: 1.3; }
-    .tabla-rec tr:last-child td { border-bottom:none; }
+    .tabla-rec th {
+        background: #f5f5f5;
+        padding: 6px 5px;
+        text-align: left;
+        font-size: 10px;
+        color: #888;
+        text-transform: uppercase;
+        border-bottom: 1px solid #eee;
+    }
+    .tabla-rec td {
+        padding: 7px 5px;
+        border-bottom: 1px solid #f5f5f5;
+        vertical-align: top;
+        font-size: 11px;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+    .tabla-rec tr:last-child td { border-bottom: none; }
 
-    /* Columnas con NÚMEROS (precios, totales, debe, fechas, códigos): 1 línea estricta.
-       Detección por posición + clase para máxima cobertura sin reescribir cada generador HTML. */
-    .tabla-rec td.col-monto,
-    .tabla-rec td.col-fecha,
-    .tabla-rec td.col-cod,
-    .tabla-rec th.col-monto,
-    .tabla-rec th.col-fecha,
-    .tabla-rec th.col-cod,
-    /* Heuristica: ultimas 3 columnas suelen ser numericas (Total, Pagado, Debe / Variacion) */
-    .tabla-rec td:nth-last-child(-n+3),
-    .tabla-rec th:nth-last-child(-n+3) {
+    /* Columnas numericas: nowrap + right + tabular-nums (digitos alineados) */
+    .tabla-rec th.num, .tabla-rec td.num {
         white-space: nowrap;
         text-align: right;
+        font-variant-numeric: tabular-nums;
     }
 
-    /* Columnas con NOMBRES (cliente, categoria): hasta 2 lineas — line-clamp para evitar
-       que el row crezca demasiado, y palabras largas se cortan con elipsis. */
-    .tabla-rec td.col-nombre,
-    .tabla-rec td:first-child + td  /* segunda columna suele ser nombre */ {
-        max-width: 140px;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        line-clamp: 2;
-        text-overflow: ellipsis;
-        word-break: break-word;
+    /* Columnas de fecha: nowrap pero left aligned */
+    .tabla-rec th.fecha, .tabla-rec td.fecha {
+        white-space: nowrap;
     }
     .debe-badge { color:#C0392B; font-weight:bold; font-size:11px; }
 
@@ -3308,7 +3300,7 @@ function cargarDashboard() {
         const tiposK = ['Tratamiento','Producto','Otro'];
         const tiposLabel = ['Tratamientos','Productos','Otros'];
         const tiposColores = ['#8E44AD','#2980B9','#7F8C8D'];
-        let htmlTipo = '<table class="tabla-rec"><thead><tr><th>Tipo</th><th>Mes actual</th><th>Mes anterior</th><th>Variación</th></tr></thead><tbody>';
+        let htmlTipo = '<table class="tabla-rec"><thead><tr><th>Tipo</th><th class="num">Mes actual</th><th class="num">Mes anterior</th><th class="num">Variación</th></tr></thead><tbody>';
         tiposK.forEach((k, i) => {
             const act = d.tipo_mes_actual[k] || 0;
             const ant = d.tipo_mes_anterior[k] || 0;
@@ -3318,9 +3310,9 @@ function cargarDashboard() {
                 : `<span style="color:${parseFloat(varPct)>=0?'#27ae60':'#C0392B'};font-weight:bold;">${parseFloat(varPct)>=0?'▲':'▼'} ${Math.abs(varPct)}%</span>`;
             htmlTipo += `<tr>
                 <td><span style="background:${tiposColores[i]};color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;">${tiposLabel[i]}</span></td>
-                <td><strong>${fmt(act)}</strong></td>
-                <td style="color:#888;">${fmt(ant)}</td>
-                <td>${varHtml}</td>
+                <td class="num"><strong>${fmt(act)}</strong></td>
+                <td class="num" style="color:#888;">${fmt(ant)}</td>
+                <td class="num">${varHtml}</td>
             </tr>`;
         });
         document.getElementById('tabla-tipo-mes').innerHTML = htmlTipo + '</tbody></table>';
@@ -3345,14 +3337,14 @@ function cargarDashboard() {
         });
 
         // ── GENERAL: atenciones recientes ──
-        let htmlR='<table class="tabla-rec"><thead><tr><th>Fecha</th><th>Cliente</th><th>Categoría</th><th>Total</th><th>Debe</th></tr></thead><tbody>';
+        let htmlR='<table class="tabla-rec"><thead><tr><th class="fecha">Fecha</th><th>Cliente</th><th>Categoría</th><th class="num">Total</th><th class="num">Debe</th></tr></thead><tbody>';
         d.recientes.forEach(r => {
-            htmlR+=`<tr><td>${r.fecha}</td><td>${r.cliente}</td><td>${r.categoria}</td><td>${r.total?fmt(r.total):'—'}</td><td>${r.debe>0?'<span class="debe-badge">'+fmt(r.debe)+'</span>':'—'}</td></tr>`;
+            htmlR+=`<tr><td class="fecha">${r.fecha}</td><td>${r.cliente}</td><td>${r.categoria}</td><td class="num">${r.total?fmt(r.total):'—'}</td><td class="num">${r.debe>0?'<span class="debe-badge">'+fmt(r.debe)+'</span>':'—'}</td></tr>`;
         });
         document.getElementById('tabla-recientes').innerHTML = htmlR + '</tbody></table>';
 
         // ── CLIENTES: top 20% tabla con evolución ──
-        let html20 = '<table class="tabla-rec"><thead><tr><th>#</th><th>Cliente</th><th>Facturado</th><th>Visitas</th><th>Frec./mes</th><th>Lo que más compra</th><th>Este mes</th><th>Mes ant.</th><th>Tendencia</th></tr></thead><tbody>';
+        let html20 = '<table class="tabla-rec"><thead><tr><th class="num">#</th><th>Cliente</th><th class="num">Facturado</th><th class="num">Visitas</th><th class="num">Frec./mes</th><th>Lo que más compra</th><th class="num">Este mes</th><th class="num">Mes ant.</th><th class="num">Tendencia</th></tr></thead><tbody>';
         if (d.top20_clientes.length === 0) {
             html20 += '<tr><td colspan="9" style="text-align:center;color:#aaa;padding:16px;">Sin datos en el período</td></tr>';
         } else {
@@ -3364,15 +3356,15 @@ function cargarDashboard() {
                     : '<span style="color:#aaa;font-size:16px;">—</span>';
                 const debeHtml = c.debe > 0 ? `<br><span class="debe-badge">${fmt(c.debe)}</span>` : '';
                 html20 += `<tr>
-                    <td style="color:#aaa;font-size:11px;">${i+1}</td>
+                    <td class="num" style="color:#aaa;font-size:11px;">${i+1}</td>
                     <td><strong>${c.cliente}</strong>${debeHtml}</td>
-                    <td>${fmt(c.total)}</td>
-                    <td style="text-align:center;">${c.visitas}</td>
-                    <td style="text-align:center;">${c.frecuencia}</td>
+                    <td class="num">${fmt(c.total)}</td>
+                    <td class="num">${c.visitas}</td>
+                    <td class="num">${c.frecuencia}</td>
                     <td style="font-size:11px;color:#666;">${c.cat_principal}</td>
-                    <td style="color:#27ae60;">${c.mes_actual > 0 ? fmt(c.mes_actual) : '—'}</td>
-                    <td style="color:#888;">${c.mes_anterior > 0 ? fmt(c.mes_anterior) : '—'}</td>
-                    <td style="text-align:center;">${tendIcon}</td>
+                    <td class="num" style="color:#27ae60;">${c.mes_actual > 0 ? fmt(c.mes_actual) : '—'}</td>
+                    <td class="num" style="color:#888;">${c.mes_anterior > 0 ? fmt(c.mes_anterior) : '—'}</td>
+                    <td class="num">${tendIcon}</td>
                 </tr>`;
             });
         }
@@ -3414,14 +3406,14 @@ function cargarDashboard() {
                         <span style="font-size:12px;font-weight:bold;color:${b.color};">${b.label}</span>
                         <span style="font-size:13px;font-weight:bold;color:${b.color};">${data_b.count} ítem(s) · ${fmt(data_b.total)}</span>
                     </div>
-                    <table class="tabla-rec" style="margin:0;"><thead><tr><th>Cliente</th><th>Categoría</th><th>Debe</th><th>Fecha venta</th><th>Días</th></tr></thead><tbody>`;
+                    <table class="tabla-rec" style="margin:0;"><thead><tr><th>Cliente</th><th>Categoría</th><th class="num">Debe</th><th class="fecha">Fecha venta</th><th class="num">Días</th></tr></thead><tbody>`;
                 data_b.items.forEach(it => {
                     html += `<tr>
                         <td>${it.cliente}</td>
                         <td style="font-size:11px;">${it.categoria || '—'}</td>
-                        <td><span class="debe-badge">${fmt(it.debe)}</span></td>
-                        <td style="font-size:11px;color:#aaa;">${it.fecha}</td>
-                        <td style="text-align:center;color:#888;font-size:11px;">${it.dias}d</td>
+                        <td class="num"><span class="debe-badge">${fmt(it.debe)}</span></td>
+                        <td class="fecha" style="font-size:11px;color:#aaa;">${it.fecha}</td>
+                        <td class="num" style="color:#888;font-size:11px;">${it.dias}d</td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
@@ -3450,16 +3442,16 @@ function cargarDashboard() {
         });
 
         // ── PAGOS: tabla pagos recientes ──
-        let htmlCR='<table class="tabla-rec"><thead><tr><th>Fecha</th><th>Cliente</th><th>Categoría</th><th>Monto</th><th>Método</th></tr></thead><tbody>';
+        let htmlCR='<table class="tabla-rec"><thead><tr><th class="fecha">Fecha</th><th>Cliente</th><th>Categoría</th><th class="num">Monto</th><th>Método</th></tr></thead><tbody>';
         if (d.pagos_recientes.length === 0) {
             htmlCR += '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px;">Sin pagos en este período</td></tr>';
         } else {
             d.pagos_recientes.forEach(c => {
                 htmlCR+=`<tr>
-                    <td>${c.fecha}</td>
+                    <td class="fecha">${c.fecha}</td>
                     <td>${c.cliente}</td>
                     <td>${c.categoria || '—'}${c.cod_item ? '<br><small style="color:#bbb">'+c.cod_item+'</small>' : ''}</td>
-                    <td>${fmt(c.monto)}</td>
+                    <td class="num">${fmt(c.monto)}</td>
                     <td style="font-size:11px;">${c.metodo}</td>
                 </tr>`;
             });
