@@ -119,14 +119,29 @@ def main():
                 page.screenshot(path=str(screenshot_path), full_page=True)
                 print(f"    [OK] screenshot -> {screenshot_path.name}")
 
-                # Detectar elementos overflow horizontal del viewport (375px iPhone)
+                # Detectar elementos overflow horizontal del viewport (390px iPhone 13 Pro).
+                # IGNORA elementos dentro de contenedores scrolleables (overflow-x: auto/scroll)
+                # porque esos son intencionales — accesibles via swipe horizontal.
                 overflowing = page.evaluate("""
                     () => {
                         const vw = window.innerWidth;
                         const overflows = [];
+                        const isScrollableContainer = (el) => {
+                            const cs = getComputedStyle(el);
+                            return cs.overflowX === 'auto' || cs.overflowX === 'scroll';
+                        };
+                        const hasScrollableAncestor = (el) => {
+                            let p = el.parentElement;
+                            while (p && p !== document.body) {
+                                if (isScrollableContainer(p)) return true;
+                                p = p.parentElement;
+                            }
+                            return false;
+                        };
                         document.querySelectorAll('*').forEach(el => {
                             const r = el.getBoundingClientRect();
                             if (r.right > vw + 5 && r.width > 50 && el.offsetParent) {
+                                if (hasScrollableAncestor(el)) return;  // intencional
                                 const id = el.id || el.className?.toString().slice(0,40) || el.tagName;
                                 overflows.push({id, w: Math.round(r.width), right: Math.round(r.right)});
                             }
