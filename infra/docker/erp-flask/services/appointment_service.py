@@ -352,6 +352,18 @@ def mark_attended(
     apt.status = "attended"
     apt.attended_at = _utc_now()
     apt.updated_by = updated_by
+
+    # Auto-transicion del lead: si la cita tiene lead_id, marcarlo como 'cliente'
+    # (la doctora opera SOLO en ERP — Vtiger se actualizara via workflow n8n A2 futuro)
+    if apt.lead_id:
+        lead = db.execute(
+            select(Lead).where(Lead.id == apt.lead_id)
+        ).scalar_one_or_none()
+        if lead is not None and lead.estado_lead != "cliente":
+            lead.estado_lead = "cliente"
+            if apt.cod_cliente:
+                lead.cod_cliente_vinculado = apt.cod_cliente
+
     db.flush()
 
     audit_service.log(
@@ -365,6 +377,7 @@ def mark_attended(
             "attended_at": apt.attended_at.isoformat(),
             "cod_cliente": apt.cod_cliente,
             "cliente_created": cliente_created_cod is not None,
+            "lead_estado_updated_to": "cliente" if apt.lead_id else None,
         },
         user_id=updated_by,
     )
@@ -390,6 +403,19 @@ def mark_no_show(
     apt.status = "no_show"
     apt.no_show_at = _utc_now()
     apt.updated_by = updated_by
+
+    # Auto-transicion del lead: vuelve a 'contactado' para re-entrar al ciclo de nurturing.
+    # Si Dario detecta que un lead acumula muchos no-shows, puede marcarlo manualmente
+    # como 'perdido' en Vtiger. Threshold automatico (no_show_count) queda para v2.
+    lead_estado_updated = None
+    if apt.lead_id:
+        lead = db.execute(
+            select(Lead).where(Lead.id == apt.lead_id)
+        ).scalar_one_or_none()
+        if lead is not None and lead.estado_lead in ("agendado", "asistio"):
+            lead.estado_lead = "contactado"
+            lead_estado_updated = "contactado"
+
     db.flush()
 
     audit_service.log(
@@ -398,7 +424,11 @@ def mark_no_show(
         entity_type="appointment",
         entity_id=apt.cod_appointment,
         before_state={"status": before_status},
-        after_state={"status": apt.status, "no_show_at": apt.no_show_at.isoformat()},
+        after_state={
+            "status": apt.status,
+            "no_show_at": apt.no_show_at.isoformat(),
+            "lead_estado_updated_to": lead_estado_updated,
+        },
         user_id=updated_by,
     )
     return apt

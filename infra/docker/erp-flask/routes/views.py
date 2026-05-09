@@ -70,6 +70,13 @@ def index() -> str:
                 .scalars()
                 .all()
             )
+            # Lookup phone -> cod_cliente para detectar leads que ya son clientes recurrentes
+            # (ya tenemos `clientes` cargado arriba con activo=True).
+            clientes_by_phone = {
+                c.phone_e164: c.cod_cliente
+                for c in clientes
+                if c.phone_e164
+            }
             leads_pendientes = [
                 {
                     "cod_lead": l.cod_lead,
@@ -78,6 +85,9 @@ def index() -> str:
                     "tratamiento_interes": l.tratamiento_interes or "",
                     "estado_lead": l.estado_lead,
                     "fecha_captura": l.fecha_captura.isoformat() if l.fecha_captura else "",
+                    "utm_campaign": l.utm_campaign_at_capture or "",
+                    # Si phone matchea con cliente activo -> recurrente que vio el ad
+                    "cod_cliente_existente": clientes_by_phone.get(l.phone_e164),
                 }
                 for l in leads_rows
             ]

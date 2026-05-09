@@ -361,6 +361,19 @@ class TestMarkAttended:
         )
         assert len(events) == 1
 
+    def test_mark_attended_transitions_lead_to_cliente(self, db_session, lead):
+        """Auto-transicion: lead.estado_lead pasa a 'cliente' al marcar attended."""
+        assert lead.estado_lead in ("nuevo", "contactado", "agendado")  # estado inicial activo
+        apt = appointment_service.create(
+            db_session, treatment="X", scheduled_for=_future_dt(24), cod_lead=lead.cod_lead
+        )
+        appointment_service.mark_attended(db_session, apt.cod_appointment)
+        db_session.refresh(lead)
+        assert lead.estado_lead == "cliente"
+        # cod_cliente_vinculado debe apuntar al cliente recien creado
+        assert lead.cod_cliente_vinculado is not None
+        assert lead.cod_cliente_vinculado.startswith("LIVCLIENT")
+
 
 # ============================================================
 # MARK NO_SHOW
@@ -382,6 +395,60 @@ class TestMarkNoShow:
         appointment_service.mark_attended(db_session, apt.cod_appointment)
         with pytest.raises(appointment_service.InvalidTransitionError):
             appointment_service.mark_no_show(db_session, apt.cod_appointment)
+
+    def test_mark_no_show_transitions_lead_to_contactado(self, db_session, lead):
+        """Auto-transicion: lead.estado_lead vuelve a 'contactado' (re-nurturing)."""
+        # Forzar lead a 'agendado' (simula flujo: cita confirmada antes del no-show)
+        lead.estado_lead = "agendado"
+        db_session.commit()
+        apt = appointment_service.create(
+            db_session, treatment="X", scheduled_for=_future_dt(24), cod_lead=lead.cod_lead
+        )
+        appointment_service.confirm(db_session, apt.cod_appointment)
+        appointment_service.mark_no_show(db_session, apt.cod_appointment)
+        db_session.refresh(lead)
+        assert lead.estado_lead == "contactado"
+
+
+class TestClienteRecurrente:
+    """ADR-0035 v2: si phone del lead matchea con cliente activo,
+    mark_attended no crea cliente nuevo, vincula al existente."""
+
+    def test_lead_with_existing_client_phone_links_not_creates(self, db_session):
+        # 1. Crear cliente existente con phone X
+        cliente_existente = cliente_service.create(
+            db_session, nombre="Cliente Recurrente", phone_raw="987111000"
+        )
+        db_session.commit()
+
+        # 2. Crear lead nuevo con MISMO phone (simula "vio el ad de nuevo")
+        recurring_lead = Lead(
+            cod_lead="LIVLEAD0099",
+            vtiger_id="V-9099",
+            nombre="Mismo Cliente Diferente Forma",
+            phone_e164="+51987111000",
+            fuente="digital",
+            canal_adquisicion="form_web",
+            utm_campaign_at_capture="dia-madre-2026",
+        )
+        db_session.add(recurring_lead)
+        db_session.commit()
+        db_session.refresh(recurring_lead)
+
+        # 3. Crear appointment + mark attended
+        apt = appointment_service.create(
+            db_session,
+            treatment="Botox refresh",
+            scheduled_for=_future_dt(24),
+            cod_lead=recurring_lead.cod_lead,
+        )
+        appointment_service.mark_attended(db_session, apt.cod_appointment)
+
+        # 4. Asserts: NO se creo cliente nuevo, se vinculo al existente
+        assert apt.cod_cliente == cliente_existente.cod_cliente
+        # El lead apunta al cliente original, no a uno nuevo
+        db_session.refresh(recurring_lead)
+        assert recurring_lead.cod_cliente_vinculado == cliente_existente.cod_cliente
 
 
 # ============================================================
