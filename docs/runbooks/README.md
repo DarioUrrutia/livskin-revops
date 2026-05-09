@@ -74,6 +74,8 @@ related_skills:                          # skills MCP que usan este runbook
 | 17 | [vtiger-custom-fields](vtiger-custom-fields.md) | informativo | N/A — referencia cf_NNN ↔ ERP fields |
 | 18 | [wordpress-form-livskin-integration](wordpress-form-livskin-integration.md) | informativo | N/A — activar/desactivar/debuggear forms WP |
 | 19 | [landing-pages-deploy](landing-pages-deploy.md) | informativo | N/A — Cloudflare Pages deploy de landings |
+| 20 | [arranque-sesion](arranque-sesion.md) | informativo | N/A — protocolo warmup obligatorio Bloque B (2026-05-06) |
+| 21 | [agenda-mantenimiento](agenda-mantenimiento.md) | low | ❌ — diagnóstico módulo Agenda ERP (ADR-0035, Fase 4A.1) |
 
 ## Runbooks históricos (pre-Bloque 0.6)
 

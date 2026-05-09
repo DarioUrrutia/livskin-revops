@@ -3,6 +3,7 @@
 Importa Base + todos los modelos para que Alembic los detecte.
 """
 from models.base import Base, TimestampMixin
+from models.appointment import Appointment
 from models.audit_log import AuditLog
 from models.catalogo import Catalogo
 from models.cliente import Cliente
@@ -19,6 +20,7 @@ from models.venta import Venta
 __all__ = [
     "Base",
     "TimestampMixin",
+    "Appointment",
     "AuditLog",
     "Catalogo",
     "Cliente",

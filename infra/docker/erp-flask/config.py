@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     # Si False: GET /api/leads/search-match retorna 404 (UI tip nunca aparece).
     auto_match_lead_enabled: bool = True
 
+    # ADR-0035 — Modulo Agenda Mínima (Fase 4A).
+    # Default False hasta validación con doctora (sub-paso 8 del plan).
+    # Si False: todos los endpoints /api/appointments retornan 404 + UI no muestra pestaña.
+    agenda_feature_enabled: bool = False
+
     @property
     def database_url(self) -> str:
         return (

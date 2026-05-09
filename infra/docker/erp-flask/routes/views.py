@@ -14,8 +14,11 @@ from typing import Any
 from flask import Blueprint, get_flashed_messages, render_template, request
 from sqlalchemy import select
 
+from config import settings
 from db import session_scope
+from models.appointment import Appointment
 from models.cliente import Cliente
+from models.lead import Lead
 
 bp = Blueprint("views", __name__)
 
@@ -55,6 +58,55 @@ def index() -> str:
                     max_num = num
         next_client_num = max_num + 1
 
+        # ADR-0035 — Leads pendientes para Agenda (modal + secciones de cards).
+        # Solo si feature flag activa, evitamos query innecesaria.
+        leads_pendientes: list[dict[str, Any]] = []
+        leads_sin_cita: list[dict[str, Any]] = []
+        if getattr(settings, "agenda_feature_enabled", False):
+            from sqlalchemy import select as _sel
+            from models.appointment import APPOINTMENT_ACTIVE_STATUSES
+
+            leads_rows = list(
+                db.execute(
+                    select(Lead)
+                    .where(Lead.estado_lead.in_(("nuevo", "contactado", "agendado")))
+                    .order_by(Lead.fecha_captura.desc().nullslast())
+                )
+                .scalars()
+                .all()
+            )
+            # Lookup phone -> cod_cliente para detectar leads que ya son clientes recurrentes
+            clientes_by_phone = {
+                c.phone_e164: c.cod_cliente
+                for c in clientes
+                if c.phone_e164
+            }
+            # Lookup leads que ya tienen appointment activa (scheduled/confirmed)
+            # para excluirlos de la sección "esperando agendar"
+            lead_ids_con_cita_activa = set(
+                db.execute(
+                    _sel(Appointment.lead_id)
+                    .where(Appointment.status.in_(APPOINTMENT_ACTIVE_STATUSES))
+                    .where(Appointment.lead_id.is_not(None))
+                ).scalars().all()
+            )
+
+            for l in leads_rows:
+                lead_dict = {
+                    "cod_lead": l.cod_lead,
+                    "nombre": l.nombre,
+                    "phone": l.phone_e164 or "",
+                    "tratamiento_interes": l.tratamiento_interes or "",
+                    "estado_lead": l.estado_lead,
+                    "fecha_captura": l.fecha_captura.isoformat() if l.fecha_captura else "",
+                    "utm_campaign": l.utm_campaign_at_capture or "",
+                    "cod_cliente_existente": clientes_by_phone.get(l.phone_e164),
+                }
+                leads_pendientes.append(lead_dict)
+                # Si NO tiene appointment activa, va a la seccion "esperando agendar"
+                if l.id not in lead_ids_con_cita_activa:
+                    leads_sin_cita.append(lead_dict)
+
     active_tab = request.args.get("tab", "venta")
     messages = get_flashed_messages()
 
@@ -66,4 +118,8 @@ def index() -> str:
         next_client_num=next_client_num,
         active_tab=active_tab,
         messages=messages,
+        # ADR-0035 — feature flag para mostrar/ocultar pestaña AGENDA
+        agenda_feature_enabled=getattr(settings, "agenda_feature_enabled", False),
+        leads_pendientes=leads_pendientes,
+        leads_sin_cita=leads_sin_cita,
     )

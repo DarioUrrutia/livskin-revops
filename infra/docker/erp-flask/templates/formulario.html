@@ -24,21 +24,103 @@
         }
         .header {
             background: white;
-            text-align: center;
-            padding: 20px;
+            padding: 14px 16px;
             border-bottom: 3px solid #C0392B;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .header img { max-width: 200px; height: auto; }
+        .header-logo { display: flex; align-items: center; flex-shrink: 0; }
+        .header-logo img { max-width: 140px; height: auto; }
+        @media (min-width: 720px) { .header-logo img { max-width: 180px; } }
 
-        /* Tabs */
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #555;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .header-user-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .header-menu-toggle {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #666;
+        }
+        .header-menu-toggle:hover { background: #eee; }
+        .header-admin-menu {
+            display: none;
+            position: absolute;
+            right: 16px;
+            top: 56px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 6px 0;
+            min-width: 180px;
+            z-index: 1000;
+        }
+        .header-admin-menu.open { display: block; }
+        .header-admin-menu a {
+            display: block;
+            padding: 8px 14px;
+            color: #555;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .header-admin-menu a:hover { background: #f5f5f5; }
+        .header-admin-menu a.danger { color: #b91c1c; border-top: 1px solid #eee; }
+        .header-logout-btn {
+            background: #fce8e6;
+            color: #b91c1c;
+            border: 1px solid #f5c6c2;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .header-logout-btn:hover { background: #f5c6c2; }
+
+        /* Botón submit sticky en mobile — siempre accesible sin scrollear todo el form */
+        @media (max-width: 719px) {
+            .submit-sticky-mobile {
+                position: sticky;
+                bottom: 8px;
+                z-index: 50;
+                box-shadow: 0 -2px 12px rgba(192, 57, 43, 0.18);
+                margin-top: 16px !important;
+            }
+        }
+
+        /* Tabs — horizontal scroll en mobile cuando 7+ pestañas no entran */
         .tabs {
             display: flex;
             border-bottom: 2px solid #eee;
             background: #fafafa;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
         }
+        .tabs::-webkit-scrollbar { height: 3px; }
+        .tabs::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
         .tab-btn {
-            flex: 1;
-            padding: 12px 4px;
+            flex: 1 0 auto;
+            min-width: 80px;
+            padding: 12px 8px;
             font-size: 12px;
             font-weight: bold;
             color: #999;
@@ -50,6 +132,7 @@
             transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         .tab-btn.active { color: #C0392B; border-bottom-color: #C0392B; }
         .tab-btn:hover:not(.active) { color: #666; }
@@ -227,26 +310,37 @@
 </head>
 <body>
 <div class="card">
-    <div class="header" style="position: relative;">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Livskin Logo">
+    <div class="header">
+        <div class="header-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Livskin Logo">
+        </div>
         {% if current_user %}
-        <div style="position: absolute; top: 8px; right: 12px; font-size: 0.8rem; color: #666;">
-            <span>{{ current_user.nombre_completo }}</span>
+        <div class="header-user">
+            <span class="header-user-name">{{ current_user.nombre_completo }}</span>
+            <button type="button" class="header-menu-toggle" onclick="toggleAdminMenu(event)" aria-label="Menú de usuario">⚙️ menú</button>
+            <a href="{{ url_for('auth.logout') }}" class="header-logout-btn" title="Cerrar sesión">⏻ Salir</a>
+        </div>
+        <div id="header-admin-menu" class="header-admin-menu" onclick="event.stopPropagation()">
+            <a href="{{ url_for('auth.change_password_get') }}">🔑 Cambiar contraseña</a>
             {% if current_user.rol == 'admin' %}
-            &middot;
-            <a href="{{ url_for('admin.audit_log_view') }}" style="color: #059669; text-decoration: none;">audit log</a>
-            &middot;
-            <a href="{{ url_for('admin.system_health_view') }}" style="color: #059669; text-decoration: none;">system health</a>
-            &middot;
-            <a href="{{ url_for('admin.agent_costs_view') }}" style="color: #059669; text-decoration: none;">agent costs</a>
+            <a href="{{ url_for('admin.audit_log_view') }}">📜 Audit log</a>
+            <a href="{{ url_for('admin.system_health_view') }}">💚 System health</a>
+            <a href="{{ url_for('admin.agent_costs_view') }}">💸 Agent costs</a>
             {% endif %}
-            &middot;
-            <a href="{{ url_for('auth.change_password_get') }}" style="color: #4a6cf7; text-decoration: none;">cambiar contraseña</a>
-            &middot;
-            <a href="{{ url_for('auth.logout') }}" style="color: #b91c1c; text-decoration: none;">cerrar sesión</a>
+            <a href="{{ url_for('auth.logout') }}" class="danger">⏻ Cerrar sesión</a>
         </div>
         {% endif %}
     </div>
+    <script>
+    function toggleAdminMenu(ev) {
+        ev.stopPropagation();
+        document.getElementById('header-admin-menu').classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+        const m = document.getElementById('header-admin-menu');
+        if (m) m.classList.remove('open');
+    });
+    </script>
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -263,6 +357,9 @@
         <button class="tab-btn" data-tab="cliente"   onclick="cambiarTab('cliente')">Cliente</button>
         <button class="tab-btn" data-tab="dashboard" onclick="cambiarTab('dashboard')">Dashboard</button>
         <button class="tab-btn" data-tab="libro"     onclick="cambiarTab('libro'); cargarLibro();">Libro</button>
+        {% if agenda_feature_enabled %}
+        <button class="tab-btn" data-tab="agenda"    onclick="cambiarTab('agenda'); cargarAgenda();">Agenda</button>
+        {% endif %}
     </div>
 
     <!-- ═══════════════════════════════════════════════════════ TAB: VENTA -->
@@ -436,7 +533,7 @@
             <input type="hidden" name="num_deudas" id="num_deudas_venta" value="0">
             <div id="deuda-hidden-fields"></div>
 
-            <button type="submit" id="btn-guardar-venta">GUARDAR VENTA</button>
+            <button type="submit" id="btn-guardar-venta" class="submit-sticky-mobile">GUARDAR VENTA</button>
         </form>
     </div>
 
@@ -487,7 +584,7 @@
                 </div>
             </div>
 
-            <button type="submit">GUARDAR GASTO</button>
+            <button type="submit" class="submit-sticky-mobile">GUARDAR GASTO</button>
         </form>
     </div>
 
@@ -590,7 +687,7 @@
                 <div style="font-size:11px; color:#aaa; margin-top:4px; display:none;" id="pago-credito-nota">El exceso se registrará automáticamente como crédito del cliente.</div>
             </div>
 
-            <button type="submit">REGISTRAR PAGO</button>
+            <button type="submit" class="submit-sticky-mobile">REGISTRAR PAGO</button>
         </form>
     </div>
 
@@ -923,6 +1020,294 @@
 
 </div><!-- /tab-libro -->
 
+{% if agenda_feature_enabled %}
+<!-- ═══════════════════════════════════════════════════════ TAB: AGENDA (ADR-0035) -->
+<div id="tab-agenda" class="tab-content form-body" style="padding:16px;">
+
+    <!-- Sección 1: leads recién llegados que esperan que se les coordine fecha -->
+    {% if leads_sin_cita and leads_sin_cita|length > 0 %}
+    <div style="margin-bottom:24px;">
+        <h2 style="margin:0 0 4px 0;font-size:16px;color:#333;">Esperando agendar fecha <span style="background:#FFF3E0;color:#E65100;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px;">{{ leads_sin_cita|length }}</span></h2>
+        <p style="margin:0 0 12px 0;font-size:11px;color:#999;">Leads que llegaron y aún no tienen cita coordinada. Coordiná día/hora y luego click "Agendar fecha".</p>
+        <div id="agenda-leads-pendientes"></div>
+    </div>
+    {% endif %}
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <h2 style="margin:0;font-size:16px;color:#333;">Próximas citas</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <select id="agenda-filtro-status" onchange="cargarAgenda()" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
+                <option value="">Todos los estados</option>
+                <option value="scheduled">Pendiente confirmación</option>
+                <option value="confirmed">Confirmada</option>
+                <option value="attended">Asistió</option>
+                <option value="no_show">No vino</option>
+                <option value="cancelled">Cancelada</option>
+                <option value="rescheduled">Reagendada</option>
+            </select>
+            <button onclick="abrirModalNuevaCita()" title="Crear cita manualmente (excepcional — el chatbot WhatsApp las crea automáticamente)" style="padding:6px 10px;background:#f5f5f5;color:#888;border:1px solid #ddd;border-radius:4px;font-size:11px;cursor:pointer;">+ manual</button>
+        </div>
+    </div>
+    <p style="margin:0 0 16px 0;font-size:11px;color:#999;">Las citas aparecen automáticamente cuando un lead confirma fecha por WhatsApp. Marca el estado de cada cita con los botones de la derecha.</p>
+
+    <style>
+        .agenda-card {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        @media (min-width: 720px) {
+            .agenda-card { grid-template-columns: 1fr 1fr auto; align-items: center; gap: 14px; }
+        }
+        .agenda-card-header { font-size: 14px; font-weight: 600; color: #333; }
+        .agenda-card-meta { font-size: 12px; color: #888; line-height: 1.5; }
+        .agenda-card-status {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-top: 4px;
+        }
+        .agenda-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-start;
+        }
+        @media (min-width: 720px) {
+            .agenda-card-actions { justify-content: flex-end; }
+        }
+        .agenda-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            min-height: 36px;
+            min-width: 70px;
+            white-space: nowrap;
+        }
+        .agenda-btn-confirm  { background: #27AE60; color: white; }
+        .agenda-btn-attended { background: #2980B9; color: white; }
+        .agenda-btn-noshow   { background: #E67E22; color: white; }
+        .agenda-btn-resched  { background: #f0f0f0; color: #555; border: 1px solid #ddd; }
+        .agenda-btn-cancel   { background: #f5f5f5; color: #aaa; border: 1px solid #eee; }
+        .agenda-recurrente-tag {
+            display: inline-block;
+            background: #FFF3E0;
+            color: #E65100;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+        }
+
+        /* Card de "lead esperando agendar fecha" — mobile-first compacta */
+        .lead-card {
+            background: white;
+            border: 1px solid #f0d8c0;
+            border-left: 3px solid #E67E22;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+        .lead-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .lead-card-nombre {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.3;
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            white-space: normal;
+        }
+        .lead-card-state {
+            background: #FFF3E0;
+            color: #E65100;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .lead-card-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 6px;
+            gap: 8px;
+        }
+        .lead-phone {
+            color: #2980B9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .lead-card-cod {
+            font-size: 10px;
+            color: #aaa;
+            font-family: monospace;
+        }
+        .lead-card-meta {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .lead-card-fecha {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        .lead-btn-agendar {
+            width: 100%;
+            padding: 10px;
+            background: #27AE60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 40px;
+        }
+        .lead-btn-agendar:active { background: #229954; }
+        .lead-recurrente-pill {
+            display: inline-block;
+            background: #FFF3E0;
+            color: #E65100;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 8px;
+            margin-left: 6px;
+            font-family: monospace;
+        }
+    </style>
+    <div id="agenda-lista">
+        <div id="agenda-empty" style="background:white;border:1px solid #e8e8e8;border-radius:8px;padding:40px;text-align:center;color:#888;font-size:13px;line-height:1.6;">Cargando...</div>
+        <div id="agenda-cards"></div>
+    </div>
+
+    <!-- Modal Agendar fecha (para leads recién llegados) -->
+    <div id="modal-agendar-lead" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;overflow-y:auto;" onclick="if(event.target===this)cerrarModalAgendarLead()">
+        <div style="max-width:440px;margin:40px auto;background:white;border-radius:12px;padding:22px;box-shadow:0 4px 20px rgba(0,0,0,0.2);position:relative;">
+            <button onclick="cerrarModalAgendarLead()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;">&times;</button>
+            <h3 style="margin:0 0 4px 0;font-size:16px;color:#333;">📅 Agendar fecha</h3>
+            <div id="modal-agendar-lead-nombre" style="font-size:14px;font-weight:600;color:#C0392B;margin-bottom:2px;">—</div>
+            <div id="modal-agendar-lead-info" style="font-size:11px;color:#888;margin-bottom:18px;">—</div>
+
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Tratamiento *</label>
+                    <input type="text" id="agendar-lead-treatment" placeholder="Botox, Ácido Hialurónico..." style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Fecha *</label>
+                        <input type="date" id="agendar-lead-fecha" style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Hora *</label>
+                        <input type="time" id="agendar-lead-hora" style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
+                    </div>
+                </div>
+                <div id="agendar-lead-error" style="display:none;color:#C0392B;font-size:12px;padding:8px 10px;background:#fce8e6;border-radius:4px;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+                    <button onclick="cerrarModalAgendarLead()" style="padding:9px 14px;background:#f5f5f5;color:#666;border:1px solid #ddd;border-radius:4px;font-size:13px;cursor:pointer;">Cancelar</button>
+                    <button onclick="confirmarAgendarLead()" style="padding:9px 16px;background:#C0392B;color:white;border:none;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;">Confirmar cita</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nueva cita -->
+    <div id="modal-nueva-cita" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;overflow-y:auto;" onclick="if(event.target===this)cerrarModalNuevaCita()">
+        <div style="max-width:480px;margin:40px auto;background:white;border-radius:12px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.2);position:relative;">
+            <button onclick="cerrarModalNuevaCita()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;">&times;</button>
+            <h3 style="margin:0 0 16px 0;font-size:16px;color:#333;">Nueva cita</h3>
+
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="background:#fdf6e3;border-left:3px solid #C0392B;padding:8px 12px;font-size:12px;color:#666;">
+                    💡 La Agenda registra <strong>citas de leads digitales</strong> capturados via campañas. Si un cliente recurrente vino por una campaña, se registra acá igual (el sistema detecta el match automáticamente).
+                </div>
+
+                <!-- LEAD PENDIENTE: dropdown con leads de Vtiger en estados nuevo/contactado/agendado -->
+                <div id="campo-lead">
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Buscar lead por nombre *</label>
+                    <input type="text" id="nueva-cita-lead" list="lista-leads-agenda" placeholder="Empezá a escribir el nombre..." style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;" oninput="onLeadInput()">
+                    <datalist id="lista-leads-agenda">
+                        {% for l in leads_pendientes %}
+                        <option value="{{ l.nombre }} · {{ l.phone }} · {{ l.cod_lead }}{% if l.tratamiento_interes %} · {{ l.tratamiento_interes }}{% endif %}{% if l.cod_cliente_existente %} · 🔁 cliente recurrente{% endif %}">{% endfor %}
+                    </datalist>
+                    <small id="lead-info" style="color:#999;font-size:11px;display:block;margin-top:4px;">{{ leads_pendientes|length }} lead(s) pendiente(s) — selecciona uno de la lista.</small>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Tratamiento *</label>
+                    <input type="text" id="nueva-cita-treatment" placeholder="Ej: Botox, Ácido Hialurónico, Limpieza..." style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Fecha *</label>
+                        <input type="date" id="nueva-cita-fecha" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Hora *</label>
+                        <input type="time" id="nueva-cita-hora" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
+                    </div>
+                    <div style="width:90px;">
+                        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Min</label>
+                        <input type="number" id="nueva-cita-duracion" value="60" min="15" max="480" step="15" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Canal de contacto</label>
+                    <select id="nueva-cita-channel" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;background:white;">
+                        <option value="">— Sin especificar —</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="phone">Teléfono</option>
+                        <option value="walk_in">Walk-in (presencial)</option>
+                        <option value="form_web">Formulario web</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Notas</label>
+                    <textarea id="nueva-cita-notes" rows="3" placeholder="Observaciones operativas (opcional)" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+                </div>
+
+                <div id="nueva-cita-error" style="display:none;color:#C0392B;font-size:12px;padding:8px 10px;background:#fce8e6;border-radius:4px;"></div>
+
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                    <button onclick="cerrarModalNuevaCita()" style="padding:8px 14px;background:#f5f5f5;color:#666;border:1px solid #ddd;border-radius:4px;font-size:13px;cursor:pointer;">Cancelar</button>
+                    <button onclick="crearNuevaCita()" style="padding:8px 14px;background:#C0392B;color:white;border:none;border-radius:4px;font-size:13px;cursor:pointer;">Crear cita</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- /tab-agenda -->
+{% endif %}
+
 </div><!-- /card -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1004,10 +1389,55 @@
         font-size: 11px; font-weight: bold; color: #C0392B;
         text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
     }
-    .tabla-rec { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .tabla-rec th { background:#f5f5f5; padding:6px 8px; text-align:left; font-size:10px; color:#888; text-transform:uppercase; border-bottom:1px solid #eee; }
-    .tabla-rec td { padding:6px 8px; border-bottom:1px solid #f5f5f5; vertical-align:top; }
-    .tabla-rec tr:last-child td { border-bottom:none; }
+    /* Tablas Dashboard — refinadas 2026-05-09 final:
+       - Tabla NO forza width 100% ni min-width — toma ancho natural por contenido
+       - Wrapper padre tiene overflow-x: auto -> scroll horizontal cuando hace falta
+       - Default: wrap NATURAL (nombres se ven completos)
+       - .num: nowrap + right (precios, totales, debe — simbolo y numeros pegados)
+       - .fecha: nowrap left
+       Memoria: feedback_mobile_targets_layout_rules. */
+    .tabla-rec {
+        border-collapse: collapse;
+        font-size: 12px;
+        table-layout: auto;
+    }
+    .tabla-rec th {
+        background: #f5f5f5;
+        padding: 6px 8px;
+        text-align: left;
+        font-size: 10px;
+        color: #888;
+        text-transform: uppercase;
+        border-bottom: 1px solid #eee;
+    }
+    .tabla-rec td {
+        padding: 7px 8px;
+        border-bottom: 1px solid #f5f5f5;
+        vertical-align: top;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+    .tabla-rec tr:last-child td { border-bottom: none; }
+
+    /* Columnas numericas: nowrap + right + tabular-nums (digitos alineados) */
+    .tabla-rec th.num, .tabla-rec td.num {
+        white-space: nowrap;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Columnas de fecha: nowrap left aligned */
+    .tabla-rec th.fecha, .tabla-rec td.fecha {
+        white-space: nowrap;
+    }
+
+    /* Wrappers padre de tablas: scroll horizontal cuando contenido excede viewport */
+    #tabla-recientes, #tabla-recientes-tipos, #tabla-tipo-mes,
+    #tabla-top20, #tabla-pagos-recientes, #tabla-aging,
+    .dash-card:has(.tabla-rec), [id*="tabla-"]:has(.tabla-rec) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
     .debe-badge { color:#C0392B; font-weight:bold; font-size:11px; }
 
     /* ── Libro de movimientos: responsive ── */
@@ -2906,6 +3336,17 @@ let dashCargado = false;
 const COLORES = ['#C0392B','#2980B9','#27AE60','#8E44AD','#E67E22','#16A085','#2C3E50','#D35400','#7F8C8D','#F39C12'];
 
 function fmt(n) { return 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+// Formato de porcentaje: 1 decimal para ahorrar espacio (tasa cobro, variaciones, etc.)
+function fmtPct(n) {
+    if (n === null || n === undefined || isNaN(Number(n))) return '—';
+    return Number(n).toFixed(1) + '%';
+}
+// Formato de fecha: ISO yyyy-mm-dd -> dd-mm-yyyy (Dario lo prefiere así)
+function fmtFecha(iso) {
+    if (!iso) return '';
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
+}
 function mesLabel(ym) { const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; const[y,m]=ym.split('-'); return M[parseInt(m)-1]+' '+y.slice(2); }
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
@@ -2955,7 +3396,7 @@ function cargarDashboard() {
         document.getElementById('kpi-cobrado').textContent   = fmt(d.cobrado_total);
         document.getElementById('kpi-pendiente').textContent = fmt(d.pendiente_total);
         document.getElementById('kpi-ticket').textContent    = fmt(d.ticket_promedio);
-        document.getElementById('kpi-tasa').textContent      = d.tasa_cobro + '%';
+        document.getElementById('kpi-tasa').textContent      = fmtPct(d.tasa_cobro);
         const balEl = document.getElementById('kpi-balance'), balCard = document.getElementById('kpi-balance-card');
         balEl.textContent = fmt(d.balance_neto);
         balEl.style.color = d.balance_neto >= 0 ? '#27ae60' : '#C0392B';
@@ -2982,13 +3423,13 @@ function cargarDashboard() {
             if (val === null || val === undefined) return '<span style="font-size:11px;color:#aaa;">Sin datos anteriores</span>';
             const col = val >= 0 ? '#27ae60' : '#C0392B';
             const arrow = val >= 0 ? '▲' : '▼';
-            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(val)}%</span> <span style="font-size:11px;color:#aaa;">vs mes ant.</span>`;
+            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(Number(val).toFixed(1))}%</span> <span style="font-size:11px;color:#aaa;">vs mes ant.</span>`;
         }
         function deltaChipAño(val) {
             if (val === null || val === undefined) return '<span style="font-size:11px;color:#aaa;">Sin datos año anterior</span>';
             const col = val >= 0 ? '#27ae60' : '#C0392B';
             const arrow = val >= 0 ? '▲' : '▼';
-            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(val)}%</span> <span style="font-size:11px;color:#aaa;">vs año ant.</span>`;
+            return `<span style="font-size:13px;font-weight:bold;color:${col};">${arrow} ${Math.abs(Number(val).toFixed(1))}%</span> <span style="font-size:11px;color:#aaa;">vs año ant.</span>`;
         }
         document.getElementById('comp-mes-act').textContent = fmt(d.comp_mes_actual);
         document.getElementById('comp-mes-ant-lbl').textContent = 'Mes ant: ' + fmt(d.comp_mes_anterior);
@@ -3012,19 +3453,19 @@ function cargarDashboard() {
         const tiposK = ['Tratamiento','Producto','Otro'];
         const tiposLabel = ['Tratamientos','Productos','Otros'];
         const tiposColores = ['#8E44AD','#2980B9','#7F8C8D'];
-        let htmlTipo = '<table class="tabla-rec"><thead><tr><th>Tipo</th><th>Mes actual</th><th>Mes anterior</th><th>Variación</th></tr></thead><tbody>';
+        let htmlTipo = '<table class="tabla-rec"><thead><tr><th>Tipo</th><th class="num">Mes actual</th><th class="num">Mes anterior</th><th class="num">Variación</th></tr></thead><tbody>';
         tiposK.forEach((k, i) => {
             const act = d.tipo_mes_actual[k] || 0;
             const ant = d.tipo_mes_anterior[k] || 0;
             if (act === 0 && ant === 0) return;
-            const varPct = ant > 0 ? ((act - ant) / ant * 100).toFixed(1) : null;
+            const varPct = ant > 0 ? Number(((act - ant) / ant * 100).toFixed(1)) : null;
             const varHtml = varPct === null ? '<span style="color:#aaa;">—</span>'
                 : `<span style="color:${parseFloat(varPct)>=0?'#27ae60':'#C0392B'};font-weight:bold;">${parseFloat(varPct)>=0?'▲':'▼'} ${Math.abs(varPct)}%</span>`;
             htmlTipo += `<tr>
                 <td><span style="background:${tiposColores[i]};color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;">${tiposLabel[i]}</span></td>
-                <td><strong>${fmt(act)}</strong></td>
-                <td style="color:#888;">${fmt(ant)}</td>
-                <td>${varHtml}</td>
+                <td class="num"><strong>${fmt(act)}</strong></td>
+                <td class="num" style="color:#888;">${fmt(ant)}</td>
+                <td class="num">${varHtml}</td>
             </tr>`;
         });
         document.getElementById('tabla-tipo-mes').innerHTML = htmlTipo + '</tbody></table>';
@@ -3049,14 +3490,15 @@ function cargarDashboard() {
         });
 
         // ── GENERAL: atenciones recientes ──
-        let htmlR='<table class="tabla-rec"><thead><tr><th>Fecha</th><th>Cliente</th><th>Categoría</th><th>Total</th><th>Debe</th></tr></thead><tbody>';
+        let htmlR='<table class="tabla-rec"><thead><tr><th class="fecha">Fecha</th><th>Cliente</th><th>Categoría</th><th class="num">Total</th><th class="num">Debe</th></tr></thead><tbody>';
         d.recientes.forEach(r => {
-            htmlR+=`<tr><td>${r.fecha}</td><td>${r.cliente}</td><td>${r.categoria}</td><td>${r.total?fmt(r.total):'—'}</td><td>${r.debe>0?'<span class="debe-badge">'+fmt(r.debe)+'</span>':'—'}</td></tr>`;
+            const zonaTxt = r.zona ? `<div style="font-size:10px;color:#aaa;margin-top:2px;font-style:italic;">${r.zona}</div>` : '';
+            htmlR+=`<tr><td class="fecha">${fmtFecha(r.fecha)}</td><td>${r.cliente}</td><td>${r.categoria}${zonaTxt}</td><td class="num">${r.total?fmt(r.total):'—'}</td><td class="num">${r.debe>0?'<span class="debe-badge">'+fmt(r.debe)+'</span>':'—'}</td></tr>`;
         });
         document.getElementById('tabla-recientes').innerHTML = htmlR + '</tbody></table>';
 
         // ── CLIENTES: top 20% tabla con evolución ──
-        let html20 = '<table class="tabla-rec"><thead><tr><th>#</th><th>Cliente</th><th>Facturado</th><th>Visitas</th><th>Frec./mes</th><th>Lo que más compra</th><th>Este mes</th><th>Mes ant.</th><th>Tendencia</th></tr></thead><tbody>';
+        let html20 = '<table class="tabla-rec"><thead><tr><th class="num">#</th><th>Cliente</th><th class="num">Facturado</th><th class="num">Visitas</th><th class="num">Frec./mes</th><th>Lo que más compra</th><th class="num">Este mes</th><th class="num">Mes ant.</th><th class="num">Tendencia</th></tr></thead><tbody>';
         if (d.top20_clientes.length === 0) {
             html20 += '<tr><td colspan="9" style="text-align:center;color:#aaa;padding:16px;">Sin datos en el período</td></tr>';
         } else {
@@ -3068,15 +3510,15 @@ function cargarDashboard() {
                     : '<span style="color:#aaa;font-size:16px;">—</span>';
                 const debeHtml = c.debe > 0 ? `<br><span class="debe-badge">${fmt(c.debe)}</span>` : '';
                 html20 += `<tr>
-                    <td style="color:#aaa;font-size:11px;">${i+1}</td>
+                    <td class="num" style="color:#aaa;font-size:11px;">${i+1}</td>
                     <td><strong>${c.cliente}</strong>${debeHtml}</td>
-                    <td>${fmt(c.total)}</td>
-                    <td style="text-align:center;">${c.visitas}</td>
-                    <td style="text-align:center;">${c.frecuencia}</td>
+                    <td class="num">${fmt(c.total)}</td>
+                    <td class="num">${c.visitas}</td>
+                    <td class="num">${c.frecuencia}</td>
                     <td style="font-size:11px;color:#666;">${c.cat_principal}</td>
-                    <td style="color:#27ae60;">${c.mes_actual > 0 ? fmt(c.mes_actual) : '—'}</td>
-                    <td style="color:#888;">${c.mes_anterior > 0 ? fmt(c.mes_anterior) : '—'}</td>
-                    <td style="text-align:center;">${tendIcon}</td>
+                    <td class="num" style="color:#27ae60;">${c.mes_actual > 0 ? fmt(c.mes_actual) : '—'}</td>
+                    <td class="num" style="color:#888;">${c.mes_anterior > 0 ? fmt(c.mes_anterior) : '—'}</td>
+                    <td class="num">${tendIcon}</td>
                 </tr>`;
             });
         }
@@ -3118,14 +3560,14 @@ function cargarDashboard() {
                         <span style="font-size:12px;font-weight:bold;color:${b.color};">${b.label}</span>
                         <span style="font-size:13px;font-weight:bold;color:${b.color};">${data_b.count} ítem(s) · ${fmt(data_b.total)}</span>
                     </div>
-                    <table class="tabla-rec" style="margin:0;"><thead><tr><th>Cliente</th><th>Categoría</th><th>Debe</th><th>Fecha venta</th><th>Días</th></tr></thead><tbody>`;
+                    <table class="tabla-rec" style="margin:0;"><thead><tr><th>Cliente</th><th>Categoría</th><th class="num">Debe</th><th class="fecha">Fecha venta</th><th class="num">Días</th></tr></thead><tbody>`;
                 data_b.items.forEach(it => {
                     html += `<tr>
                         <td>${it.cliente}</td>
                         <td style="font-size:11px;">${it.categoria || '—'}</td>
-                        <td><span class="debe-badge">${fmt(it.debe)}</span></td>
-                        <td style="font-size:11px;color:#aaa;">${it.fecha}</td>
-                        <td style="text-align:center;color:#888;font-size:11px;">${it.dias}d</td>
+                        <td class="num"><span class="debe-badge">${fmt(it.debe)}</span></td>
+                        <td class="fecha" style="font-size:11px;color:#aaa;">${fmtFecha(it.fecha)}</td>
+                        <td class="num" style="color:#888;font-size:11px;">${it.dias}d</td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
@@ -3154,16 +3596,16 @@ function cargarDashboard() {
         });
 
         // ── PAGOS: tabla pagos recientes ──
-        let htmlCR='<table class="tabla-rec"><thead><tr><th>Fecha</th><th>Cliente</th><th>Categoría</th><th>Monto</th><th>Método</th></tr></thead><tbody>';
+        let htmlCR='<table class="tabla-rec"><thead><tr><th class="fecha">Fecha</th><th>Cliente</th><th>Categoría</th><th class="num">Monto</th><th>Método</th></tr></thead><tbody>';
         if (d.pagos_recientes.length === 0) {
             htmlCR += '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px;">Sin pagos en este período</td></tr>';
         } else {
             d.pagos_recientes.forEach(c => {
                 htmlCR+=`<tr>
-                    <td>${c.fecha}</td>
+                    <td class="fecha">${fmtFecha(c.fecha)}</td>
                     <td>${c.cliente}</td>
                     <td>${c.categoria || '—'}${c.cod_item ? '<br><small style="color:#bbb">'+c.cod_item+'</small>' : ''}</td>
-                    <td>${fmt(c.monto)}</td>
+                    <td class="num">${fmt(c.monto)}</td>
                     <td style="font-size:11px;">${c.metodo}</td>
                 </tr>`;
             });
@@ -3659,6 +4101,361 @@ function exportarLibroCSV() {
     a.download = `libro_movimientos_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+}
+
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// AGENDA \u2014 modulo agenda minima (ADR-0035)
+// Solo se ejecuta si feature flag esta ON (el HTML del tab no existe sin flag)
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+const STATUS_LABELS = {
+    scheduled:   { txt: 'Pendiente confirmar', color: '#888' },
+    confirmed:   { txt: 'Confirmada',          color: '#27AE60' },
+    attended:    { txt: 'Asisti\u00f3',             color: '#2980B9' },
+    no_show:     { txt: 'No vino',             color: '#C0392B' },
+    cancelled:   { txt: 'Cancelada',           color: '#aaa' },
+    rescheduled: { txt: 'Reagendada',          color: '#7F8C8D' }
+};
+
+function formatScheduledFor(isoStr) {
+    const d = new Date(isoStr);
+    const opts = { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+    return d.toLocaleString('es-PE', opts);
+}
+
+// CLIENTES_CODIGOS ya está declarado arriba (línea ~1162) — reusamos esa global.
+// Solo declaramos lo nuevo del módulo Agenda:
+const LEADS_PENDIENTES = {{ leads_pendientes|tojson if leads_pendientes else '[]' }};
+const LEADS_SIN_CITA = {{ leads_sin_cita|tojson if leads_sin_cita else '[]' }};
+// Mapeo cod_lead -> nombre (para mostrar en lista de citas)
+const LEAD_NOMBRES = LEADS_PENDIENTES.reduce((acc, l) => { acc[l.cod_lead] = l.nombre; return acc; }, {});
+// Mapeo cod_cliente -> nombre (invertido del CLIENTES_CODIGOS global)
+const CLIENTE_NOMBRES = Object.entries(CLIENTES_CODIGOS).reduce((acc, [nombre, cod]) => { acc[cod] = nombre; return acc; }, {});
+
+function resolverNombrePorAppointment(apt) {
+    if (apt.cod_cliente && CLIENTE_NOMBRES[apt.cod_cliente]) {
+        return CLIENTE_NOMBRES[apt.cod_cliente] + ' \u00b7 ' + apt.cod_cliente;
+    }
+    if (apt.cod_cliente) return apt.cod_cliente;  // cliente nuevo no en context
+    if (apt.lead_id) {
+        // Buscar por lead_id en LEADS_PENDIENTES (no tenemos id directo, fallback a "Lead #N")
+        return 'Lead #' + apt.lead_id;
+    }
+    return '\u2014';
+}
+
+// ── Render de cards "leads esperando agendar fecha" — mobile-first compacto ──
+function renderLeadsSinCita() {
+    const cont = document.getElementById('agenda-leads-pendientes');
+    if (!cont || !LEADS_SIN_CITA || LEADS_SIN_CITA.length === 0) return;
+
+    cont.innerHTML = LEADS_SIN_CITA.map(l => {
+        const recurrenteTag = l.cod_cliente_existente
+            ? `<span class="lead-recurrente-pill">🔁 ${l.cod_cliente_existente}</span>` : '';
+        const fechaCap = l.fecha_captura ? l.fecha_captura.slice(0, 10) : '';
+        const fechaCapPretty = fechaCap ? fmtFecha(fechaCap) : '';
+        const tratamiento = l.tratamiento_interes
+            ? `<span style="color:#C0392B;font-weight:600;">${l.tratamiento_interes}</span>`
+            : '<span style="color:#aaa;font-style:italic;">sin tratamiento</span>';
+        const campana = l.utm_campaign ? ` · <span style="color:#888;">${l.utm_campaign}</span>` : '';
+        return `
+            <div class="lead-card">
+                <div class="lead-card-header">
+                    <div class="lead-card-nombre">${l.nombre}${recurrenteTag}</div>
+                    <span class="lead-card-state">${l.estado_lead}</span>
+                </div>
+                <div class="lead-card-info">
+                    <a href="tel:${l.phone}" class="lead-phone">📞 ${l.phone}</a>
+                    <span class="lead-card-cod">${l.cod_lead}</span>
+                </div>
+                <div class="lead-card-meta">${tratamiento}${campana}</div>
+                ${fechaCapPretty ? `<div class="lead-card-fecha">llegó ${fechaCapPretty}</div>` : ''}
+                <button onclick="abrirModalAgendarLead('${l.cod_lead}')" class="lead-btn-agendar">📅 Agendar fecha</button>
+            </div>
+        `;
+    }).join('');
+}
+
+// ── Modal Agendar fecha (para leads sin cita) ──
+let leadParaAgendar = null;
+function abrirModalAgendarLead(cod_lead) {
+    const lead = LEADS_SIN_CITA.find(l => l.cod_lead === cod_lead);
+    if (!lead) { alert('Lead no encontrado'); return; }
+    leadParaAgendar = lead;
+
+    document.getElementById('modal-agendar-lead-nombre').textContent = lead.nombre;
+    document.getElementById('modal-agendar-lead-info').textContent =
+        `${lead.phone} · ${lead.cod_lead}${lead.tratamiento_interes ? ' · interesado en ' + lead.tratamiento_interes : ''}`;
+    document.getElementById('agendar-lead-treatment').value = lead.tratamiento_interes || '';
+
+    // Default: mañana 10am
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('agendar-lead-fecha').value = tomorrow.toISOString().slice(0,10);
+    document.getElementById('agendar-lead-hora').value = '10:00';
+    document.getElementById('modal-agendar-lead').style.display = 'block';
+    document.getElementById('agendar-lead-error').style.display = 'none';
+}
+function cerrarModalAgendarLead() {
+    document.getElementById('modal-agendar-lead').style.display = 'none';
+    leadParaAgendar = null;
+}
+async function confirmarAgendarLead() {
+    if (!leadParaAgendar) return;
+    const treatment = document.getElementById('agendar-lead-treatment').value.trim();
+    const fecha = document.getElementById('agendar-lead-fecha').value;
+    const hora = document.getElementById('agendar-lead-hora').value;
+    const errorDiv = document.getElementById('agendar-lead-error');
+    errorDiv.style.display = 'none';
+    if (!treatment || !fecha || !hora) {
+        errorDiv.textContent = 'Faltan campos: tratamiento + fecha + hora.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    const body = {
+        cod_lead: leadParaAgendar.cod_lead,
+        treatment: treatment,
+        scheduled_for: new Date(fecha + 'T' + hora + ':00').toISOString(),
+        duration_min: 60,
+        channel: 'whatsapp'
+    };
+    try {
+        const res = await fetch('/api/appointments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            errorDiv.textContent = 'Error: ' + (err.error || 'HTTP ' + res.status);
+            errorDiv.style.display = 'block';
+            return;
+        }
+        cerrarModalAgendarLead();
+        // Recargar pagina para que el lead salga de "esperando" y entre a "citas próximas"
+        window.location.href = '/?tab=agenda';
+    } catch (e) {
+        errorDiv.textContent = 'Error: ' + e.message;
+        errorDiv.style.display = 'block';
+    }
+}
+
+async function cargarAgenda() {
+    // Renderizar leads sin cita primero (sincronicamente, ya tenemos data)
+    renderLeadsSinCita();
+
+    const status = document.getElementById('agenda-filtro-status').value;
+    const url = '/api/appointments?limit=200' + (status ? '&status=' + status : '');
+    const empty = document.getElementById('agenda-empty');
+    const cards = document.getElementById('agenda-cards');
+
+    empty.textContent = 'Cargando...';
+    empty.style.display = 'block';
+    cards.innerHTML = '';
+
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        if (!data.items || data.items.length === 0) {
+            const filtroActivo = document.getElementById('agenda-filtro-status').value;
+            if (filtroActivo) {
+                empty.innerHTML = '<div style="font-size:14px;margin-bottom:6px;">No hay citas en estado <strong>' + (STATUS_LABELS[filtroActivo]?.txt || filtroActivo) + '</strong>.</div><div style="font-size:12px;color:#aaa;">Cambiá el filtro para ver otras.</div>';
+            } else {
+                empty.innerHTML = '<div style="font-size:14px;margin-bottom:8px;">📭 No hay citas registradas todavía.</div>' +
+                    '<div style="font-size:12px;color:#aaa;line-height:1.6;">Las citas aparecen automáticamente cuando un lead<br>confirma fecha en WhatsApp (próximamente con el chatbot).</div>';
+            }
+            empty.style.display = 'block';
+            return;
+        }
+
+        cards.innerHTML = data.items.map(apt => {
+            const lbl = STATUS_LABELS[apt.status] || { txt: apt.status, color: '#888' };
+            const subject = resolverNombrePorAppointment(apt);
+            // Detectar recurrente: appointment con cod_cliente Y lead_id (lead que matcheo a cliente existente)
+            const recurrenteTag = (apt.cod_cliente && apt.lead_id)
+                ? '<span class="agenda-recurrente-tag">\ud83d\udd01 recurrente</span>' : '';
+            const buttons = botonesPorStatus(apt);
+            return `
+                <div class="agenda-card">
+                    <div>
+                        <div class="agenda-card-header">${formatScheduledFor(apt.scheduled_for)}</div>
+                        <div class="agenda-card-meta">${apt.duration_min} min \u00b7 ${apt.cod_appointment}${apt.channel ? ' \u00b7 v\u00eda ' + apt.channel : ''}</div>
+                        <div class="agenda-card-status" style="background:${lbl.color}20;color:${lbl.color};">${lbl.txt}</div>
+                    </div>
+                    <div>
+                        <div class="agenda-card-header">${subject}${recurrenteTag}</div>
+                        <div class="agenda-card-meta"><strong>${apt.treatment}</strong></div>
+                    </div>
+                    <div class="agenda-card-actions">${buttons}</div>
+                </div>
+            `;
+        }).join('');
+
+        empty.style.display = 'none';
+    } catch (e) {
+        empty.textContent = 'Error cargando agenda: ' + e.message;
+    }
+}
+
+function botonesPorStatus(apt) {
+    const btnConfirmar = `<button onclick="accionAgenda('${apt.cod_appointment}','confirm')" class="agenda-btn agenda-btn-confirm">Confirmar</button>`;
+    const btnAsistio   = `<button onclick="accionAgenda('${apt.cod_appointment}','mark-attended')" class="agenda-btn agenda-btn-attended">Vino</button>`;
+    const btnNoVino    = `<button onclick="accionAgenda('${apt.cod_appointment}','mark-no-show')" class="agenda-btn agenda-btn-noshow">No vino</button>`;
+    const btnReagendar = `<button onclick="accionReagendar('${apt.cod_appointment}')" class="agenda-btn agenda-btn-resched">Reagendar</button>`;
+    const btnCancelar  = `<button onclick="accionAgenda('${apt.cod_appointment}','cancel')" class="agenda-btn agenda-btn-cancel">Cancelar</button>`;
+
+    if (apt.status === 'scheduled')   return btnConfirmar + btnReagendar + btnCancelar;
+    if (apt.status === 'confirmed')   return btnAsistio + btnNoVino + btnReagendar + btnCancelar;
+    return '<span style="color:#bbb;font-size:11px;font-style:italic;">terminal</span>';
+}
+
+async function accionReagendar(cod) {
+    const fecha = prompt('Nueva fecha (YYYY-MM-DD):');
+    if (!fecha) return;
+    const hora = prompt('Nueva hora (HH:MM):');
+    if (!hora) return;
+    try {
+        const iso = new Date(fecha + 'T' + hora + ':00').toISOString();
+        const res = await fetch('/api/appointments/' + cod + '/reschedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_scheduled_for: iso, new_duration_min: 60 })
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert('Error: ' + (err.error || 'HTTP ' + res.status));
+            return;
+        }
+        cargarAgenda();
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+async function accionAgenda(cod, accion) {
+    const labels = { confirm: 'confirmar', 'mark-attended': 'marcar asistencia', 'mark-no-show': 'marcar no-show', cancel: 'cancelar' };
+    if (!confirm('\u00bfConfirm\u00e1s ' + labels[accion] + ' la cita ' + cod + '?')) return;
+
+    try {
+        const res = await fetch('/api/appointments/' + cod + '/' + accion, { method: 'POST' });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert('Error: ' + (err.error || 'HTTP ' + res.status));
+            return;
+        }
+        cargarAgenda();
+    } catch (e) {
+        alert('Error de red: ' + e.message);
+    }
+}
+
+function onLeadInput() {
+    // Mostrar info pre-poblada del lead seleccionado
+    const valor = document.getElementById('nueva-cita-lead').value;
+    const info = document.getElementById('lead-info');
+    const lead = LEADS_PENDIENTES.find(l =>
+        valor.includes('\u00b7 ' + l.cod_lead) || l.nombre === valor
+    );
+    if (lead) {
+        let detail = `Lead seleccionado: <strong>${lead.nombre}</strong> \u00b7 ${lead.phone}`;
+        if (lead.tratamiento_interes) detail += ` \u00b7 interesado en ${lead.tratamiento_interes}`;
+        if (lead.utm_campaign) detail += ` \u00b7 campa\u00f1a: ${lead.utm_campaign}`;
+        detail += ` \u00b7 estado: ${lead.estado_lead}`;
+        if (lead.cod_cliente_existente) {
+            detail += `<br><span style="color:#E67E22;font-weight:600;">\ud83d\udd01 Cliente recurrente \u2014 ya existe como ${lead.cod_cliente_existente} (vino por la campa\u00f1a otra vez)</span>`;
+        }
+        info.innerHTML = detail;
+        info.style.color = '#27AE60';
+        // Auto-rellenar tratamiento si lead lo tiene
+        if (lead.tratamiento_interes && !document.getElementById('nueva-cita-treatment').value) {
+            document.getElementById('nueva-cita-treatment').value = lead.tratamiento_interes;
+        }
+    } else {
+        info.textContent = LEADS_PENDIENTES.length + ' lead(s) pendiente(s) \u2014 selecciona uno de la lista.';
+        info.style.color = '#999';
+    }
+}
+
+function abrirModalNuevaCita() {
+    document.getElementById('modal-nueva-cita').style.display = 'block';
+    document.getElementById('nueva-cita-error').style.display = 'none';
+
+    // Default: ma\u00f1ana 10am
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('nueva-cita-fecha').value = tomorrow.toISOString().slice(0,10);
+    document.getElementById('nueva-cita-hora').value = '10:00';
+}
+
+function cerrarModalNuevaCita() {
+    document.getElementById('modal-nueva-cita').style.display = 'none';
+    ['lead','treatment','fecha','hora','notes'].forEach(k => {
+        const el = document.getElementById('nueva-cita-' + k);
+        if (el) el.value = '';
+    });
+    document.getElementById('nueva-cita-duracion').value = '60';
+    document.getElementById('nueva-cita-channel').value = '';
+    document.getElementById('lead-info').textContent = LEADS_PENDIENTES.length + ' lead(s) pendiente(s) \u2014 selecciona uno de la lista.';
+    document.getElementById('lead-info').style.color = '#999';
+}
+
+async function crearNuevaCita() {
+    const treatment = document.getElementById('nueva-cita-treatment').value.trim();
+    const fecha = document.getElementById('nueva-cita-fecha').value;
+    const hora = document.getElementById('nueva-cita-hora').value;
+    const duracion = parseInt(document.getElementById('nueva-cita-duracion').value, 10) || 60;
+    const channel = document.getElementById('nueva-cita-channel').value || null;
+    const notes = document.getElementById('nueva-cita-notes').value.trim() || null;
+
+    const errorDiv = document.getElementById('nueva-cita-error');
+    errorDiv.style.display = 'none';
+
+    // Resolver cod_lead desde el dropdown
+    const valor = document.getElementById('nueva-cita-lead').value;
+    const lead = LEADS_PENDIENTES.find(l =>
+        valor.includes('\u00b7 ' + l.cod_lead) || l.nombre === valor
+    );
+    if (!lead) {
+        errorDiv.textContent = 'Selecciona un lead de la lista (escrib\u00ed y eleg\u00ed una opci\u00f3n).';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    if (!treatment || !fecha || !hora) {
+        errorDiv.textContent = 'Faltan campos requeridos (tratamiento, fecha, hora).';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    const body = {
+        cod_lead: lead.cod_lead,
+        treatment: treatment,
+        scheduled_for: new Date(fecha + 'T' + hora + ':00').toISOString(),
+        duration_min: duracion
+    };
+    if (channel) body.channel = channel;
+    if (notes) body.notes = notes;
+
+    try {
+        const res = await fetch('/api/appointments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            errorDiv.textContent = 'Error: ' + (err.error || 'HTTP ' + res.status);
+            errorDiv.style.display = 'block';
+            return;
+        }
+        cerrarModalNuevaCita();
+        cargarAgenda();
+    } catch (e) {
+        errorDiv.textContent = 'Error de red: ' + e.message;
+        errorDiv.style.display = 'block';
+    }
 }
 
 </script>

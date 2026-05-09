@@ -233,6 +233,7 @@ def compute_dashboard(
             "fecha": v.fecha.isoformat(),
             "cliente": v.cliente_nombre or "",
             "categoria": v.categoria or "",
+            "zona": v.zona_cantidad_envase or "",
             "total": _f(v.total),
             "debe": _f(v.debe),
         }

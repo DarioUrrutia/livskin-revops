@@ -4,6 +4,7 @@ from flask import Flask, g
 from config import settings
 from middleware.auth_middleware import init_auth_middleware
 from routes.admin import bp as admin_bp
+from routes.api_appointments import bp as appointments_bp
 from routes.api_catalogo import bp as catalogo_bp
 from routes.api_internal import bp as api_internal_bp
 from routes.api_internal import register_public_endpoints as _register_internal_public
@@ -47,6 +48,7 @@ def create_app() -> Flask:
     flask_app.register_blueprint(libro_bp)
     flask_app.register_blueprint(pagos_bp)
     flask_app.register_blueprint(venta_bp)
+    flask_app.register_blueprint(appointments_bp)  # ADR-0035 — gated por settings.agenda_feature_enabled
 
     @flask_app.route("/ping")
     def ping() -> str:
