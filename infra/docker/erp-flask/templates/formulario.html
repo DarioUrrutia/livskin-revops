@@ -1023,8 +1023,18 @@
 {% if agenda_feature_enabled %}
 <!-- ═══════════════════════════════════════════════════════ TAB: AGENDA (ADR-0035) -->
 <div id="tab-agenda" class="tab-content form-body" style="padding:16px;">
+
+    <!-- Sección 1: leads recién llegados que esperan que se les coordine fecha -->
+    {% if leads_sin_cita and leads_sin_cita|length > 0 %}
+    <div style="margin-bottom:24px;">
+        <h2 style="margin:0 0 4px 0;font-size:16px;color:#333;">Esperando agendar fecha <span style="background:#FFF3E0;color:#E65100;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px;">{{ leads_sin_cita|length }}</span></h2>
+        <p style="margin:0 0 12px 0;font-size:11px;color:#999;">Leads que llegaron y aún no tienen cita coordinada. Coordiná día/hora y luego click "Agendar fecha".</p>
+        <div id="agenda-leads-pendientes"></div>
+    </div>
+    {% endif %}
+
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-        <h2 style="margin:0;font-size:18px;color:#333;">Agenda — Próximas citas</h2>
+        <h2 style="margin:0;font-size:16px;color:#333;">Próximas citas</h2>
         <div style="display:flex;gap:8px;align-items:center;">
             <select id="agenda-filtro-status" onchange="cargarAgenda()" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">
                 <option value="">Todos los estados</option>
@@ -1103,6 +1113,38 @@
     <div id="agenda-lista">
         <div id="agenda-empty" style="background:white;border:1px solid #e8e8e8;border-radius:8px;padding:40px;text-align:center;color:#888;font-size:13px;line-height:1.6;">Cargando...</div>
         <div id="agenda-cards"></div>
+    </div>
+
+    <!-- Modal Agendar fecha (para leads recién llegados) -->
+    <div id="modal-agendar-lead" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;overflow-y:auto;" onclick="if(event.target===this)cerrarModalAgendarLead()">
+        <div style="max-width:440px;margin:40px auto;background:white;border-radius:12px;padding:22px;box-shadow:0 4px 20px rgba(0,0,0,0.2);position:relative;">
+            <button onclick="cerrarModalAgendarLead()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;">&times;</button>
+            <h3 style="margin:0 0 4px 0;font-size:16px;color:#333;">📅 Agendar fecha</h3>
+            <div id="modal-agendar-lead-nombre" style="font-size:14px;font-weight:600;color:#C0392B;margin-bottom:2px;">—</div>
+            <div id="modal-agendar-lead-info" style="font-size:11px;color:#888;margin-bottom:18px;">—</div>
+
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                    <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Tratamiento *</label>
+                    <input type="text" id="agendar-lead-treatment" placeholder="Botox, Ácido Hialurónico..." style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Fecha *</label>
+                        <input type="date" id="agendar-lead-fecha" style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;">Hora *</label>
+                        <input type="time" id="agendar-lead-hora" style="width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:4px;font-size:14px;">
+                    </div>
+                </div>
+                <div id="agendar-lead-error" style="display:none;color:#C0392B;font-size:12px;padding:8px 10px;background:#fce8e6;border-radius:4px;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+                    <button onclick="cerrarModalAgendarLead()" style="padding:9px 14px;background:#f5f5f5;color:#666;border:1px solid #ddd;border-radius:4px;font-size:13px;cursor:pointer;">Cancelar</button>
+                    <button onclick="confirmarAgendarLead()" style="padding:9px 16px;background:#C0392B;color:white;border:none;border-radius:4px;font-size:13px;font-weight:600;cursor:pointer;">Confirmar cita</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal Nueva cita -->
@@ -3991,6 +4033,7 @@ function formatScheduledFor(isoStr) {
 // CLIENTES_CODIGOS ya está declarado arriba (línea ~1162) — reusamos esa global.
 // Solo declaramos lo nuevo del módulo Agenda:
 const LEADS_PENDIENTES = {{ leads_pendientes|tojson if leads_pendientes else '[]' }};
+const LEADS_SIN_CITA = {{ leads_sin_cita|tojson if leads_sin_cita else '[]' }};
 // Mapeo cod_lead -> nombre (para mostrar en lista de citas)
 const LEAD_NOMBRES = LEADS_PENDIENTES.reduce((acc, l) => { acc[l.cod_lead] = l.nombre; return acc; }, {});
 // Mapeo cod_cliente -> nombre (invertido del CLIENTES_CODIGOS global)
@@ -4008,7 +4051,105 @@ function resolverNombrePorAppointment(apt) {
     return '\u2014';
 }
 
+// ── Render de cards "leads esperando agendar fecha" ──
+function renderLeadsSinCita() {
+    const cont = document.getElementById('agenda-leads-pendientes');
+    if (!cont || !LEADS_SIN_CITA || LEADS_SIN_CITA.length === 0) return;
+
+    cont.innerHTML = LEADS_SIN_CITA.map(l => {
+        const recurrenteTag = l.cod_cliente_existente
+            ? `<span class="agenda-recurrente-tag">🔁 cliente recurrente · ${l.cod_cliente_existente}</span>` : '';
+        const fechaCap = l.fecha_captura ? l.fecha_captura.slice(0, 10) : '';
+        const fechaCapPretty = fechaCap ? fmtFecha(fechaCap) : '';
+        const tratamiento = l.tratamiento_interes ? `<strong>${l.tratamiento_interes}</strong>` : '<em style="color:#aaa;">sin tratamiento especificado</em>';
+        const campana = l.utm_campaign ? `<span style="font-size:10px;color:#888;">via ${l.utm_campaign}</span>` : '';
+        return `
+            <div class="agenda-card" style="border-left:3px solid #E67E22;">
+                <div>
+                    <div class="agenda-card-header">${l.nombre} ${recurrenteTag}</div>
+                    <div class="agenda-card-meta">${l.phone} · ${l.cod_lead}${fechaCapPretty ? ' · llegó ' + fechaCapPretty : ''}</div>
+                    <div class="agenda-card-status" style="background:#FFF3E020;color:#E65100;">${l.estado_lead}</div>
+                </div>
+                <div>
+                    <div class="agenda-card-meta">${tratamiento}</div>
+                    <div style="margin-top:4px;">${campana}</div>
+                </div>
+                <div class="agenda-card-actions">
+                    <button onclick="abrirModalAgendarLead('${l.cod_lead}')" class="agenda-btn agenda-btn-confirm">📅 Agendar fecha</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ── Modal Agendar fecha (para leads sin cita) ──
+let leadParaAgendar = null;
+function abrirModalAgendarLead(cod_lead) {
+    const lead = LEADS_SIN_CITA.find(l => l.cod_lead === cod_lead);
+    if (!lead) { alert('Lead no encontrado'); return; }
+    leadParaAgendar = lead;
+
+    document.getElementById('modal-agendar-lead-nombre').textContent = lead.nombre;
+    document.getElementById('modal-agendar-lead-info').textContent =
+        `${lead.phone} · ${lead.cod_lead}${lead.tratamiento_interes ? ' · interesado en ' + lead.tratamiento_interes : ''}`;
+    document.getElementById('agendar-lead-treatment').value = lead.tratamiento_interes || '';
+
+    // Default: mañana 10am
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('agendar-lead-fecha').value = tomorrow.toISOString().slice(0,10);
+    document.getElementById('agendar-lead-hora').value = '10:00';
+    document.getElementById('modal-agendar-lead').style.display = 'block';
+    document.getElementById('agendar-lead-error').style.display = 'none';
+}
+function cerrarModalAgendarLead() {
+    document.getElementById('modal-agendar-lead').style.display = 'none';
+    leadParaAgendar = null;
+}
+async function confirmarAgendarLead() {
+    if (!leadParaAgendar) return;
+    const treatment = document.getElementById('agendar-lead-treatment').value.trim();
+    const fecha = document.getElementById('agendar-lead-fecha').value;
+    const hora = document.getElementById('agendar-lead-hora').value;
+    const errorDiv = document.getElementById('agendar-lead-error');
+    errorDiv.style.display = 'none';
+    if (!treatment || !fecha || !hora) {
+        errorDiv.textContent = 'Faltan campos: tratamiento + fecha + hora.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    const body = {
+        cod_lead: leadParaAgendar.cod_lead,
+        treatment: treatment,
+        scheduled_for: new Date(fecha + 'T' + hora + ':00').toISOString(),
+        duration_min: 60,
+        channel: 'whatsapp'
+    };
+    try {
+        const res = await fetch('/api/appointments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            errorDiv.textContent = 'Error: ' + (err.error || 'HTTP ' + res.status);
+            errorDiv.style.display = 'block';
+            return;
+        }
+        cerrarModalAgendarLead();
+        // Recargar pagina para que el lead salga de "esperando" y entre a "citas próximas"
+        window.location.href = '/?tab=agenda';
+    } catch (e) {
+        errorDiv.textContent = 'Error: ' + e.message;
+        errorDiv.style.display = 'block';
+    }
+}
+
 async function cargarAgenda() {
+    // Renderizar leads sin cita primero (sincronicamente, ya tenemos data)
+    renderLeadsSinCita();
+
     const status = document.getElementById('agenda-filtro-status').value;
     const url = '/api/appointments?limit=200' + (status ? '&status=' + status : '');
     const empty = document.getElementById('agenda-empty');
