@@ -24,11 +24,76 @@
         }
         .header {
             background: white;
-            text-align: center;
-            padding: 20px;
+            padding: 14px 16px;
             border-bottom: 3px solid #C0392B;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .header img { max-width: 200px; height: auto; }
+        .header-logo { display: flex; align-items: center; flex-shrink: 0; }
+        .header-logo img { max-width: 140px; height: auto; }
+        @media (min-width: 720px) { .header-logo img { max-width: 180px; } }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #555;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .header-user-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .header-menu-toggle {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #666;
+        }
+        .header-menu-toggle:hover { background: #eee; }
+        .header-admin-menu {
+            display: none;
+            position: absolute;
+            right: 16px;
+            top: 56px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 6px 0;
+            min-width: 180px;
+            z-index: 1000;
+        }
+        .header-admin-menu.open { display: block; }
+        .header-admin-menu a {
+            display: block;
+            padding: 8px 14px;
+            color: #555;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .header-admin-menu a:hover { background: #f5f5f5; }
+        .header-admin-menu a.danger { color: #b91c1c; border-top: 1px solid #eee; }
+        .header-logout-btn {
+            background: #fce8e6;
+            color: #b91c1c;
+            border: 1px solid #f5c6c2;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .header-logout-btn:hover { background: #f5c6c2; }
 
         /* Tabs — horizontal scroll en mobile cuando 7+ pestañas no entran */
         .tabs {
@@ -234,26 +299,37 @@
 </head>
 <body>
 <div class="card">
-    <div class="header" style="position: relative;">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Livskin Logo">
+    <div class="header">
+        <div class="header-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Livskin Logo">
+        </div>
         {% if current_user %}
-        <div style="position: absolute; top: 8px; right: 12px; font-size: 0.8rem; color: #666;">
-            <span>{{ current_user.nombre_completo }}</span>
+        <div class="header-user">
+            <span class="header-user-name">{{ current_user.nombre_completo }}</span>
+            <button type="button" class="header-menu-toggle" onclick="toggleAdminMenu(event)" aria-label="Menú de usuario">⚙️ menú</button>
+            <a href="{{ url_for('auth.logout') }}" class="header-logout-btn" title="Cerrar sesión">⏻ Salir</a>
+        </div>
+        <div id="header-admin-menu" class="header-admin-menu" onclick="event.stopPropagation()">
+            <a href="{{ url_for('auth.change_password_get') }}">🔑 Cambiar contraseña</a>
             {% if current_user.rol == 'admin' %}
-            &middot;
-            <a href="{{ url_for('admin.audit_log_view') }}" style="color: #059669; text-decoration: none;">audit log</a>
-            &middot;
-            <a href="{{ url_for('admin.system_health_view') }}" style="color: #059669; text-decoration: none;">system health</a>
-            &middot;
-            <a href="{{ url_for('admin.agent_costs_view') }}" style="color: #059669; text-decoration: none;">agent costs</a>
+            <a href="{{ url_for('admin.audit_log_view') }}">📜 Audit log</a>
+            <a href="{{ url_for('admin.system_health_view') }}">💚 System health</a>
+            <a href="{{ url_for('admin.agent_costs_view') }}">💸 Agent costs</a>
             {% endif %}
-            &middot;
-            <a href="{{ url_for('auth.change_password_get') }}" style="color: #4a6cf7; text-decoration: none;">cambiar contraseña</a>
-            &middot;
-            <a href="{{ url_for('auth.logout') }}" style="color: #b91c1c; text-decoration: none;">cerrar sesión</a>
+            <a href="{{ url_for('auth.logout') }}" class="danger">⏻ Cerrar sesión</a>
         </div>
         {% endif %}
     </div>
+    <script>
+    function toggleAdminMenu(ev) {
+        ev.stopPropagation();
+        document.getElementById('header-admin-menu').classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+        const m = document.getElementById('header-admin-menu');
+        if (m) m.classList.remove('open');
+    });
+    </script>
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}
