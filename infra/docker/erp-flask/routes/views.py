@@ -14,6 +14,7 @@ from typing import Any
 from flask import Blueprint, get_flashed_messages, render_template, request
 from sqlalchemy import select
 
+from config import settings
 from db import session_scope
 from models.cliente import Cliente
 
@@ -66,4 +67,6 @@ def index() -> str:
         next_client_num=next_client_num,
         active_tab=active_tab,
         messages=messages,
+        # ADR-0035 — feature flag para mostrar/ocultar pestaña AGENDA
+        agenda_feature_enabled=getattr(settings, "agenda_feature_enabled", False),
     )
