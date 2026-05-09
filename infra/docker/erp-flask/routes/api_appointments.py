@@ -117,7 +117,12 @@ def create_appointment():  # type: ignore[no-untyped-def]
     try:
         body = AppointmentCreate.model_validate(request.get_json(silent=True) or {})
     except ValidationError as e:
-        return jsonify({"error": "validacion fallida", "detalle": e.errors()}), 400
+        # Sanitizar errors para JSON (Pydantic incluye ctx.error nativo en algunos casos)
+        clean_errors = [
+            {"loc": list(err.get("loc", [])), "msg": str(err.get("msg", "")), "type": err.get("type", "")}
+            for err in e.errors()
+        ]
+        return jsonify({"error": "validacion fallida", "detalle": clean_errors}), 400
 
     try:
         with session_scope() as db:
@@ -149,7 +154,12 @@ def update_appointment(cod_appointment: str):  # type: ignore[no-untyped-def]
     try:
         body = AppointmentUpdate.model_validate(request.get_json(silent=True) or {})
     except ValidationError as e:
-        return jsonify({"error": "validacion fallida", "detalle": e.errors()}), 400
+        # Sanitizar errors para JSON (Pydantic incluye ctx.error nativo en algunos casos)
+        clean_errors = [
+            {"loc": list(err.get("loc", [])), "msg": str(err.get("msg", "")), "type": err.get("type", "")}
+            for err in e.errors()
+        ]
+        return jsonify({"error": "validacion fallida", "detalle": clean_errors}), 400
 
     try:
         with session_scope() as db:
@@ -248,7 +258,12 @@ def reschedule_appointment(cod_appointment: str):  # type: ignore[no-untyped-def
             request.get_json(silent=True) or {}
         )
     except ValidationError as e:
-        return jsonify({"error": "validacion fallida", "detalle": e.errors()}), 400
+        # Sanitizar errors para JSON (Pydantic incluye ctx.error nativo en algunos casos)
+        clean_errors = [
+            {"loc": list(err.get("loc", [])), "msg": str(err.get("msg", "")), "type": err.get("type", "")}
+            for err in e.errors()
+        ]
+        return jsonify({"error": "validacion fallida", "detalle": clean_errors}), 400
 
     try:
         with session_scope() as db:
