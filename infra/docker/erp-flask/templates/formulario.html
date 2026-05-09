@@ -95,6 +95,17 @@
         }
         .header-logout-btn:hover { background: #f5c6c2; }
 
+        /* Botón submit sticky en mobile — siempre accesible sin scrollear todo el form */
+        @media (max-width: 719px) {
+            .submit-sticky-mobile {
+                position: sticky;
+                bottom: 8px;
+                z-index: 50;
+                box-shadow: 0 -2px 12px rgba(192, 57, 43, 0.18);
+                margin-top: 16px !important;
+            }
+        }
+
         /* Tabs — horizontal scroll en mobile cuando 7+ pestañas no entran */
         .tabs {
             display: flex;
@@ -522,7 +533,7 @@
             <input type="hidden" name="num_deudas" id="num_deudas_venta" value="0">
             <div id="deuda-hidden-fields"></div>
 
-            <button type="submit" id="btn-guardar-venta">GUARDAR VENTA</button>
+            <button type="submit" id="btn-guardar-venta" class="submit-sticky-mobile">GUARDAR VENTA</button>
         </form>
     </div>
 
@@ -573,7 +584,7 @@
                 </div>
             </div>
 
-            <button type="submit">GUARDAR GASTO</button>
+            <button type="submit" class="submit-sticky-mobile">GUARDAR GASTO</button>
         </form>
     </div>
 
@@ -676,7 +687,7 @@
                 <div style="font-size:11px; color:#aaa; margin-top:4px; display:none;" id="pago-credito-nota">El exceso se registrará automáticamente como crédito del cliente.</div>
             </div>
 
-            <button type="submit">REGISTRAR PAGO</button>
+            <button type="submit" class="submit-sticky-mobile">REGISTRAR PAGO</button>
         </form>
     </div>
 

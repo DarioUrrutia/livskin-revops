@@ -167,13 +167,12 @@ def main():
             if take_screenshot:
                 page.screenshot(path=str(out_dir / take_screenshot), full_page=True)
 
-            # Submit
-            page.locator("#form-venta button[type='submit']").click()
-            try:
-                page.wait_for_url(re=r".*", timeout=10000)
-            except Exception:
-                pass
-            time.sleep(1.5)
+            # Submit — scroll explicito + click force=True (mas robusto que click default
+            # cuando el form se reorganiza dinamicamente al ingresar pago)
+            page.locator("#btn-guardar-venta").scroll_into_view_if_needed()
+            time.sleep(0.4)
+            page.locator("#btn-guardar-venta").click(force=True)
+            time.sleep(2.5)
             # Detectar si hay mensaje de error o success
             html = page.content()
             success = "registrada" in html.lower() or "guardada" in html.lower() or "exitosa" in html.lower()
