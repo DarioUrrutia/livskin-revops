@@ -3805,12 +3805,12 @@ function formatScheduledFor(isoStr) {
     return d.toLocaleString('es-PE', opts);
 }
 
-// Mapeo nombre <-> codigo desde context Jinja (poblado al render)
-const CLIENTES_CODIGOS = {{ clientes_codigos|tojson if clientes_codigos else '{}' }};
+// CLIENTES_CODIGOS ya está declarado arriba (línea ~1162) — reusamos esa global.
+// Solo declaramos lo nuevo del módulo Agenda:
 const LEADS_PENDIENTES = {{ leads_pendientes|tojson if leads_pendientes else '[]' }};
 // Mapeo cod_lead -> nombre (para mostrar en lista de citas)
 const LEAD_NOMBRES = LEADS_PENDIENTES.reduce((acc, l) => { acc[l.cod_lead] = l.nombre; return acc; }, {});
-// Mapeo cod_cliente -> nombre
+// Mapeo cod_cliente -> nombre (invertido del CLIENTES_CODIGOS global)
 const CLIENTE_NOMBRES = Object.entries(CLIENTES_CODIGOS).reduce((acc, [nombre, cod]) => { acc[cod] = nombre; return acc; }, {});
 
 function resolverNombrePorAppointment(apt) {
