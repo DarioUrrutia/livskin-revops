@@ -946,20 +946,69 @@
     </div>
     <p style="margin:0 0 16px 0;font-size:11px;color:#999;">Las citas aparecen automáticamente cuando un lead confirma fecha por WhatsApp. Marca el estado de cada cita con los botones de la derecha.</p>
 
-    <div id="agenda-lista" style="background:white;border-radius:8px;border:1px solid #e8e8e8;overflow:hidden;">
-        <div id="agenda-empty" style="padding:40px;text-align:center;color:#888;font-size:13px;line-height:1.6;">Cargando...</div>
-        <table id="agenda-tabla" style="width:100%;border-collapse:collapse;display:none;">
-            <thead style="background:#f9f9f9;">
-                <tr>
-                    <th style="padding:10px 12px;text-align:left;font-size:11px;color:#888;letter-spacing:0.3px;text-transform:uppercase;border-bottom:1px solid #e8e8e8;">Cuándo</th>
-                    <th style="padding:10px 12px;text-align:left;font-size:11px;color:#888;letter-spacing:0.3px;text-transform:uppercase;border-bottom:1px solid #e8e8e8;">Para</th>
-                    <th style="padding:10px 12px;text-align:left;font-size:11px;color:#888;letter-spacing:0.3px;text-transform:uppercase;border-bottom:1px solid #e8e8e8;">Tratamiento</th>
-                    <th style="padding:10px 12px;text-align:left;font-size:11px;color:#888;letter-spacing:0.3px;text-transform:uppercase;border-bottom:1px solid #e8e8e8;">Estado</th>
-                    <th style="padding:10px 12px;text-align:right;font-size:11px;color:#888;letter-spacing:0.3px;text-transform:uppercase;border-bottom:1px solid #e8e8e8;">Acción</th>
-                </tr>
-            </thead>
-            <tbody id="agenda-tbody"></tbody>
-        </table>
+    <style>
+        .agenda-card {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        @media (min-width: 720px) {
+            .agenda-card { grid-template-columns: 1fr 1fr auto; align-items: center; gap: 14px; }
+        }
+        .agenda-card-header { font-size: 14px; font-weight: 600; color: #333; }
+        .agenda-card-meta { font-size: 12px; color: #888; line-height: 1.5; }
+        .agenda-card-status {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-top: 4px;
+        }
+        .agenda-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-start;
+        }
+        @media (min-width: 720px) {
+            .agenda-card-actions { justify-content: flex-end; }
+        }
+        .agenda-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            min-height: 36px;
+            min-width: 70px;
+            white-space: nowrap;
+        }
+        .agenda-btn-confirm  { background: #27AE60; color: white; }
+        .agenda-btn-attended { background: #2980B9; color: white; }
+        .agenda-btn-noshow   { background: #E67E22; color: white; }
+        .agenda-btn-resched  { background: #f0f0f0; color: #555; border: 1px solid #ddd; }
+        .agenda-btn-cancel   { background: #f5f5f5; color: #aaa; border: 1px solid #eee; }
+        .agenda-recurrente-tag {
+            display: inline-block;
+            background: #FFF3E0;
+            color: #E65100;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+        }
+    </style>
+    <div id="agenda-lista">
+        <div id="agenda-empty" style="background:white;border:1px solid #e8e8e8;border-radius:8px;padding:40px;text-align:center;color:#888;font-size:13px;line-height:1.6;">Cargando...</div>
+        <div id="agenda-cards"></div>
     </div>
 
     <!-- Modal Nueva cita -->
@@ -3812,12 +3861,11 @@ async function cargarAgenda() {
     const status = document.getElementById('agenda-filtro-status').value;
     const url = '/api/appointments?limit=200' + (status ? '&status=' + status : '');
     const empty = document.getElementById('agenda-empty');
-    const tabla = document.getElementById('agenda-tabla');
-    const tbody = document.getElementById('agenda-tbody');
+    const cards = document.getElementById('agenda-cards');
 
     empty.textContent = 'Cargando...';
     empty.style.display = 'block';
-    tabla.style.display = 'none';
+    cards.innerHTML = '';
 
     try {
         const res = await fetch(url);
@@ -3836,38 +3884,68 @@ async function cargarAgenda() {
             return;
         }
 
-        tbody.innerHTML = data.items.map(apt => {
+        cards.innerHTML = data.items.map(apt => {
             const lbl = STATUS_LABELS[apt.status] || { txt: apt.status, color: '#888' };
             const subject = resolverNombrePorAppointment(apt);
+            // Detectar recurrente: appointment con cod_cliente Y lead_id (lead que matcheo a cliente existente)
+            const recurrenteTag = (apt.cod_cliente && apt.lead_id)
+                ? '<span class="agenda-recurrente-tag">\ud83d\udd01 recurrente</span>' : '';
             const buttons = botonesPorStatus(apt);
             return `
-                <tr style="border-bottom:1px solid #f0f0f0;">
-                    <td style="padding:12px;font-size:13px;color:#333;">${formatScheduledFor(apt.scheduled_for)}<br><small style="color:#999;">${apt.duration_min} min \u00b7 ${apt.cod_appointment}</small></td>
-                    <td style="padding:12px;font-size:13px;color:#333;">${subject}${apt.channel ? '<br><small style="color:#999;">v\u00eda ' + apt.channel + '</small>' : ''}</td>
-                    <td style="padding:12px;font-size:13px;color:#333;">${apt.treatment}</td>
-                    <td style="padding:12px;font-size:12px;color:${lbl.color};font-weight:600;">${lbl.txt}</td>
-                    <td style="padding:12px;text-align:right;">${buttons}</td>
-                </tr>
+                <div class="agenda-card">
+                    <div>
+                        <div class="agenda-card-header">${formatScheduledFor(apt.scheduled_for)}</div>
+                        <div class="agenda-card-meta">${apt.duration_min} min \u00b7 ${apt.cod_appointment}${apt.channel ? ' \u00b7 v\u00eda ' + apt.channel : ''}</div>
+                        <div class="agenda-card-status" style="background:${lbl.color}20;color:${lbl.color};">${lbl.txt}</div>
+                    </div>
+                    <div>
+                        <div class="agenda-card-header">${subject}${recurrenteTag}</div>
+                        <div class="agenda-card-meta"><strong>${apt.treatment}</strong></div>
+                    </div>
+                    <div class="agenda-card-actions">${buttons}</div>
+                </div>
             `;
         }).join('');
 
         empty.style.display = 'none';
-        tabla.style.display = 'table';
     } catch (e) {
         empty.textContent = 'Error cargando agenda: ' + e.message;
     }
 }
 
 function botonesPorStatus(apt) {
-    const btnStyle = 'padding:5px 9px;border:none;border-radius:3px;font-size:11px;cursor:pointer;margin-left:3px;';
-    const btnConfirmar = `<button onclick="accionAgenda('${apt.cod_appointment}','confirm')" style="${btnStyle}background:#27AE60;color:white;">Confirmar</button>`;
-    const btnAsistio   = `<button onclick="accionAgenda('${apt.cod_appointment}','mark-attended')" style="${btnStyle}background:#2980B9;color:white;">Asisti\u00f3</button>`;
-    const btnNoVino    = `<button onclick="accionAgenda('${apt.cod_appointment}','mark-no-show')" style="${btnStyle}background:#E67E22;color:white;">No vino</button>`;
-    const btnCancelar  = `<button onclick="accionAgenda('${apt.cod_appointment}','cancel')" style="${btnStyle}background:#aaa;color:white;">Cancelar</button>`;
+    const btnConfirmar = `<button onclick="accionAgenda('${apt.cod_appointment}','confirm')" class="agenda-btn agenda-btn-confirm">Confirmar</button>`;
+    const btnAsistio   = `<button onclick="accionAgenda('${apt.cod_appointment}','mark-attended')" class="agenda-btn agenda-btn-attended">Vino</button>`;
+    const btnNoVino    = `<button onclick="accionAgenda('${apt.cod_appointment}','mark-no-show')" class="agenda-btn agenda-btn-noshow">No vino</button>`;
+    const btnReagendar = `<button onclick="accionReagendar('${apt.cod_appointment}')" class="agenda-btn agenda-btn-resched">Reagendar</button>`;
+    const btnCancelar  = `<button onclick="accionAgenda('${apt.cod_appointment}','cancel')" class="agenda-btn agenda-btn-cancel">Cancelar</button>`;
 
-    if (apt.status === 'scheduled')   return btnConfirmar + btnCancelar;
-    if (apt.status === 'confirmed')   return btnAsistio + btnNoVino + btnCancelar;
-    return '<span style="color:#bbb;font-size:11px;">\u2014</span>';
+    if (apt.status === 'scheduled')   return btnConfirmar + btnReagendar + btnCancelar;
+    if (apt.status === 'confirmed')   return btnAsistio + btnNoVino + btnReagendar + btnCancelar;
+    return '<span style="color:#bbb;font-size:11px;font-style:italic;">terminal</span>';
+}
+
+async function accionReagendar(cod) {
+    const fecha = prompt('Nueva fecha (YYYY-MM-DD):');
+    if (!fecha) return;
+    const hora = prompt('Nueva hora (HH:MM):');
+    if (!hora) return;
+    try {
+        const iso = new Date(fecha + 'T' + hora + ':00').toISOString();
+        const res = await fetch('/api/appointments/' + cod + '/reschedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_scheduled_for: iso, new_duration_min: 60 })
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert('Error: ' + (err.error || 'HTTP ' + res.status));
+            return;
+        }
+        cargarAgenda();
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
 }
 
 async function accionAgenda(cod, accion) {
