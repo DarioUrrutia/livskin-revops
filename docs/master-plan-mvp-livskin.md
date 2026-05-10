@@ -1,6 +1,6 @@
 # Plan Maestro — Livskin RevOps MVP
 
-**Versión:** 1.0 · **Fecha:** 2026-04-18 · **Estado:** Vivo (actualizado en cada decisión estructural)
+**Versión:** 3.2 · **Fecha:** 2026-04-18 (creación) · **Última actualización:** 2026-05-10 · **Estado:** Vivo (actualizado en cada decisión estructural)
 
 > Este documento es la **referencia autoritativa del proyecto**. Cualquier decisión o conversación estratégica debe ser reflejada aquí. Lo que no está escrito aquí no existe para el proyecto.
 
@@ -487,26 +487,36 @@ consent flag
 
 ## 10. Agentes IA
 
-### 10.1 Los 4 agentes (MVP) + 5to (post-MVP, en evaluación)
+### 10.1 Scope agentes (REVISADO 2026-05-03 + 2026-05-10 — doctrinas #11 + #14)
 
-**MVP (Fases 4-6)**:
+> **⚠️ Esta sección fue reescrita por dos audits sucesivos.** La versión original listaba 5 agentes IA (Conversation/Content/Acquisition/Growth/Infra-Security) como entregables de Fases 4-6.
+>
+> **Audit 2026-05-03** (memoria `project_agent_scope_audit_2026_05_03.md`) redujo scope a **1 agente real + 2 scripts con LLM ocasional**.
+>
+> **Doctrina #14 articulada 2026-05-10** (memoria `feedback_sesion_estrategica_agentes_dedicada.md`) agregó: la layer multi-agente se diseña en **sesión estratégica DEDICADA post-backbone determinístico cerrado**. Excepción permitida: **Brand Orchestrator V0 BOOTSTRAP** discrecional. Conversation Agent IA NO bootstrap.
 
-| Agente | Propósito | Frecuencia | Intervención humana/semana |
-|---|---|---|---|
-| **Conversation** | Primera línea atención pacientes vía WhatsApp | Tiempo real 24/7 | ~30 min/día (escalaciones a doctora) |
-| **Content** | Generar 12 briefs semanales para ads + testimoniales | Semanal (domingos) | 15 min domingo (aprobación) |
-| **Acquisition** | Convertir briefs a ads Meta + optimización autónoma | Semanal (lunes) + diario (tracking) | 10 min lunes |
-| **Growth** | Análisis continuo + reporte ejecutivo semanal | Diario (análisis) + semanal (reporte) | 1 hora lunes |
+**Scope V1 (post-audit 2026-05-03 + doctrina 2026-05-10)**:
 
-**Cierre de Fase 6 / extensión inmediata** (decisión Dario 2026-04-25):
+| Agente | Versión V1 | Tipo | Fase | Intervención humana/semana |
+|---|---|---|---|---|
+| **Conversation Agent v0** | **Rule-based** (state machine Python + n8n) | Determinístico | 4A.3 | ~30 min/día doctora (escalaciones manuales del bot a su WA personal) |
+| **Brand Orchestrator V0 BOOTSTRAP** | Monolítico, briefs+copy, sin subagentes | IA (excepción permitida durante backbone) | Insertable durante 4A si Dario aprueba discrecionalmente | 15 min/sesión (aprobar briefs antes publicar) |
+| **Brand Orchestrator V1** | 5 subagentes (research/concept/copy/visual/implementation) | IA (formal post-sesión estratégica) | 4B post-backbone | 15 min domingo (aprobación briefs semanales) |
+| **Acquisition synth script** | SQL + 1 LLM call/semana para narrativa | Determinístico + LLM ocasional | 5 | 5 min lunes (revisar reporte) |
+| **Growth narrative script** | SQL + 1 LLM call/mes para narrativa | Determinístico + LLM ocasional | 5 | 30 min mensuales (revisar narrativa) |
+| **Conversation Agent IA** | LLM monolítico Sonnet + tools | IA (DIFERIDO) | Reabrir si volumen WA >100 conv/día sostenido 7+ días | — |
+| **Infra+Security agent** | LLM + tools + sensors (post-Fase 6 capa auto-mantenimiento) | IA | 7 (extensión) | ~30 min/semana (autorizaciones risk) |
 
-| Agente | Propósito | Frecuencia | Intervención humana/semana |
-|---|---|---|---|
-| **Infra + Security** | Mantenimiento autónomo de servidores + monitoreo de seguridad; ejecuta acciones safe automáticamente, propone acciones riesgosas a Dario | Continuo (alertas) + scheduled (audits, backups, updates) | ~30 min/semana (autorizaciones de acciones risk) |
+**Doctrina rectora del scope**: principio operativo #11 (deterministic backbone first) + #14 (sesión estratégica agentes dedicada).
 
-**Timing**: se construye en Fase 6 / extensión, **aprovechando que ya se setupean** Watchtower + UptimeRobot + n8n alertas + monthly audit + backups + runbooks (sensors/tools que el agente usa). Construir todo junto evita doble configuración.
+**ADRs del scope**:
+- ADR-0034 🔄 SUPERSEDIDA — Conversation Agent IA monolítico Foundation (linaje: ✅ → 💤 → 🔄)
+- ADR-0037 reservado — Conversation Agent v0 rule-based formal (sale de sesión estratégica)
+- ADR-0038 reservado — Brand Orchestrator V0 BOOTSTRAP (si excepción ejecutada)
+- ADR-0039 reservado — Brand Orchestrator V1 multi-agent
 
-Detalle del 5to agente y plan operativo: memoria `project_infra_security_agent`.
+Detalle V0 vs V1 + bootstrap exception: memoria `project_agent_org_design.md` (actualizada 2026-05-10).
+Detalle 5to agente Infra+Security: memoria `project_infra_security_agent.md` (clarificada 2026-05-10).
 
 ### 10.2 Orquestación híbrida
 
@@ -764,9 +774,23 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 
 
 
-### 11.5b Interludio estratégico — Definición de estrategia, segmentos y plan de negocio (entre Fase 3 y Fase 4)
+### 11.5b Interludio estratégico — Fase 4A.6 (PARTE DEL BACKBONE, REVISADO 2026-05-10)
 
-> **⚠️ ACTUALIZACIÓN 2026-05-04 — parcialmente cumplido en modo BOOTSTRAP:** Dario pasó documento "Guidelines de Campañas Livskin" que destila la metodología creativa (decoded + nudge + predictably irrational + funnel TOFU/MOFU/BOFU + filosofía + checklist 4 preguntas). Esto cubre el componente **brand voice** del interludio. Ha sido capturado en `docs/brand/` v0.1 BORRADOR (modo bootstrap principio operativo #13). Asciende a v1.0 firmada al cierre del post-mortem de la primera campaña paga (Día de la Madre 2026-05). **Componentes pendientes del interludio**: arquetipos detallados (3-5 perfiles), posicionamiento competitivo formal, plan estratégico 6-12-24 meses. Estos esperan a la sesión estratégica organizacional dedicada (~4-8h) post-Bridge Episode.
+> **⚠️ REVISIÓN MAYOR 2026-05-10 (doctrina #14)**: el interludio estratégico es **PARTE del backbone determinístico** (Fase 4A.6), no bloque pre-Fase 5 ni input externo a una sesión de agentes IA. Memoria autoritativa: `project_interludio_estrategico_es_backbone.md`.
+>
+> **Razón**: brand voice + arquetipos + posicionamiento + plan estratégico son **base conceptual** del sistema con o sin agentes IA. Templates Meta-approved (4A.3), email marketing copy (4A.5), mensajes del bot rule-based, copy de landings consumen estos assets. Sin agentes IA, los assets siguen siendo necesarios.
+>
+> **Versión histórica de esta sección** (2026-04-26 / 2026-05-04): describía interludio como "input para sesión de agentes" — INCORRECTO, supersedido por doctrina #14.
+>
+> **Estado al 2026-05-10**:
+> - ✅ `docs/brand/` v0.1 BORRADOR: brand-system.md + 4 archivos modulares (copy-principles, design-principles, image-guidelines, campaign-brief-template) — modo bootstrap principio #13
+> - ✅ Bootstrap principio #13 ABIERTO hasta post-mortem 2DA campaña paga (revisado 2026-05-08; original era 1ra campaña pero Bridge Episode con 6 leads no aporta evidencia suficiente)
+> - ✅ 14 INS + 6 R doctrina capturados del Bridge Episode (sin aplicar, esperan 2da campaña)
+> - ❌ Arquetipos 3-5 perfiles: NO existen
+> - ❌ Posicionamiento competitivo formal: NO existe
+> - ❌ Plan estratégico 6-12-24m: NO existe
+>
+> **Ascenso v0.1 → v1.0**: al cierre Bootstrap (post-mortem 2da campaña paga). Antes es trabajo iterativo válido en modo BOOTSTRAP.
 
 **Objetivo:** producir el input narrativo que los agentes de Fases 4-5 van a consumir como contexto de prompt.
 
@@ -802,13 +826,42 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 
 **Importante:** no es una fase numerada del roadmap (no añade semanas ni cambia exit criteria de Fases 1-6). Es un **interludio narrativo-estratégico** de 1-2 sesiones que encaja entre Fase 3 y Fase 4 sin desplazar fechas si se hace con foco.
 
-### 11.5c Bridge Episode — Primera campaña paga FB Ads (insertado 2026-05-03 post-audit)
+### 11.5c Bridge Episode — Primera campaña paga FB Ads · ✅ EJECUTADO Y CERRADO (2026-05-03 a 2026-05-08)
 
-**⚠️ Insertado el 2026-05-03 entre Fase 3 (cerrada) y Fase 4 (reescrita).** Resultado del audit honesto del scope de agentes (`docs/audits/agent-scope-audit-2026-05-03.md`) + articulación del principio operativo #11 (`feedback_deterministic_backbone_first.md`).
+**⚠️ ACTUALIZACIÓN 2026-05-10**: el Bridge Episode SE EJECUTÓ del 2026-05-03 al 2026-05-08 (4 días, cerrado anticipado por Dario). Esta sección describe lo que efectivamente ocurrió + decisiones derivadas. La nueva doctrina (memoria `feedback_no_campana_sin_whatsapp_automatico.md` articulada 2026-05-09) supersede planes futuros similares — ninguna campaña paga sin bot WhatsApp automático funcional.
 
-**Objetivo:** validar el deterministic backbone construido con tráfico real ANTES de construir agentes IA. Captura data para informar Fase 4 con datos en mano, no hipótesis.
+**Plan original** (2026-05-03):
+- Budget $100 USD / 5 días
+- 3 destinos: landing botox-mvp + landing prp-mvp (a crear) + WhatsApp directo doctora con shortcodes manuales
+- Atribución manual via shortcodes pre-poblados
+- Tracking sheet manual de la doctora
 
-**No es fase numerada del roadmap** (similar al interludio § 11.5b) — es un **episodio puente operacional de 5-7 días** entre Fase 3 cerrada y Fase 4 reescrita.
+**Resultado real** (post-mortem 2026-05-08):
+- 6 leads totales, **TODOS via WhatsApp directo manual** (0 via landing)
+- $S/.188 spent (de $100 USD ≈ S/.380 budget)
+- 0 conversiones a venta documentadas
+- 14 INS (insights) + 6 R (refinamientos) doctrina capturados en `docs/campaigns/2026-05-dia-madre/_doctrine-feedback.md`
+
+**Aprendizajes principales**:
+- WhatsApp directo >> Landing (refuta hipótesis del funnel original)
+- Objetivo Meta debe ser "Mensajes" no "Tráfico"
+- Audience radius 15-25km (no Cusco completo)
+- Daily reports obligatorios para próxima campaña
+- Hook pain-specific funciona mejor que awareness genérico
+- Click-to-WhatsApp ads prioritario
+
+**Decisión Dario 2026-05-08 — Bootstrap principio #13 SIGUE ABIERTO**:
+- Originalmente Bootstrap iba a cerrar post-mortem 1ra campaña (este Bridge)
+- Dario decidió mantener ABIERTO hasta 2da campaña — los 14 INS + 6 R no tienen evidencia suficiente con 1 sola campaña
+- Insights NO se aplican a doctrina v0.1 todavía — se acumulan
+
+**Doctrina nueva post-Bridge (2026-05-09)**:
+- Memoria 🔥 `feedback_no_campana_sin_whatsapp_automatico.md` SUPERSEDE planes futuros tipo Bridge original
+- Ninguna campaña paga sin bot WhatsApp automático funcional (Fase 4A.3 cerrada)
+- Speed-to-lead <60s + doctora no 24/7 = bot rule-based mandatorio antes de invertir más en ads
+
+**Detalle táctico ejecutado**: `docs/campaigns/2026-05-dia-madre/` (renombrado de "2026-05-first-campaign")
+**Memoria efímera**: `project_first_paid_campaign_2026_05_03` (archivar/marcar SUPERSEDED post-cierre Bootstrap)
 
 **Setup:**
 - Budget: $100 USD lifetime / 5 días
@@ -834,27 +887,54 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 - ¿CAC sostenible para tratamientos $300-800?
 - ¿Las creatividades hechas por Dario+Claude convierten? → informa urgencia construir Brand Orchestrator IA
 
-### 11.6 Fase 4 (REVISADA POR AUDIT 2026-05-03)
+### 11.6 Fase 4 (REVISADA POR AUDIT 2026-05-03 + DOCTRINA #14 2026-05-10)
 
-**⚠️ La Fase 4 fue reescrita drásticamente.** La versión original ("Conversation Agent IA") fue **diferida** por audit. La versión revisada divide Fase 4 en dos sub-bloques con orden estricto:
+**⚠️ La Fase 4 fue reescrita en 2 momentos.** Estructura final post-doctrina #14:
 
-**Sub-bloque 4A — Cerrar el deterministic backbone restante** (post-Bridge Episode):
-- Chatbot WhatsApp **rule-based** (state machine Python en ERP, NO IA)
-- Módulo Agenda mínimo en ERP (tabla `appointments` + UI tab + audit log)
-- Notificaciones a doctora (n8n workflow chico, sin IA)
-- Re-engagement queue determinística (cron SQL → cola para doctora)
-- Cualquier hallazgo del Bridge Episode que sea bloqueante
+**Sub-bloque 4A — Cerrar el deterministic backbone completo** (post-Bridge Episode):
+- ✅ **4A.1** Módulo Agenda mínima ERP (ADR-0035) — COMPLETA 2026-05-09
+- ⏳ **4A.2** WhatsApp Cloud API con número doctora (`+51947741117`) — bloqueada por restricción Meta (Domain Verification + cleanup ejecutados 2026-05-09/10, pivot pendiente verificar 24-48h)
+- ⏳ **4A.3** Bot-broker rule-based bidireccional (state machine Python + n8n cron, NO IA) — depende 4A.2. Memoria autoritativa: `project_chatbot_broker_architecture.md`
+- ⏳ **4A.4** Smoke E2E completo (lead WA → ERP → cita → asistencia → cliente → venta → CAPI emit)
+- 🆕 **4A.5** Email institucional (Zoho Free) + email marketing tool (MailerLite Free) + 2 flujos base (welcome + post-cita) + notificaciones email al lead/cliente desde ERP + re-engagement queue determinística (cliente 60+ días sin actividad)
+- 🆕 **4A.6** **Interludio estratégico (PARTE DEL BACKBONE)** — brand voice v1.0 + arquetipos 3-5 perfiles + posicionamiento competitivo + plan estratégico 6-12-24m (memoria `project_interludio_estrategico_es_backbone.md`)
+- ✅ **4A.3 sub** — Workflow A2 sync ERP→Vtiger (ADR-0036) — COMPLETO 2026-05-10
 
-**Sub-bloque 4B — Primer agente IA real: Brand Orchestrator** (solo cuando 4A está validado):
-- Caso canónico subagent pattern (5 subagentes: research/concept/copy/visual/implementation)
-- Brand voice consolidado como input (debe estar listo del trabajo paralelo del Bridge Episode)
-- Eval suite previa con 30+ ejemplos
-- Budget hard-cap (~$70/mes per audit)
-- VPS dedicado de agentes (`agents.livskin.site`) — decisión arquitectónica formal con ADR-0035 cuando arranque construcción
+**═══ ✅ DETERMINISTIC BACKBONE CERRADO (todas las 4A.X) ═══**
 
-**Conversation Agent IA — diferido**: V1 es chatbot rule-based de 4A. Reabrir cuando volumen WA >100 conv/día sostenido (memoria `project_agent_scope_audit_2026_05_03`).
+**🆕 SESIÓN ESTRATÉGICA AGENTES IA** (Principio Operativo #14 articulado 2026-05-10):
+- **Bloque DEDICADO** post-backbone cerrado
+- **Duración**: 4-8h totales **divisibles en 1-3 sesiones según necesidad** (Dario decide formato cuando lo arranque)
+- **Outputs**:
+  - ADR-0037 Conversation Agent v0 rule-based formal (supersede ADR-0034)
+  - ADR-0038 Brand Orchestrator V0 BOOTSTRAP (si excepción ejecutada)
+  - ADR-0039 Brand Orchestrator V1 multi-agent (5 subagentes)
+  - ADRs Acquisition synth + Growth narrative scripts
+  - ADR Infra+Security agent (timing Fase 7)
+  - ADR VPS dedicado de agentes (`agents.livskin.site`)
+  - `docs/agents/organization-chart.md` formal
+  - Skills inventory final + eval suites + budget caps + approval flows
 
-**ADR-0034 v1.0** (Conversation Agent IA Foundation, escrita 2026-05-02) → marcada 💤 Diferida; será supersedida por ADR Conversation Agent v0 rule-based cuando se construya en Fase 4A.
+**Excepción permitida — Brand Orchestrator V0 BOOTSTRAP** (durante Fase 4A si demanda):
+- **Discrecional**: Dario aprueba cuando lo sienta necesario (no requiere trigger objetivo)
+- **Scope V0 acotado**: solo briefs + copy, monolítico (sin subagentes), brand voice borrador o firmada según disponibilidad
+- **Output siempre revisable antes de publicar**: NUNCA agente publica directo
+- **Alimenta sesión estratégica** con datos reales (scope refinado, herramientas validadas, métricas eficiencia)
+- Detalle: memoria `feedback_sesion_estrategica_agentes_dedicada.md`
+
+**Excepción Conversation Agent IA NO permitida**: rule-based de 4A.3 hasta volumen WA >100 conv/día sostenido 7+ días.
+
+**Sub-bloque 4B — Brand Orchestrator V1 implementación** (post-sesión estratégica):
+- 5 subagentes (research/concept/copy/visual/implementation)
+- Stack completo (Claude Design + Canva API + fal.ai)
+- Eval suite con 30+ ejemplos pre-construcción
+- Budget hard-cap ~$60/mes
+- VPS dedicado `agents.livskin.site`
+
+**ADR-0034 v1.0** (Conversation Agent IA Foundation): linaje completo:
+- 2026-05-02: ✅ Aprobada
+- 2026-05-03: 💤 Diferida (audit honesto)
+- 2026-05-10: 🔄 **Supersedida** por doctrina #14 — V1 NO será LLM monolítico, V1 es rule-based de 4A.3
 
 ---
 
@@ -885,9 +965,28 @@ Seguridad  ██   ██   ██   ░░   ██   ░░   ░░   ░░
 - Cada mensaje queda en `livskin_brain.conversations` con embedding
 - Langfuse muestra la ejecución completa con costo estimado
 
-### 11.7 Fase 5 — Content Agent + Acquisition Engine (Semanas 7-8)
+### 11.7 Fase 5 — Acquisition + Growth scripts (REVISADA POR AUDIT 2026-05-03 + DOCTRINA #14)
 
-**Objetivo:** creativos generados automáticamente + campañas auto-optimizándose.
+> **⚠️ Esta fase fue reescrita drásticamente.** La versión original (Content Agent + Acquisition Engine como agentes plenos IA, Semanas 7-8) fue **reducida** por audit 2026-05-03 (memoria `project_agent_scope_audit_2026_05_03.md`).
+>
+> **Versión revisada — scripts con LLM ocasional, NO agentes plenos:**
+> - **Acquisition synthesizer** (script con 1 LLM call por reporte semanal): Meta API reader + Google API reader + ROI analyzer determinísticos + LLM solo para narrativa del reporte
+> - **Growth narrative** (script con 1 LLM call mensual): SQL determinístico de cohorts/retention + LLM para narrativa
+>
+> **Razón del downscoping**: 95% del trabajo es queries + APIs determinísticos. No requieren agent infra (VPS dedicado, eval suite persistente, budgets persistentes).
+>
+> **Brand Orchestrator (creativo)** ya está en Fase 4B post-sesión estratégica de agentes IA — NO duplicar en Fase 5.
+>
+> **Pre-requisitos** para Fase 5:
+> - Brand Orchestrator V1 productivo (Fase 4B completa)
+> - Datos de campañas reales (post-Bridge Episode + post-Fase 4A.5 email funcionando + post-bot rule-based)
+> - Brain Layer 5 alimentado por Brand Orchestrator
+>
+> **Sección histórica original** abajo (no se ejecuta tal cual — referencia de scope que descartamos):
+
+---
+
+**Objetivo (versión histórica, supersedida):** creativos generados automáticamente + campañas auto-optimizándose.
 
 **Entregables Semana 7 (Content Agent):**
 - **Dossiers aprobados:** 0030 (Content Agent con Claude Design), 0045 (pipeline creativo), 0046 (landing pages)
@@ -1342,6 +1441,20 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 - **Runbook nuevo**: `docs/runbooks/sesion-modo-proyecto-vs-campana.md` documenta los 3 modos + workflow + anti-patrones + cierre formal del bootstrap.
 - **Bridge Episode pivota**: campaña "primera campaña paga" se reframea como "Día de la Madre 2026-05". Misma fecha de lanzamiento (~5 may), mismo budget, misma metodología. La fecha del 11 de mayo (Día de la Madre Perú) es el frame contextual que activa identidad alineado al doc de Guidelines.
 - **Razón del cambio**: Dario detectó que las decisiones de campaña estaban contaminando memorias críticas durables. Articuló necesidad de gobernanza de contextos. Pasó documento de Guidelines como input crítico que el master plan tenía diferido al "interludio estratégico". El timing del Día de la Madre + tener el doc de Guidelines convergen en este reframe estratégico.
+
+### v3.2 — 2026-05-10
+- **Principio Operativo #14 agregado a CLAUDE.md** — Sesión estratégica de agentes IA es bloque DEDICADO post-backbone determinístico cerrado. Excepción permitida: Brand Orchestrator V0 BOOTSTRAP discrecional. Conversation Agent IA NO bootstrap.
+- **§ 10.1 reescrita** — scope agentes V1 con tabla actualizada (Conversation v0 rule-based / BO V0 bootstrap / BO V1 post-sesión / Acquisition synth + Growth scripts / Conversation IA diferido / Infra+Security Fase 7).
+- **§ 11.5b reescrita** — interludio estratégico es **PARTE del backbone (Fase 4A.6)**, no bloque pre-Fase 5 ni input externo. Memoria `project_interludio_estrategico_es_backbone.md`.
+- **§ 11.5c actualizada** — Bridge Episode marcado como ✅ EJECUTADO Y CERRADO (2026-05-03 a 2026-05-08, 6 leads, anticipado). Decisión Dario 2026-05-08: Bootstrap principio #13 SIGUE ABIERTO hasta 2da campaña paga (originalmente cerraba con 1ra). Doctrina nueva post-Bridge: `feedback_no_campana_sin_whatsapp_automatico.md` SUPERSEDE planes futuros similares.
+- **§ 11.5a Bloque puente Agenda Mínima ERP** ✅ COMPLETO 2026-05-09 (ADR-0035 implementado, 53/53 tests passing, 98% coverage service).
+- **§ 11.6 reescrita** — Fase 4A expandida con 6 sub-fases (4A.1 ✅ + 4A.2 + 4A.3 + 4A.4 + 4A.5 email + 4A.6 interludio). Sesión estratégica agentes IA insertada como bloque dedicado entre 4A.6 y 4B. Excepción Brand Orchestrator V0 BOOTSTRAP articulada. Workflow A2 sub-componente ✅ COMPLETO 2026-05-10 (ADR-0036).
+- **§ 11.7 Fase 5 reescrita** — Acquisition + Growth como **scripts con LLM ocasional**, NO agentes plenos. Brand Orchestrator no se duplica acá (vive en 4B). Versión histórica conservada como referencia.
+- **ADR-0034 status cambia** 💤 Diferida → 🔄 **Supersedida** por doctrina #14 — V1 NO será LLM monolítico, V1 es rule-based de 4A.3.
+- **ADR-0001 § 9.1 actualizada** — tabla consumidores brain refleja V0/V1 + scripts vs agentes plenos.
+- **ADRs reservados nuevos**: 0037 Conversation Agent v0 rule-based formal, 0038 Brand Orchestrator V0 BOOTSTRAP, 0039 Brand Orchestrator V1 multi-agent. Materializan al ejecutar sesión estratégica de agentes IA.
+- **Workflow A2 sync ERP→Vtiger**: nuevo (ADR-0036), bidireccional cierre, 17 tests pytest, smoke E2E real exitoso (Vtiger LEA68 leadstatus Nuevo→Cliente).
+- **Razón del cambio**: Dario pidió revisión exhaustiva del proyecto antes de plasmar la doctrina nueva. 5 agentes Explore auditaron master plan + memorias + ADRs + backlog/brand/runbooks/sesiones + código. Detectaron 2 contradicciones críticas + 6 menores + 8 gaps + 11 archivos a actualizar. Esta v3.2 ejecuta los 11 updates en cascada.
 
 ---
 

@@ -21,6 +21,44 @@
 
 ---
 
+## 🆕 Prioridad sesión 2026-05-10 — Doctrina #14 + Fase 4A en curso (post-Workflow A2)
+
+### Estado al 2026-05-10 cierre
+
+- ✅ **Fase 4A.1** — Módulo Agenda Mínima ERP COMPLETA 2026-05-09 (ADR-0035)
+- ✅ **Fase 4A.3 sub** — Workflow A2 sync ERP→Vtiger COMPLETO 2026-05-10 (ADR-0036, smoke E2E exitoso)
+- ✅ **Bridge Episode** CERRADO 2026-05-08 (4 días, 6 leads, anticipado)
+- ✅ **Doctrina #14** articulada — sesión estratégica agentes IA dedicada post-backbone
+- ✅ **Cleanup masivo Meta** ejecutado (apps + SU + pixel desconectado + Domain Verification + OAuth residuales)
+- 🟡 **Bootstrap principio #13** ABIERTO hasta 2da campaña paga (decisión Dario 2026-05-08)
+
+### 🔴 Fase 4A — Backbone determinístico completo (REVISADA 2026-05-10 con doctrina #14)
+
+**Sub-fases en cascada (ver master plan § 11.6 v3.2)**:
+
+- ✅ 4A.1 — Módulo Agenda mínima ERP — 2026-05-09
+- ⏳ 4A.2 — WhatsApp Cloud API con número doctora `+51947741117` (bloqueada por restricción Meta)
+- ⏳ 4A.3 — Bot-broker rule-based bidireccional (depende 4A.2)
+- ⏳ 4A.4 — Smoke E2E completo
+- 🆕 4A.5 — Email institucional (Zoho Free) + email marketing tool (MailerLite Free) + 2 flujos base + notificaciones email + re-engagement queue
+- 🆕 4A.6 — Interludio estratégico (PARTE DEL BACKBONE) — brand voice v1.0 + arquetipos 3-5 + posicionamiento + plan estratégico 6-12-24m
+- ✅ 4A.3 sub — Workflow A2 sync ERP→Vtiger — 2026-05-10
+
+**Excepción permitida — Brand Orchestrator V0 BOOTSTRAP** (durante Fase 4A si demanda discrecional Dario):
+- Scope acotado: solo briefs + copy, monolítico, brand voice borrador
+- Output siempre revisable antes de publicar
+- Alimenta sesión estratégica con datos reales
+
+**Excepción Conversation Agent IA NO permitida**: rule-based de 4A.3 hasta volumen amerite.
+
+**═══ DESPUÉS DE BACKBONE CERRADO ═══**
+
+**🆕 SESIÓN ESTRATÉGICA AGENTES IA** (Principio #14):
+- Bloque dedicado 4-8h totales divisibles en 1-3 sesiones
+- Outputs: ADR-0037 Conversation v0 rule-based + ADR-0038 BO V0 BOOTSTRAP + ADR-0039 BO V1 + ADRs scripts + ADR Infra+Security + organigrama + skills inventory final + eval suites + budget caps
+
+---
+
 ## 🆕 Prioridad sesión 2026-05-09 — Arranque Fase 4A (post-cierre Bridge Episode)
 
 ### 🔴 Fase 4A — Backbone determinístico end-to-end (modo PROYECTO, 10-15h en 3-5 sesiones)

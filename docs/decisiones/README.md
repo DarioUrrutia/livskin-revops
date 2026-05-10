@@ -19,19 +19,22 @@ Este directorio contiene todos los **Architecture Decision Records (ADRs)** del 
 
 ---
 
-## ⚠️ Importante (auditoría 2026-05-03)
+## ⚠️ Importante (auditoría 2026-05-03 + actualización 2026-05-10)
 
-Este index fue **reescrito el 2026-05-03** tras auditoría integral del proyecto. La versión legacy listaba ~50 ADRs ✅ pero solo existían **20 archivos físicos** — el resto eran números reservados con metadata "✅" engañosa. Removidos.
+Este index fue **reescrito el 2026-05-03** tras auditoría integral del proyecto + **actualizado el 2026-05-10** tras ADRs nuevos + cambio de status ADR-0034. La versión legacy listaba ~50 ADRs ✅ pero solo existían 20 archivos físicos — el resto eran números reservados con metadata "✅" engañosa.
 
 Notas históricas relevantes:
 
-- **Conflicto de numeración 0033 / 0034**: el index legacy reservaba 0033 = "Escalación a doctora WhatsApp" y 0034 = "Reactivación 45 días". Ambos números fueron **reasignados** a archivos nuevos durante mayo 2026 (match auto + Conversation Agent IA). Las decisiones legacy reservadas tomarán números futuros (≥0035) cuando se materialicen como archivos físicos.
+- **Conflicto de numeración 0033 / 0034**: el index legacy reservaba 0033 = "Escalación a doctora WhatsApp" y 0034 = "Reactivación 45 días". Ambos números fueron **reasignados** a archivos nuevos durante mayo 2026 (match auto + Conversation Agent IA). Las decisiones legacy reservadas tomarán números futuros (≥0040) cuando se materialicen como archivos físicos.
 
-- **ADRs entre 0004-0010, 0016-0018, 0020, 0022, 0028-0029, 0035-0044** estaban en el index legacy como ✅ pero NO existen como archivo. Si alguna decisión necesita ser ADR formal, se reservará número en el momento de escribir.
+- **ADRs entre 0004-0010, 0016-0018, 0020, 0022, 0028-0029, 0037-0044** estaban en el index legacy como ✅ pero NO existen como archivo. Si alguna decisión necesita ser ADR formal, se reservará número en el momento de escribir.
+
+- **2026-05-09**: agregado ADR-0035 (Módulo Agenda Mínima ERP) tras implementación Fase 4A.1.
+- **2026-05-10**: agregado ADR-0036 (Workflow A2 sync ERP→Vtiger). Status ADR-0034 cambió `💤 Diferida` → `🔄 Supersedida` por doctrina #14 nueva.
 
 ---
 
-## ADRs físicos verificados (20 archivos al 2026-05-03)
+## ADRs físicos verificados (22 archivos al 2026-05-10)
 
 ### Arquitectura y datos (Fase 0-1)
 
@@ -89,13 +92,18 @@ Notas históricas relevantes:
 | [0035](0035-modulo-agenda-minima-erp.md) | Módulo Agenda Mínima ERP | ✅ | 4A.1 |
 | [0036](0036-workflow-a2-sync-erp-vtiger.md) | Workflow [A2] sync ERP→Vtiger (cierra bidireccional lead lifecycle) | ✅ | 4A.3 (sub) |
 
-### Agentes IA — diferida por audit 2026-05-03
+### Agentes IA — supersedida por doctrina #14 (2026-05-10)
 
 | ADR | Título | Estado | Fase |
 |---|---|---|---|
-| [0034](0034-conversation-agent-foundation.md) | Conversation Agent IA Foundation | 💤 **Diferida** (audit 2026-05-03) | 4 (orig) |
+| [0034](0034-conversation-agent-foundation.md) | Conversation Agent IA Foundation | 🔄 **Supersedida** (linaje: ✅ 2026-05-02 → 💤 2026-05-03 → 🔄 2026-05-10) | 4 (orig) |
 
-> **Nota sobre ADR-0034**: aprobada el 2026-05-02, diferida al día siguiente tras audit honesto del scope de agentes (memoria 🔥 CRÍTICA `project_agent_scope_audit_2026_05_03.md` + audit formal `docs/audits/agent-scope-audit-2026-05-03.md`). V1 será chatbot rule-based + handoff humano + templates Meta-approved (Fase 4A). Esta ADR será **supersedida** por ADR futura "Conversation Agent v0 rule-based" cuando se construya.
+> **Nota sobre ADR-0034 — linaje completo**:
+> 1. **2026-05-02**: ✅ Aprobada (escrita Claude, decisión Dario)
+> 2. **2026-05-03**: 💤 Diferida tras audit honesto (memoria 🔥 `project_agent_scope_audit_2026_05_03.md` + audit `docs/audits/agent-scope-audit-2026-05-03.md`). Conversation Agent IA reducido a "diferir hasta validación con data real".
+> 3. **2026-05-10**: 🔄 Supersedida por **Principio Operativo #14** + memoria `feedback_sesion_estrategica_agentes_dedicada.md` (Dario clarificó que V1 NO será LLM monolítico — V1 es **chatbot rule-based** de Fase 4A.3). Razón del cambio: "Diferida" implicaba pause de la decisión IA monolítica; "Supersedida" refleja la realidad de cambio de arquitectura.
+>
+> **Será reemplazada por ADR-0037 "Conversation Agent v0 rule-based"** cuando se construya formalmente en la sesión estratégica de agentes IA (post-backbone cerrado per principio #14). Conversation Agent IA real reabriría SOLO si volumen WhatsApp >100 conv/día sostenido por 7+ días.
 
 ---
 
@@ -103,19 +111,19 @@ Notas históricas relevantes:
 
 Estas son decisiones que el proyecto va a necesitar formalizar cuando lleguen. **No tienen archivo todavía** y **el número se asigna al escribir, no al reservar** — para evitar conflictos como 0033/0034.
 
-| Concepto | Cuándo se materializa |
-|---|---|
-| Conversation Agent v0 rule-based | Fase 4A (post-Bridge Episode + módulo Agenda) — supersede ADR-0034 |
-| Módulo Agenda mínimo en ERP | Fase 4A (Bloque puente operacional) |
-| VPS dedicado de agentes (`agents.livskin.site`) | Fase 4B (cuando se construya Brand Orchestrator) |
-| Brand Orchestrator multi-agent (5 subagentes) | Fase 4B post-validación + brand voice consolidado |
-| Acquisition synthesizer (script LLM ocasional) | Fase 5 — script con LLM, NO agente formal |
-| Growth narrative (script LLM mensual) | Fase 5 — script |
-| Cutover ERP Render → VPS 3 | Fase 6 |
-| Reactivación 45 días post-visita | Fase 6+ post-cutover |
-| Escalación handoff doctora WhatsApp | cuando se construya Conversation Agent v0 |
-| Lead scoring v1 rules-based | Fase 4A o 4B según necesidad observada en datos del Bridge Episode |
-| Re-introducir staging real (DB separada) | Fase 6 al cutover Render→VPS3 — supersede la Opción A actual de erp-staging eliminado |
+| Concepto | Cuándo se materializa | Notas (post-doctrina #14) |
+|---|---|---|
+| **0037 Conversation Agent v0 rule-based** | Sesión estratégica agentes IA post-backbone cerrado | Supersede ADR-0034. Documenta arquitectura formal del rule-based de Fase 4A.3 |
+| **0038 Brand Orchestrator V0 BOOTSTRAP** | Si excepción Brand Orchestrator V0 BOOTSTRAP se ejecutó durante backbone | Documenta lecciones aprendidas + scope refinado + herramientas validadas |
+| **0039 Brand Orchestrator V1 multi-agent** | Sesión estratégica agentes IA post-backbone | 5 subagentes formal (research/concept/copy/visual/implementation) |
+| ADR Acquisition synthesizer script | Sesión estratégica agentes IA | Script con LLM ocasional, NO agente formal |
+| ADR Growth narrative script | Sesión estratégica agentes IA | Script con LLM mensual |
+| ADR Infra+Security agent | Sesión estratégica agentes IA — timing construcción Fase 7 | Diferido — skills cubren V1 |
+| ADR VPS dedicado agentes (`agents.livskin.site`) | Sesión estratégica agentes IA | Decisión arquitectónica formal |
+| Cutover ERP Render → VPS 3 | Fase 6 | |
+| Reactivación 45 días post-visita | Fase 6+ post-cutover | |
+| Lead scoring v1 rules-based | Fase 4A o 4B según necesidad | |
+| Re-introducir staging real (DB separada) | Fase 6 al cutover Render→VPS3 | Supersede Opción A erp-staging eliminado |
 
 ---
 

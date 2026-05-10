@@ -1,12 +1,38 @@
-# ADR-0034 — Conversation Agent Foundation (Fase 4 arranque) — 💤 DIFERIDA POR AUDIT 2026-05-03
+# ADR-0034 — Conversation Agent Foundation (Fase 4 arranque) — 🔄 SUPERSEDIDA POR DOCTRINA #14 (2026-05-10)
 
-> **⚠️ ESTADO ACTUALIZADO 2026-05-03:** Esta ADR fue aprobada el 2026-05-02 pero al día siguiente, en sesión estratégica, Dario y Claude Code ejecutaron audit honesto que reveló sobreescalamiento del agent design. El Conversation Agent IA fue **diferido**. V1 será **chatbot rule-based + handoff humano + templates Meta-approved** (deterministic backbone first — principio operativo #11 nuevo en CLAUDE.md). Esta ADR queda en histórico documentando la dirección original; será **supersedida por ADR futura "Conversation Agent v0 rule-based"** cuando se construya en Fase 4A post-Bridge Episode (primera campaña paga). Lo que aporta este documento sigue siendo útil como referencia: schema DB de conversaciones, guardrails post-LLM (válidos cuando llegue agent IA), eval suite design, setup Meta App. NO ejecutar la implementación descrita acá hasta tener data real de campaña + brand voice consolidado + decisión explícita de avanzar con agente IA. **Doctrina rectora**: memoria `feedback_deterministic_backbone_first.md`. **Audit completo**: memoria `project_agent_scope_audit_2026_05_03.md` + `docs/audits/agent-scope-audit-2026-05-03.md`.
+> **⚠️ ESTADO ACTUALIZADO 2026-05-10**: esta ADR pasó por 3 estados:
+>
+> 1. **2026-05-02**: ✅ Aprobada (escrita por Claude, decisión Dario)
+> 2. **2026-05-03**: 💤 Diferida tras audit honesto (memoria `project_agent_scope_audit_2026_05_03.md`) — Conversation Agent IA reducido a "diferir hasta validación con data real"
+> 3. **2026-05-10**: 🔄 **SUPERSEDIDA** por doctrina nueva (Principio Operativo #14 + memoria `feedback_sesion_estrategica_agentes_dedicada.md`)
+>
+> **Razón del cambio Diferida → Supersedida**:
+> - "Diferida" = "posponemos la decisión para después" — implicaba que esta arquitectura IA monolítica seguía vigente, solo en pausa
+> - "Supersedida" = "esta decisión se reemplaza por otra" — refleja la realidad: V1 NO será LLM Conversation Agent monolítico. V1 será **chatbot rule-based + handoff humano + templates Meta-approved** (Fase 4A.3, deterministic backbone first per principio #11)
+>
+> **Future**: nueva **ADR-0037 "Conversation Agent v0 rule-based"** documentará formalmente la arquitectura rule-based cuando se ejecute la sesión estratégica de agentes IA (post-backbone cerrado per principio #14). El Conversation Agent IA monolítico (este ADR) se reabriría SOLO si volumen WhatsApp >100 conv/día sostenido por 7+ días.
+>
+> **Valor remanente de este documento**:
+> - Schema DB de conversaciones (`conversations`, `conversation_turns`, `agent_tool_calls`) sigue siendo válido — rule-based también necesita persistir conversaciones
+> - Guardrails post-LLM aplicarán cuando llegue Conversation Agent IA real (post-volumen amerite)
+> - Eval suite design sirve como template para 30+ ejemplos del rule-based
+> - Setup Meta App + WhatsApp Cloud API ya está parcialmente en producción (test number `+1 555-191-3740` activo desde 2026-05-09; restricción Meta en proceso de destrabar)
+>
+> NO ejecutar la implementación IA descrita acá hasta:
+> 1. Backbone determinístico CERRADO (Fases 4A.1-4A.6 todas)
+> 2. Bot rule-based de Fase 4A.3 corriendo 30+ días en producción
+> 3. Golden set ≥30 conversaciones etiquetadas
+> 4. Volumen WhatsApp sostenido que justifique IA
+> 5. Sesión estratégica de agentes IA aprueba el ADR-0037+ formal
+>
+> **Doctrina rectora**: principios operativos #11 (deterministic backbone first) + #14 (sesión estratégica agentes dedicada). **Audit base**: `docs/audits/agent-scope-audit-2026-05-03.md`.
 
-**Estado:** 💤 **Diferida** (originalmente ✅ Aprobada 2026-05-02 → diferida 2026-05-03 tras audit)
-**Fecha:** 2026-05-02 · **Diferida:** 2026-05-03
+**Estado:** 🔄 **Supersedida** (linaje: ✅ Aprobada 2026-05-02 → 💤 Diferida 2026-05-03 → 🔄 Supersedida 2026-05-10)
+**Fecha:** 2026-05-02 · **Diferida:** 2026-05-03 · **Supersedida:** 2026-05-10
 **Autor propuesta:** Claude Code
 **Decisor final:** Dario
-**Fase del roadmap:** Originalmente Fase 4 IA — ahora diferida hasta Fase 4B post-validación
+**Fase del roadmap:** Originalmente Fase 4 IA — Conversation Agent IA queda diferido indefinido (reabrir si volumen >100 conv/día). V1 rule-based en Fase 4A.3.
+**Supersedida por:** ADR-0037 futuro (Conversation Agent v0 rule-based formal, post-sesión estratégica de agentes)
 **Workstream:** Agentes · WhatsApp · Datos
 
 ---

@@ -473,16 +473,19 @@ Evals automáticos                                 ██
 
 ### 9.1 Consumidores
 
-| Consumidor | Cómo accede | Casos de uso |
-|---|---|---|
-| **Conversation Agent** | Tool calls n8n | Contexto paciente, clínica, precedentes |
-| **Content Agent** | Tool calls n8n | Creativos ganadores pasados, brand voice |
-| **Acquisition Engine** | Tool calls n8n | Performance histórica, learnings |
-| **Growth Agent** | Tool calls n8n + SQL directo | Análisis transversal para escribir learnings |
-| **Claude Code (yo)** | MCP server | Consulta proyecto, ayuda a usuaria |
-| **Usuaria — vista analítica** | Metabase (L3+L5+L6) | Dashboards numéricos, exploración SQL |
-| **Usuaria — vista visual** | **Obsidian (L2 human layer)** | Ver grafo de docs, explorar ADRs, tomar notas, buscar full-text |
-| **Langfuse** | Observación pasiva | Trackea qué retrievals hicieron los agentes |
+| Consumidor | Cómo accede | Casos de uso | Notas (post-doctrina #14) |
+|---|---|---|---|
+| **Conversation Agent v0 rule-based** (Fase 4A.3) | Tool calls n8n + SQL directo | Estado lead, próximas citas, precedentes conversacionales | Rule-based, sin LLM. Acceso L4 limitado (no embeddings) |
+| **Conversation Agent IA** (post-volumen amerite, ADR-0034 SUPERSEDIDA) | Tool calls n8n | Contexto paciente, clínica, precedentes | DIFERIDO indefinido, reabrir si volumen >100 conv/día sostenido |
+| **Brand Orchestrator V0 BOOTSTRAP** (excepción durante 4A) | Tool calls + manual | Brand voice + arquetipos provisional | Monolítico, sin subagentes |
+| **Brand Orchestrator V1** (post-sesión estratégica, Fase 4B) | Tool calls n8n + 5 subagentes | Creativos ganadores pasados, brand voice consolidado, learnings | Caso canónico subagent pattern |
+| **Acquisition synth script** (Fase 5, scripts no agente) | SQL + 1 LLM call/semana | Performance histórica, learnings | LLM solo para narrativa reporte |
+| **Growth narrative script** (Fase 5, scripts no agente) | SQL directo + 1 LLM call/mes | Análisis transversal para escribir learnings | LLM solo para narrativa mensual |
+| **Infra+Security agent** (Fase 7 extensión) | Tool calls + sensors | Audit log, system-map, runbooks | Diferido — skills livskin-ops/livskin-deploy cubren V1 |
+| **Claude Code (yo)** | MCP server | Consulta proyecto, ayuda a usuaria | Activo |
+| **Usuaria — vista analítica** | Metabase (L3+L5+L6) | Dashboards numéricos, exploración SQL | Activo |
+| **Usuaria — vista visual** | **Obsidian (L2 human layer)** | Ver grafo de docs, explorar ADRs, tomar notas, buscar full-text | Activo |
+| **Langfuse** | Observación pasiva | Trackea qué retrievals hicieron los agentes | Pendiente Fase 4B+ |
 
 ### 9.2 Obsidian como capa humana del conocimiento del proyecto
 
