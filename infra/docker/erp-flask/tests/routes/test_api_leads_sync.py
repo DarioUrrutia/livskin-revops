@@ -243,7 +243,7 @@ class TestUpdateOperation:
                 nombre="Updated Name",
                 email="updated@test.com",
                 tratamiento_interes="PRP",
-                leadstatus="Contacted",
+                leadstatus="Contactado",
             )),
             content_type="application/json",
             headers={"X-Internal-Token": VALID_TOKEN},
@@ -252,7 +252,7 @@ class TestUpdateOperation:
         assert lead.nombre == "Updated Name"
         assert lead.email_lower == "updated@test.com"
         assert lead.tratamiento_interes == "PRP"
-        assert lead.estado_lead == "contactado"  # mapeado de "Contacted"
+        assert lead.estado_lead == "contactado"  # mapeado de "Contactado" (Vtiger Title Case → ERP lowercase)
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -260,44 +260,82 @@ class TestUpdateOperation:
 # ─────────────────────────────────────────────────────────────────────
 
 class TestStatusMapping:
-    def test_status_new_maps_to_nuevo(self, client, db_session):
+    """Mapping Vtiger leadstatus → ERP estado_lead (1:1 congruente, post-cleanup 2026-05-10).
+
+    Vtiger picklist usa Title Case con tildes; ERP usa lowercase ASCII.
+    Diferencia única: capitalización + tildes. Semántica idéntica.
+    """
+
+    def test_status_nuevo_maps_to_nuevo(self, client, db_session):
         client.post(
             ENDPOINT,
-            data=json.dumps(_payload(vtiger_id="10x900", leadstatus="New")),
+            data=json.dumps(_payload(vtiger_id="10x900", leadstatus="Nuevo")),
             content_type="application/json",
             headers={"X-Internal-Token": VALID_TOKEN},
         )
         lead = db_session.query(Lead).filter_by(vtiger_id="10x900").first()
         assert lead.estado_lead == "nuevo"
 
-    def test_status_junk_lead_maps_to_perdido(self, client, db_session):
+    def test_status_contactado_maps_to_contactado(self, client, db_session):
         client.post(
             ENDPOINT,
-            data=json.dumps(_payload(vtiger_id="10x901", leadstatus="Junk Lead")),
+            data=json.dumps(_payload(vtiger_id="10x901", leadstatus="Contactado")),
             content_type="application/json",
             headers={"X-Internal-Token": VALID_TOKEN},
         )
         lead = db_session.query(Lead).filter_by(vtiger_id="10x901").first()
-        assert lead.estado_lead == "perdido"
+        assert lead.estado_lead == "contactado"
 
-    def test_status_qualified_maps_to_agendado(self, client, db_session):
+    def test_status_agendado_maps_to_agendado(self, client, db_session):
         client.post(
             ENDPOINT,
-            data=json.dumps(_payload(vtiger_id="10x902", leadstatus="Qualified")),
+            data=json.dumps(_payload(vtiger_id="10x902", leadstatus="Agendado")),
             content_type="application/json",
             headers={"X-Internal-Token": VALID_TOKEN},
         )
         lead = db_session.query(Lead).filter_by(vtiger_id="10x902").first()
         assert lead.estado_lead == "agendado"
 
-    def test_status_unknown_falls_back_to_nuevo(self, client, db_session):
+    def test_status_asistio_with_tilde_maps_to_asistio_ascii(self, client, db_session):
+        """Vtiger 'Asistió' (con tilde) → ERP 'asistio' (ASCII)."""
         client.post(
             ENDPOINT,
-            data=json.dumps(_payload(vtiger_id="10x903", leadstatus="UnknownStatus")),
+            data=json.dumps(_payload(vtiger_id="10x903", leadstatus="Asistió")),
             content_type="application/json",
             headers={"X-Internal-Token": VALID_TOKEN},
         )
         lead = db_session.query(Lead).filter_by(vtiger_id="10x903").first()
+        assert lead.estado_lead == "asistio"
+
+    def test_status_cliente_maps_to_cliente(self, client, db_session):
+        client.post(
+            ENDPOINT,
+            data=json.dumps(_payload(vtiger_id="10x904", leadstatus="Cliente")),
+            content_type="application/json",
+            headers={"X-Internal-Token": VALID_TOKEN},
+        )
+        lead = db_session.query(Lead).filter_by(vtiger_id="10x904").first()
+        assert lead.estado_lead == "cliente"
+
+    def test_status_perdido_maps_to_perdido(self, client, db_session):
+        client.post(
+            ENDPOINT,
+            data=json.dumps(_payload(vtiger_id="10x905", leadstatus="Perdido")),
+            content_type="application/json",
+            headers={"X-Internal-Token": VALID_TOKEN},
+        )
+        lead = db_session.query(Lead).filter_by(vtiger_id="10x905").first()
+        assert lead.estado_lead == "perdido"
+
+    def test_status_unknown_falls_back_to_nuevo(self, client, db_session):
+        """Valor no presente en _STATUS_MAP (legacy 'Hot', 'New' inglés, etc.) → fallback nuevo."""
+        client.post(
+            ENDPOINT,
+            data=json.dumps(_payload(vtiger_id="10x906", leadstatus="UnknownStatus")),
+            content_type="application/json",
+            headers={"X-Internal-Token": VALID_TOKEN},
+        )
+        lead = db_session.query(Lead).filter_by(vtiger_id="10x906").first()
         assert lead.estado_lead == "nuevo"
 
 

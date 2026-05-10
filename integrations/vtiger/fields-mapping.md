@@ -58,9 +58,34 @@ Estos NO son custom fields — vienen con Vtiger por default — pero se incluye
 | `firstname` + ` ` + `lastname` | `nombre` (concatenado con espacio) |
 | `phone` | `phone_e164` (después de normalizar a E.164) |
 | `email` | `email_lower` (lowercase + trim) + `email_hash_sha256` |
-| `leadstatus` | `estado_lead` (mapping: `New` → `nuevo`, `Cold` → `perdido`, etc.) |
+| `leadstatus` | `estado_lead` (1:1 case-insensitive — ver § Picklist `leadstatus` abajo) |
 | `leadsource` | `fuente` (mapping específico — ver § Mapping de fuente abajo) |
 | `description` | (notas operativas, opcional) |
+
+### Picklist `leadstatus` — congruente ERP↔Vtiger (post-cleanup 2026-05-10)
+
+Tras audit del 2026-05-10 (0 leads activos, 0 FK, 0 workflows, 0 references) se reemplazó el picklist default Vtiger (Hot, Cold, Warm, Qualified, etc.) por valores 100% congruentes con `ERP lead.estado_lead`. Doctrina: `feedback_congruencia_nombres_cross_system.md`.
+
+| ERP `lead.estado_lead` | Vtiger `leadstatus` | picklist_valueid | sortorderid |
+|---|---|---|---|
+| `nuevo` | `Nuevo` | 305 | 1 |
+| `contactado` | `Contactado` | 306 | 2 |
+| `agendado` | `Agendado` | 307 | 3 |
+| `asistio` | `Asistió` | 308 | 4 |
+| `cliente` | `Cliente` | 309 | 5 |
+| `perdido` | `Perdido` | 310 | 6 |
+
+**Normalización ERP→Vtiger**: lowercase ASCII (ERP) ↔ Title Case con tildes (Vtiger). Ej: `asistio` ↔ `Asistió`. La capitalización + tildes son la única diferencia, semántica idéntica.
+
+**Cleanup ejecutado** (transactional, backups en `docs/audits/vtiger-leadstatus-cleanup-2026-05-10/`):
+- DELETE 11 valores legacy (Hot, Warm, Cold, Junk Lead, Lost Lead, Pre Qualified, Qualified, Attempted to Contact, Contact in Future, Contacted, Not Contacted)
+- INSERT 6 valores nuevos en español
+- Permisos asignados a 5 roles (H1-H5)
+- Workflow [A1] actualizado: `leadstatus: 'New'` → `leadstatus: 'Nuevo'`
+
+**Workflow [A2] (Fase 4A.3)** — sync ERP→Vtiger en sentido inverso usará el mismo mapping para propagar cambios de estado disparados desde el ERP cuando la doctora marca asistencia/no_show.
+
+---
 
 ### Mapping de `leadsource` Vtiger → `fuente` ERP
 

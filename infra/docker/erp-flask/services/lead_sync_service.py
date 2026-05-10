@@ -16,19 +16,18 @@ from schemas.lead_sync import LeadSyncRequest
 from services import codgen_service
 
 
-# Mapeo Vtiger leadstatus → ERP estado_lead (ADR-0011 v1.1, ADR-0012)
+# Mapeo Vtiger leadstatus -> ERP estado_lead (1:1 congruente post-cleanup 2026-05-10).
+# Doctrina: feedback_congruencia_nombres_cross_system.md.
+# Picklist Vtiger reemplazado: 11 valores legacy default eliminados, 6 valores en
+# espanol congruentes con ERP.lead.estado_lead. Diferencia: Title Case + tildes.
+# Ver integrations/vtiger/fields-mapping.md seccion "Picklist leadstatus".
 _STATUS_MAP: dict[str, str] = {
-    "New": "nuevo",
-    "Not Contacted": "nuevo",
-    "Attempted to Contact": "contactado",
-    "Contact in Future": "contactado",
-    "Contacted": "contactado",
-    "Pre Qualified": "agendado",
-    "Qualified": "agendado",
-    "Hot": "agendado",
-    "Junk Lead": "perdido",
-    "Lost Lead": "perdido",
-    "Cold": "perdido",
+    "Nuevo": "nuevo",
+    "Contactado": "contactado",
+    "Agendado": "agendado",
+    "Asistió": "asistio",  # tilde Vtiger -> ASCII ERP
+    "Cliente": "cliente",
+    "Perdido": "perdido",
 }
 
 # Mapeo Vtiger leadsource → ERP fuente (ver integrations/vtiger/fields-mapping.md)
