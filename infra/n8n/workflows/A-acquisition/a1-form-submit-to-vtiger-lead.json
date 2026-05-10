@@ -3,9 +3,9 @@
     "updatedAt": "2026-05-02T13:39:57.000Z",
     "createdAt": "2026-04-29T21:57:42.179Z",
     "id": "a1-form-submit-vtiger-lead",
-    "name": "[A1] Capturar Form Submit → Vtiger Lead",
+    "name": "[A1] Capturar Form Submit â†’ Vtiger Lead",
     "description": null,
-    "active": true,
+    "active": false,
     "isArchived": false,
     "nodes": [
       {
@@ -23,7 +23,7 @@
           240,
           400
         ],
-        "webhookId": "a1-form-submit"
+        "webhookId": "f7d7bd16-89ce-48d0-a193-5757f2da9e8b"
       },
       {
         "parameters": {
@@ -317,7 +317,7 @@
       {
         "parameters": {
           "language": "javaScript",
-          "jsCode": "// [A1] paso 10: Build response payload — caso CREATE exitoso\n\nconst createResponse = $input.first().json;\nif (!createResponse.success) {\n  throw new Error('Vtiger create failed: ' + JSON.stringify(createResponse));\n}\n\nconst formBody = $('Validate Phone').first().json;\n\nreturn [{ json: {\n  ok: true,\n  vtiger_lead_id: createResponse.result.id,\n  is_new: true,\n  event_id: formBody.event_id || null,\n} }];"
+          "jsCode": "// [A1] paso 10: Build response payload â€” caso CREATE exitoso\n\nconst createResponse = $input.first().json;\nif (!createResponse.success) {\n  throw new Error('Vtiger create failed: ' + JSON.stringify(createResponse));\n}\n\nconst formBody = $('Validate Phone').first().json;\n\nreturn [{ json: {\n  ok: true,\n  vtiger_lead_id: createResponse.result.id,\n  is_new: true,\n  event_id: formBody.event_id || null,\n} }];"
         },
         "id": "node-build-response-created",
         "name": "Build Response (Created)",
@@ -331,7 +331,7 @@
       {
         "parameters": {
           "language": "javaScript",
-          "jsCode": "// [A1] paso 8a: Build response — caso lead ya existe (dedup match, no UPDATE en v1.0)\n\nconst body = $input.first().json;\n\nreturn [{ json: {\n  ok: true,\n  vtiger_lead_id: body._existing_lead_id,\n  is_new: false,\n  event_id: body.event_id || null,\n} }];"
+          "jsCode": "// [A1] paso 8a: Build response â€” caso lead ya existe (dedup match, no UPDATE en v1.0)\n\nconst body = $input.first().json;\n\nreturn [{ json: {\n  ok: true,\n  vtiger_lead_id: body._existing_lead_id,\n  is_new: false,\n  event_id: body.event_id || null,\n} }];"
         },
         "id": "node-build-response-existing",
         "name": "Build Response (Existing)",
@@ -536,33 +536,12 @@
     "staticData": null,
     "meta": null,
     "pinData": null,
-    "versionId": "54e8eacd-4ae9-4b7c-8372-b0d983e1c7aa",
-    "activeVersionId": "54e8eacd-4ae9-4b7c-8372-b0d983e1c7aa",
+    "versionId": null,
+    "activeVersionId": null,
     "versionCounter": 30,
     "triggerCount": 1,
     "tags": [],
-    "shared": [
-      {
-        "updatedAt": "2026-04-29T21:57:42.187Z",
-        "createdAt": "2026-04-29T21:57:42.187Z",
-        "role": "workflow:owner",
-        "workflowId": "a1-form-submit-vtiger-lead",
-        "projectId": "EQqxa0Vj06Kx8pYk",
-        "project": {
-          "updatedAt": "2026-04-05T19:00:38.484Z",
-          "createdAt": "2026-04-05T18:54:04.825Z",
-          "id": "EQqxa0Vj06Kx8pYk",
-          "name": "Dario Urrutia <daizurma2@gmail.com>",
-          "type": "personal",
-          "icon": null,
-          "description": null,
-          "creatorId": "8f7997aa-2d8a-49dc-b314-314157233c4e"
-        }
-      }
-    ],
-    "versionMetadata": {
-      "name": null,
-      "description": null
-    }
+    "shared": null,
+    "versionMetadata": null
   }
 ]
