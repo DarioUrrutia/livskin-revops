@@ -82,6 +82,13 @@ Notas históricas relevantes:
 |---|---|---|---|
 | [0033](0033-auto-match-lead-cliente.md) | Match automático lead↔cliente al crear cliente en ERP | ✅ | 3 puente |
 
+### Módulo Agenda + sync bidireccional ERP↔Vtiger (Fase 4A)
+
+| ADR | Título | Estado | Fase |
+|---|---|---|---|
+| [0035](0035-modulo-agenda-minima-erp.md) | Módulo Agenda Mínima ERP | ✅ | 4A.1 |
+| [0036](0036-workflow-a2-sync-erp-vtiger.md) | Workflow [A2] sync ERP→Vtiger (cierra bidireccional lead lifecycle) | ✅ | 4A.3 (sub) |
+
 ### Agentes IA — diferida por audit 2026-05-03
 
 | ADR | Título | Estado | Fase |

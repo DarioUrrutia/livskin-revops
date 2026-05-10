@@ -58,8 +58,9 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 | `webhook.*` | 2 | n8n SureForms + WhatsApp |
 | `infra.*` | 20 | CI/CD + crons + sensors (Bloque 0) — incluye `infra.budget_warning/exceeded` |
 | `agent.*` | 2 | wrappers de agentes IA (Bloque 0.10) |
+| `tracking.*` | 4 | capi_emitter_service + Workflow [A2] sync ERP→Vtiger (ADR-0036) |
 
-**Total: 56 eventos canónicos.**
+**Total: 60 eventos canónicos.**
 
 ## Catálogo completo por categoría
 
@@ -167,6 +168,15 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 |---|---|---|
 | `agent.api_call_completed` | call individual a Claude API persistido | `{agent, model, tokens, cost_usd, outcome}` |
 | `agent.api_call_blocked` | llamada bloqueada por budget hard-limit | `{agent, reason, would_have_cost}` |
+
+### tracking.* (4) — emisión cross-system + sync de estado
+
+| Action | Origen | Metadata |
+|---|---|---|
+| `tracking.capi_event_emitted` | capi_emitter_service (n8n [G3] → Meta CAPI) | `{event_name, fbclid, event_id, response_code}` |
+| `tracking.capi_event_failed` | idem ante error 4xx/5xx/network | `{event_name, error_code, error_message}` |
+| `tracking.vtiger_leadstatus_synced` | n8n Workflow [A2] update Vtiger leadstatus exitoso (ADR-0036) | `{cod_lead, vtiger_id, old_leadstatus, new_leadstatus, source_audit_log_id}` |
+| `tracking.vtiger_leadstatus_sync_failed` | n8n Workflow [A2] error en update Vtiger | `{cod_lead, vtiger_id, attempted_leadstatus, error_message, source_audit_log_id}` |
 
 ## Queries comunes (machine-readable para agentes IA)
 

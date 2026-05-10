@@ -1,0 +1,112 @@
+[
+  {
+    "createdAt": "2026-05-10T17:00:00.000Z",
+    "updatedAt": "2026-05-10T17:00:00.000Z",
+    "id": "a2-sync-erp-to-vtiger-leadstatus",
+    "name": "[A2] Sync ERP estado_lead → Vtiger leadstatus",
+    "description": "ADR-0036: cierra bidireccional ERP↔Vtiger. Cron 2min consulta /api/internal/leads/pending-vtiger-sync con cursor (audit_log.id). Para cada item: auth Vtiger + update leadstatus + emit audit event vtiger.leadstatus_synced. Cursor avanza al max audit_log_id procesado.",
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 2
+              }
+            ]
+          }
+        },
+        "id": "node-cron-a2",
+        "name": "Schedule Every 2min",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [240, 400]
+      },
+      {
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "// [A2] paso 2: leer cursor de static data + fetch ERP pending-vtiger-sync\nconst staticData = $getWorkflowStaticData('global');\nconst cursor = staticData.lastAuditLogId || 0;\n\nconst erpUrl = $env.ERP_INTERNAL_URL || 'https://erp.livskin.site';\nconst token = $env.AUDIT_INTERNAL_TOKEN;\nif (!token) throw new Error('AUDIT_INTERNAL_TOKEN no configurado en n8n env');\n\nconst url = `${erpUrl}/api/internal/leads/pending-vtiger-sync?since=${cursor}&limit=50`;\nconst resp = await this.helpers.httpRequest({\n  method: 'GET',\n  url,\n  headers: { 'X-Internal-Token': token },\n  json: true,\n  timeout: 15000,\n});\n\nif (!resp || typeof resp.count !== 'number') {\n  throw new Error('ERP response invalida: ' + JSON.stringify(resp).slice(0, 200));\n}\n\nreturn [{\n  json: {\n    _cursor_in: cursor,\n    _count: resp.count,\n    _next_cursor: resp.next_cursor,\n    _has_more: resp.has_more,\n    items: resp.items || [],\n  }\n}];"
+        },
+        "id": "node-fetch-pending",
+        "name": "Fetch Pending Events ERP",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [460, 400]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "typeValidation": "strict" },
+            "conditions": [
+              {
+                "leftValue": "={{ $json._count }}",
+                "rightValue": 0,
+                "operator": { "type": "number", "operation": "gt" }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "id": "node-has-items",
+        "name": "Has Items?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [680, 400]
+      },
+      {
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "// [A2] paso 4: per-item Vtiger auth + update leadstatus + emit audit\n// Procesa TODOS los items del batch in-loop. Errores per-item NO bloquean otros items.\n\nconst crypto = require('crypto');\nconst input = $input.first().json;\nconst items = input.items || [];\n\nconst vtigerUrl = $env.VTIGER_URL;\nconst vtigerUser = $env.VTIGER_API_USER;\nconst vtigerKey = $env.VTIGER_API_ACCESSKEY;\nconst erpUrl = $env.ERP_INTERNAL_URL || 'https://erp.livskin.site';\nconst auditToken = $env.AUDIT_INTERNAL_TOKEN;\n\n// Vtiger auth: getchallenge → md5(token + accesskey) → login → sessionName\nasync function vtigerLogin() {\n  const challengeResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `${vtigerUrl}/webservice.php`,\n    qs: { operation: 'getchallenge', username: vtigerUser },\n    json: true,\n    timeout: 10000,\n  });\n  if (!challengeResp.success) throw new Error('getchallenge failed: ' + JSON.stringify(challengeResp));\n  const accessHash = crypto.createHash('md5').update(challengeResp.result.token + vtigerKey).digest('hex');\n  const loginResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${vtigerUrl}/webservice.php`,\n    body: { operation: 'login', username: vtigerUser, accessKey: accessHash },\n    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n    json: true,\n    timeout: 10000,\n  });\n  if (!loginResp.success) throw new Error('login failed: ' + JSON.stringify(loginResp));\n  return loginResp.result.sessionName;\n}\n\nasync function vtigerUpdate(sessionName, vtigerId, newLeadstatus) {\n  // Vtiger update requiere el element JSON con TODOS los fields no null O usar 'revise' (partial update)\n  const reviseResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${vtigerUrl}/webservice.php`,\n    body: {\n      operation: 'revise',\n      sessionName,\n      element: JSON.stringify({ id: vtigerId, leadstatus: newLeadstatus }),\n    },\n    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n    json: true,\n    timeout: 15000,\n  });\n  return reviseResp;\n}\n\nasync function emitAuditEvent(action, after_state, sourceAuditLogId) {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${erpUrl}/api/internal/audit-event`,\n    headers: { 'X-Internal-Token': auditToken, 'Content-Type': 'application/json' },\n    body: {\n      action,\n      category: 'tracking',\n      entity_type: 'lead',\n      entity_id: after_state.cod_lead || null,\n      after_state,\n      result: action.endsWith('failed') ? 'error' : 'success',\n      audit_metadata: { source_audit_log_id: sourceAuditLogId, workflow: 'A2' },\n    },\n    json: true,\n    timeout: 10000,\n  });\n}\n\nconst results = [];\nlet sessionName = null;\n\ntry {\n  sessionName = await vtigerLogin.call(this);\n} catch (err) {\n  // Si falla auth Vtiger, NO avanzar cursor — proximo cron retoma desde mismo punto\n  return [{ json: { _error: 'vtiger_auth_failed', _message: err.message, _items_processed: 0, _max_id_processed: input._cursor_in } }];\n}\n\nlet maxIdSuccess = input._cursor_in;\n\nfor (const item of items) {\n  try {\n    const updateResp = await vtigerUpdate.call(this, sessionName, item.vtiger_id, item.target_vtiger_leadstatus);\n    if (updateResp && updateResp.success) {\n      await emitAuditEvent.call(this, 'tracking.vtiger_leadstatus_synced', {\n        cod_lead: item.cod_lead,\n        vtiger_id: item.vtiger_id,\n        old_leadstatus: item.current_erp_estado_lead,\n        new_leadstatus: item.target_vtiger_leadstatus,\n        source_audit_log_id: item.audit_log_id,\n      }, item.audit_log_id);\n      results.push({ status: 'synced', audit_log_id: item.audit_log_id, vtiger_id: item.vtiger_id });\n      if (item.audit_log_id > maxIdSuccess) maxIdSuccess = item.audit_log_id;\n    } else {\n      throw new Error('Vtiger revise failed: ' + JSON.stringify(updateResp).slice(0, 200));\n    }\n  } catch (err) {\n    await emitAuditEvent.call(this, 'tracking.vtiger_leadstatus_sync_failed', {\n      cod_lead: item.cod_lead,\n      vtiger_id: item.vtiger_id,\n      attempted_leadstatus: item.target_vtiger_leadstatus,\n      error_message: String(err.message || err).slice(0, 500),\n      source_audit_log_id: item.audit_log_id,\n    }, item.audit_log_id);\n    results.push({ status: 'failed', audit_log_id: item.audit_log_id, vtiger_id: item.vtiger_id, error: String(err.message || err).slice(0, 200) });\n  }\n}\n\nreturn [{ json: { _items_processed: results.length, _max_id_processed: maxIdSuccess, _results: results } }];"
+        },
+        "id": "node-process-items",
+        "name": "Process Items (Vtiger Update)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [900, 300]
+      },
+      {
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "// [A2] paso 5: persistir cursor avanzado en static data\n// Solo avanza cursor a max audit_log_id de items SUCCESSFULLY synced.\n// Items failed quedan en queue para retry en proximos crons.\nconst result = $input.first().json;\nconst staticData = $getWorkflowStaticData('global');\nstaticData.lastAuditLogId = result._max_id_processed;\nstaticData.lastRunAt = new Date().toISOString();\nstaticData.lastBatchSize = result._items_processed;\nreturn [{ json: { _cursor_after: result._max_id_processed, _persisted: true, _summary: result } }];"
+        },
+        "id": "node-update-cursor",
+        "name": "Update Cursor StaticData",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [1120, 300]
+      }
+    ],
+    "connections": {
+      "Schedule Every 2min": {
+        "main": [[{ "node": "Fetch Pending Events ERP", "type": "main", "index": 0 }]]
+      },
+      "Fetch Pending Events ERP": {
+        "main": [[{ "node": "Has Items?", "type": "main", "index": 0 }]]
+      },
+      "Has Items?": {
+        "main": [
+          [{ "node": "Process Items (Vtiger Update)", "type": "main", "index": 0 }],
+          []
+        ]
+      },
+      "Process Items (Vtiger Update)": {
+        "main": [[{ "node": "Update Cursor StaticData", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "America/Lima"
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "a2-v1-2026-05-10",
+    "triggerCount": 1,
+    "tags": [],
+    "shared": [],
+    "versionMetadata": null
+  }
+]

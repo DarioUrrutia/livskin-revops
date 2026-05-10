@@ -351,6 +351,16 @@ n8n_workflows:
     fase: 3 (Mini-bloque 3.4)
     nodes_count: 5
     notes: hash SHA-256 PII per Meta CAPI spec
+
+  - id: a2-sync-erp-to-vtiger-leadstatus
+    name: "[A2] Sync ERP estado_lead → Vtiger leadstatus"
+    active: false  # creado 2026-05-10, activacion manual post smoke test
+    purpose: cierra bidireccional ERP↔Vtiger — propaga cambios de estado lead disparados desde acciones doctora en ERP (marked_attended/no_show) a Vtiger leadstatus
+    trigger: cron */2 * * * *
+    fase: 4A (sub-componente independiente del bot-broker)
+    nodes_count: 5
+    notes: cursor en static data (max audit_log.id procesado); endpoint GET /api/internal/leads/pending-vtiger-sync; mapping congruente Cliente/Contactado (ADR-0036 + feedback_congruencia_nombres_cross_system)
+    added: 2026-05-10
 ```
 
 ---
