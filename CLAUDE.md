@@ -278,6 +278,99 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
+## 📝 Estado al 2026-05-10 cierre (Doctrina #14 + Workflow A2 bidireccional + cleanup Meta + auditoría exhaustiva)
+
+### Sesión 2026-05-10 — modo PROYECTO declarado (#12)
+
+**Sesión maratónica ~10h dividida en 4 bloques principales**:
+
+**Bloque 1 — Audit + cleanup Meta Business** (~3h):
+- Audit 15 puntos del ecosistema Meta paso a paso con screenshots
+- 3 Business Managers detectados (Livskin Perú activo, Livskin Perú Comercial vacío, D'Claudia con doctora hosting Página FB + IG)
+- Cleanup: 4 OAuth integrations eliminadas (Manychat + ReplyRush + agent n8n + n8n agent residuales) + Claude Audit App + agent n8n developer apps + System User Claude Audit neutralizado
+- Pixel legacy `670708374433840` desconectado de cuenta publicitaria
+- App Meta "Livskin Integraciones" creada (App ID `807721865486018`)
+- Test number Cloud API `+1 555-191-3740` activado
+- Domain Verification livskin.site + www.livskin.site via Cloudflare DNS TXT (programático API)
+- Dominio agregado al perfil del BM (potencial unblocker shadow ban — re-revisión Meta 24-48h)
+
+**Bloque 2 — Workflow A2 sync ERP→Vtiger (cierre bidireccional)** (~3h):
+- ADR-0036 escrito (4 opciones consideradas, decisión cron pull patrón B3)
+- Vtiger leadstatus picklist cleanup (Opción A replace estricto): 11 valores legacy → 6 español congruentes con ERP (Nuevo/Contactado/Agendado/Asistió/Cliente/Perdido)
+- Workflow A1 actualizado: leadstatus 'New' → 'Nuevo'
+- Endpoint ERP `/api/internal/leads/pending-vtiger-sync` con 17 tests pytest
+- Workflow n8n [A2] importado + active=1 + activeVersionId fix + smoke E2E real exitoso (Vtiger LEA68 leadstatus Nuevo→Cliente, latencia ~2 min)
+- 2 audit events nuevos categoría tracking.* (`vtiger_leadstatus_synced/failed`)
+- Total eventos canónicos: 56 → 60
+- **Bidireccional ERP↔Vtiger CERRADO COMPLETAMENTE** ⭐
+
+**Bloque 3 — Doctrina #14 + auditoría exhaustiva** (~2h):
+- Articulación del Principio Operativo #14 nuevo en CLAUDE.md
+- 5 agentes Explore en paralelo auditaron todo el repo (master plan + 57 memorias + 22 ADRs + backlog/brand/runbooks/sesiones + código)
+- Detectaron 2 contradicciones críticas + 6 menores + 8 gaps + 11 archivos a actualizar
+- 11 updates en cascada ejecutados (CLAUDE.md, master plan v3.2, 5 memorias, 3 ADRs, 2 .md companions n8n, backlog, session log)
+
+**Bloque 4 — Doctrina/memorias persistentes** (~2h):
+- 2 memorias 🔥 CRÍTICAS nuevas: `feedback_sesion_estrategica_agentes_dedicada.md` + `project_interludio_estrategico_es_backbone.md`
+- 4 memorias actualizadas: MEMORY.md + project_agent_org_design + project_roadmap + project_infra_security_agent
+- Skills inventory actualizado con todas las capacidades de hoy
+- ADR-0034 status DIFERIDA → SUPERSEDIDA por doctrina #14
+- ADR-0001 § 9.1 tabla consumidores brain refleja V0/V1 + scripts
+- README ADRs: 22 ADRs físicos (era 20), reservados 0037-0039 agregados
+
+### Doctrinas articuladas hoy
+
+**Principio Operativo #14**: Sesión estratégica de agentes IA es bloque DEDICADO post-backbone determinístico cerrado. Excepción permitida: Brand Orchestrator V0 BOOTSTRAP discrecional (briefs+copy monolítico, output revisable antes publicar). Conversation Agent IA NO bootstrap (rule-based hasta volumen >100 conv/día sostenido).
+
+**Principio #13 trigger cierre revisado**: 2da campaña paga (era 1ra). Bridge Episode con solo 6 leads no aporta evidencia suficiente para cerrar bootstrap doctrina v0.1 → v1.0.
+
+**Memoria `project_interludio_estrategico_es_backbone.md`**: interludio estratégico (brand voice + arquetipos + posicionamiento + plan estratégico) es PARTE del backbone (Fase 4A.6), no input externo a sesión de agentes.
+
+### Bugs encontrados y arreglados
+
+1. **A1 webhookId vacío post-SQL update ayer** → causaba `Cannot read properties of undefined (reading 'endsWith')` al activar workflow. Fix: borrar A1 completo + re-import via CLI con UUID webhookId nuevo.
+2. **A2 sin activeVersionId post-import CLI** → n8n no procesaba workflow aunque active=1. Fix: SQL UPDATE `activeVersionId = versionId`.
+3. **n8n CLI execute en standalone fallaba** (port 5679 ya en uso). Workaround: activación + restart en lugar de execute manual.
+4. **Token Meta v4 visible en screenshots** del dashboard → revocado al final + valor limpiado de `keys/.env.integrations`.
+
+### Estado al cierre
+
+| Sistema | Estado |
+|---|---|
+| ERP `erp.livskin.site` | ✅ Funcionando + endpoint A2 deployed |
+| Bidireccional ERP↔Vtiger | ✅ CERRADO (workflow A2 productivo) |
+| Picklist Vtiger | ✅ 6 valores español congruentes |
+| Workflows n8n | ✅ 7 activos (A1 + A2 + B1 + B3 + E1 + E2 + G3) |
+| Meta App "Livskin Integraciones" | ✅ Creada, test number activo |
+| WhatsApp Cloud API +51947741117 | 🔴 Bloqueado por restricción Meta (24-48h re-revisión post Domain Verif) |
+| Tests ERP | ✅ 357 tests, coverage 75%+ |
+| Audit events canónicos | ✅ 60 (10 categorías) |
+| ADRs físicos | ✅ 22 (0001-0036) |
+| Master plan | ✅ v3.2 actualizada |
+| Bootstrap principio #13 | 🟡 ABIERTO hasta 2da campaña paga |
+
+### 4 Commits del día
+
+```
+848dc75 docs: doctrina #14 + 11 updates en cascada para estabilizar layer agentes IA
+9bb6f14 fix(n8n): A1 webhookId UUID format + smoke E2E A2 exitoso
+9599081 feat(erp+n8n): ADR-0036 Workflow [A2] sync ERP -> Vtiger (cierra bidireccional)
+e8cd4df docs(meta): audit Meta Business completo + cleanup ejecutado
+ce2f978 fix(vtiger): cleanup leadstatus picklist + workflow A1 + ERP sync mapping
+```
+
+### Próxima sesión propuesta
+
+**Sprint A — Email institucional + watchpoint Meta** (~30 min Zoho + pasivo):
+- Zoho Mail Free + buzón `info@livskin.site`
+- DNS records Cloudflare via API
+- IMAP setup Gmail Android
+- Watchpoint pasivo (24-48h): restricción Meta BM se levanta tras Domain Verification + cleanup OAuth
+
+Si Meta destraba → Sprint B (Fase 4A.2 + 4A.3 implementación). Si no → Submit Business Verification cuando lleguen docs RUC.
+
+---
+
 ## 📝 Estado al 2026-05-05 cierre (Bloque 0.5 Backups daily ACTIVADO + smoke integral 9 capas + auto-correcciones de proceso)
 
 ### Sesión 2026-05-05 — modo PROYECTO declarado (#12)
