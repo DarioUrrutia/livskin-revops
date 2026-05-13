@@ -25,6 +25,7 @@ integrations/<proveedor>/
 | [anthropic/](anthropic/) | Claude API (4 agentes) + budget | ⏳ Fase 0 | — |
 | [fal-ai/](fal-ai/) | Flux Pro para imágenes conceptuales | ⏳ Fase 0 | ADR-0030 |
 | [claude-design/](claude-design/) | Claude Design (research preview) para landing pages y banners | ⏳ Fase 5 | ADR-0045 |
+| [email/](email/) | Email institucional `info@livskin.site` (CF Email Routing + Brevo SMTP + Gmail Send Mail As) | 🟡 en construcción 2026-05-13 | Runbook `email-institucional-setup` |
 
 ## Principio rector
 

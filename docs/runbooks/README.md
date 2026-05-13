@@ -1,9 +1,9 @@
 ---
 type: runbooks-index
-version: 2.1
-last_updated: 2026-05-03
+version: 2.2
+last_updated: 2026-05-13
 authoritative: true
-description: Índice de runbooks operativos. Cada runbook tiene frontmatter YAML ejecutable consumible por skills MCP. Audit 2026-05-03 agregó 5 runbooks que faltaban en el index legacy.
+description: Índice de runbooks operativos. Cada runbook tiene frontmatter YAML ejecutable consumible por skills MCP. 2.2 agrega email-institucional-setup (#22).
 ---
 
 # 📘 Runbooks Operativos — Livskin
@@ -34,7 +34,7 @@ related_skills:                          # skills MCP que usan este runbook
 ---
 ```
 
-## Catálogo (18 runbooks ejecutables al 2026-05-03)
+## Catálogo (22 runbooks ejecutables al 2026-05-13)
 
 ### Operacional
 
@@ -76,6 +76,7 @@ related_skills:                          # skills MCP que usan este runbook
 | 19 | [landing-pages-deploy](landing-pages-deploy.md) | informativo | N/A — Cloudflare Pages deploy de landings |
 | 20 | [arranque-sesion](arranque-sesion.md) | informativo | N/A — protocolo warmup obligatorio Bloque B (2026-05-06) |
 | 21 | [agenda-mantenimiento](agenda-mantenimiento.md) | low | ❌ — diagnóstico módulo Agenda ERP (ADR-0035, Fase 4A.1) |
+| 22 | [email-institucional-setup](email-institucional-setup.md) | informativo | N/A — setup email `@livskin.site` con CF Email Routing + Brevo SMTP + Gmail Send Mail As (2026-05-13) |
 
 ## Runbooks históricos (pre-Bloque 0.6)
 
