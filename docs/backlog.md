@@ -21,7 +21,17 @@
 
 ---
 
-## 🆕 Prioridad sesión 2026-05-10 — Doctrina #14 + Fase 4A en curso (post-Workflow A2)
+## 🆕 Prioridad sesión 2026-05-13 — Email institucional + cleanup Meta
+
+### Estado al 2026-05-13 cierre
+
+- ✅ **Sprint A** — Email institucional `info@livskin.site` operacional E2E (stack final: Cloudflare Email Routing + Brevo SMTP + Gmail Send Mail As, $0/mes — supersedió plan original Zoho Free que fue descontinuado). Commit `9f533c5`.
+- ✅ **Cleanup identidad Meta** — `durrutia@livskinperu.com` eliminado del Accounts Center (dominio extinto, mail zombi = riesgo recovery). BM People business email actualizado a `daizurma2@gmail.com`. info@livskin.site agregado como recovery.
+- ✅ Runbook `email-institucional-setup` (35 min, 12 secciones) + `integrations/email/` documentación durable.
+- 🟡 **Sub-bloque 4A.5 parcialmente desbloqueado** — email institucional ✅ listo. Falta email marketing tool (originalmente MailerLite Free) + 2 flujos base + re-engagement queue. Reabrir con plan revisado cuando Sprint B/C arranque.
+- 🟡 **Watchpoint Meta BM restricción** — 72h post Domain Verification 2026-05-10 transcurrieron. Próxima sesión: verificar si destrabó.
+
+## Prioridad sesión 2026-05-10 — Doctrina #14 + Fase 4A en curso
 
 ### Estado al 2026-05-10 cierre
 

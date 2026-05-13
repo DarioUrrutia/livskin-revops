@@ -278,6 +278,55 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
+## 📝 Estado al 2026-05-13 cierre (Sprint A — Email institucional info@livskin.site + cleanup Meta legacy)
+
+### Sesión 2026-05-13 — modo PROYECTO declarado (#12)
+
+**Sprint A propuesto al cierre del 2026-05-10 ejecutado completo** (~4-5h):
+
+**Email institucional `info@livskin.site` operacional E2E** — stack final $0/mes:
+- **Inbound**: Cloudflare Email Routing (3 MX + DKIM CF + SPF inicial). Rule literal `info@livskin.site → daizurma@gmail.com` (Gmail principal). Destination address verified.
+- **Outbound**: Gmail Send Mail As en cuenta `daizurma@gmail.com` → Brevo SMTP (`smtp-relay.brevo.com:587`, user `ab370e001@smtp-brevo.com`, key Standard 64-char). DKIM Brevo (2 selectors) + SPF extendido + DMARC `p=none` monitor-only.
+- **UX filter**: Gmail filtro permanente `deliveredto:info@livskin.site` → Never send to Spam.
+- **Smoke E2E validado**: outbound firma DKIM `d=livskin.site`, TLS, inbox externo.
+
+**Cleanup identidad Meta (durante setup)**:
+- `info@livskin.site` agregado a Meta Accounts Center (FB only; IG/Threads habrían REEMPLAZADO daizurma2 si los marcábamos).
+- `durrutia@livskinperu.com` ELIMINADO del Accounts Center — dominio extinto = mail zombi = riesgo recovery.
+- BM Livskin Perú People: business email del único admin actualizado `durrutia@livskinperu.com` → `daizurma2@gmail.com`.
+- Estado final: 4 recovery options (info@ + daizurma2 + +51 + +39).
+
+**Hallazgos no obvios (en runbook + session log)**:
+1. CF Email Routing tiene 2 toggles separados ("DNS configurado" vs "servicio enabled"). Activación real en UI nueva `cloudflare.com/email-routing` → "+ Onboard Domain" → Done.
+2. DigitalOcean bloquea TODOS los SMTP ports outbound (25/465/587) — smoke tests SMTP desde VPS imposibles, hay que usar Gmail Send Mail As o API HTTPS.
+3. Gmail `deliveredto:` operator filtra forwards independiente del sender original — único método robusto anti-spam en setups nuevos sin reputación.
+4. Meta Accounts Center NO tiene "email primary" del perfil FB. El "displayed email" en BM People es un campo INDEPENDIENTE editable ("Correo electrónico del negocio") por persona dentro de cada BM.
+5. Instagram y Threads permiten solo 1 email por cuenta (Facebook sí permite múltiples).
+
+### Files creados/modificados
+
+**Nuevos**: `integrations/email/README.md` + `integrations/email/.env.example` + `docs/runbooks/email-institucional-setup.md` + `docs/sesiones/2026-05-13-email-institucional-cleanup-meta.md`
+
+**Modificados**: `keys/.env.integrations` (gitignored, BREVO_SMTP_*) + `integrations/README.md` + `docs/runbooks/README.md` (v2.1→2.2, runbook #22) + `docs/backlog.md`
+
+### Commit
+
+```
+9f533c5 feat(email): setup email institucional info@livskin.site + cleanup Meta legacy
+```
+
+### Próxima sesión propuesta
+
+**Verificar destrabe Meta BM** (5 min) — 72h+ desde Domain Verification livskin.site (2026-05-10). Login `business.facebook.com` y verificar si restricción "WhatsApp Business restringida" (#2655121) se levantó.
+
+**Si Meta destrabó** → **Sprint B**: Fase 4A.2 + 4A.3 (WA test number con +51947741117 doctora + bot-broker rule-based bidireccional).
+
+**Si sigue trabado + docs RUC disponibles** → submit Business Verification formal Meta (1-3 sem review).
+
+**Si sigue trabado + docs RUC no disponibles** → **Sprint C parcial**: Fase 4A.5 email marketing tool (MailerLite Free) + 2 flujos base (re-engagement inactivos + post-venta seguimiento). Aprovecha email institucional recién montado.
+
+---
+
 ## 📝 Estado al 2026-05-10 cierre (Doctrina #14 + Workflow A2 bidireccional + cleanup Meta + auditoría exhaustiva)
 
 ### Sesión 2026-05-10 — modo PROYECTO declarado (#12)
