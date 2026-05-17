@@ -21,7 +21,34 @@
 
 ---
 
-## 🆕 Prioridad sesión 2026-05-13 — Email institucional + cleanup Meta
+## 🆕 Prioridad sesión 2026-05-17 — Sprint 0 + Sprint 1 + Sprint 2 parte 1-2 + Interludio Discovery
+
+### Estado al 2026-05-17 cierre
+
+- ✅ **Sprint 0** — System User token Meta con 15 scopes Advanced (Marketing API + Pages + WhatsApp completos)
+- ✅ **Sprint 1** — WhatsApp Cloud API `+51 947 741 117` activado en SIM nueva doctora (verified_name "Livskin" AVAILABLE_WITHOUT_REVIEW, 2FA PIN guardado, webhook n8n configurado, smoke E2E OK)
+- ✅ **Cleanup WABAs duplicadas** — 6 eliminadas vía UI manual (Meta no permite delete API) → estado final 2 WABAs (productiva + test)
+- ✅ **Cleanup smoke data residual cross-system** — 543 filas eliminadas (ERP + analytics + Vtiger purge físico), consistencia ERP=88↔Analytics=88
+- ✅ **Sprint 2.1** — Migration 0008 `wa_conversation_state` (26 cols) + `wa_messages` (19 cols) aplicada en VPS3
+- ✅ **Sprint 2.2** — Parser intent + fechas JS (`infra/n8n/lib/wa_parser.js`, 24/24 tests, 10 intents, parser fechas tolerante con timezone Lima), inline-eado en workflow `[D1] WA Inbound + Parser` y validado E2E
+- ✅ **Pivote a Interludio Discovery** (Fase 4A.6) — Doctrina #14 confirmada
+- ✅ **Workbook discovery interactivo doctora** (`docs/brand/interludio-discovery-workbook.html`, 89KB) — 13 bloques + auto-save + export Markdown/JSON + datos sistema pre-cargados + top 6 tratamientos pre-llenados + hints visibles + Cusco painpoints + botón agregar tratamiento dinámico + upload fotos antes/después con compresión Canvas
+- ✅ **Bitácora discovery** (`docs/brand/interludio-discovery.md`, ~600 líneas) — marcos conceptuales para encuentro doctora
+- ⏳ **Encuentro doctora** — próxima sesión (3-4h presencial)
+- ⏳ **Sprint 2.3** Workflow D1 completo con CONTENIDO REAL (post-encuentro)
+- ⏳ **Sprint 3** D2 + D3 + escalation triggers
+- ⏳ **Sprint 4** Smoke E2E + recordatorios timing
+- ⏳ **Sprint 5+** campañas + email + agentes IA
+
+**Doctrina nueva candidata (Principio #15 a discutir)**: "Cuando componente tiene alta carga de CONTENIDO (no solo lógica), diseñar mapa conceptual + capturar voice/personas/copy ANTES de codear scaffold". Articulada tras pivote Sprint 2.3.
+
+**Memorias nuevas a crear post-cierre**:
+- `feedback_mapa_conceptual_antes_de_scaffold.md` — protocolo para componentes con carga de contenido
+- `feedback_no_pedir_manual_si_tengo_acceso.md` — verificar acceso programático antes de pedir info al usuario
+
+---
+
+## Prioridad sesión 2026-05-13 — Email institucional + cleanup Meta
 
 ### Estado al 2026-05-13 cierre
 

@@ -278,6 +278,114 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 
 ---
 
+## 📝 Estado al 2026-05-17 cierre (Sprint 0 + Sprint 1 WhatsApp + Sprint 2 parte 1-2 + Interludio Discovery Workbook)
+
+### Sesión 2026-05-16/17 — modo PROYECTO declarado (#12) — ~14h continuas
+
+**La sesión más larga del proyecto. 4 bloques: cimientos Meta+WA → cleanup masivo → Sprint 2 parte 1-2 → pivote a Interludio Discovery (Fase 4A.6).**
+
+**Bloque 1 (~2h) — Sprint 0 + Sprint 1 cimientos Meta + WhatsApp Cloud API**:
+- System User "Claude Audit" → renombrado "Claude Automation" + 15 activos asignados (1 Page + 1 Ad Account + 1 App + 1 Dominio + 8 WABAs + 2 Datasets)
+- Token Meta con **15 scopes Advanced** generado (Marketing API ads + Pages + WhatsApp completos) — sin App Review formal (Development Mode + propios assets)
+- App "Livskin Integraciones" (App ID `807721865486018`) — 3 use cases agregados: WhatsApp + Marketing API (Ads + Analytics) + Manage Page
+- **WhatsApp Cloud API `+51 947 741 117` activado** (SIM nueva doctora): register CLOUD_API + verified_name "Livskin" AVAILABLE_WITHOUT_REVIEW + 2FA PIN `395609` + GREEN quality + STANDARD throughput
+- Webhook `[D0] WA Inbound Receiver` deployed en n8n via CLI + SQL active=1/activeVersionId fix + restart container
+- Meta App subscription configurada usando App Access Token (`{app_id}|{app_secret}`) — System User token NO alcanza para POST `/{app-id}/subscriptions`
+- Smoke E2E: outbound text desde Livskin → +51982732978 OK + inbound recibido en n8n executions
+
+**Bloque 2 (~3h) — Cleanup masivo Meta + smoke data residual**:
+- **6 WABAs duplicadas/legacy eliminadas** (Meta NO permite delete via API, solo UI) → estado final 2 WABAs (productiva + test)
+- **Cleanup smoke data residual cross-system** (4 sistemas): 1 lead ERP + 4 leads + 10 opportunities en analytics warehouse + 68 leads Vtiger soft-deleted purgados físicamente (cascada 6 tablas) → **543 filas eliminadas total**, consistencia ERP=88↔Analytics=88 ✅
+- Hallazgo: **workflows E1/E2 son UPSERT-only, sin DELETE cascade** → orphan data en analytics cuando se borra en ERP (patrón a considerar al rediseñar sync)
+- Hallazgo: **Vtiger 8.2 community no purga soft-deletes automático** → SQL cascada manual en `leadscf`, `leadaddress`, `leadsubdetails`, `modtracker_basic`, `leaddetails`, `crmentity`
+
+**Bloque 3 (~3h) — Sprint 2 parte 1-2 (Migration + Parser)**:
+- **Sprint 2.1 — Migration 0008** `wa_conversation_state` (26 cols, UNIQUE PARTIAL en `phone_lead WHERE state != 'closed'`) + `wa_messages` (19 cols, UNIQUE `meta_message_id` para idempotency). Aplicada en VPS3 livskin_erp DB.
+- **Sprint 2.2 — Parser intent + fechas JS** (`infra/n8n/lib/wa_parser.js`, ~250 líneas, sin deps): 10 intents (`confirm`, `reject`, `ask_price`, `ask_human`, `ask_info`, `greeting`, `cancel`, `reschedule`, `propose_date`, `unknown`) + parser fechas tolerante (días semana, días relativos hoy/mañana/pasado, fechas numéricas + textual, horas am/pm/24h, múltiples opciones por mensaje). **24/24 tests pass**. Inline-eado en workflow `[D1] WA Inbound + Parser` y validado E2E con WA reales.
+- 3 bugs encontrados y fixados durante testing: regex ask_human no aceptaba "con la doctora", confirm no aceptaba combinaciones con coma, parseDates "hoy" sumaba 1 día por timezone shift
+
+**Bloque 4 (~6h) — PIVOTE a Interludio Discovery (Fase 4A.6) + Workbook iterativo**:
+
+Tras Sprint 2.2, Claude proponía seguir a Sprint 2.3 (workflow D1 completo). **Dario detectó que era scaffolding sin contenido**:
+> "esto va a ser scaffold sin contenido, parece mediocre... estamos yendo a ciegas... contenido de las respuestas... esto tiene que top de gama"
+
+**Pivote correcto**: faltaba **Interludio Estratégico (Fase 4A.6)** del master plan — brand voice + arquetipos + posicionamiento + customer journey + copy real del bot. Doctrina #14 (interludio ES PARTE del backbone) se confirma.
+
+**Outputs producidos**:
+1. `docs/brand/interludio-discovery.md` (~600 líneas) — Bitácora narrativa con marcos conceptuales (postura A vs B del bot, 4 estrategias de precios, 6 escenarios drop-off, sistema global de captación)
+2. `docs/brand/interludio-discovery-workbook.html` (89KB) — **Workbook interactivo digital** para encuentro con doctora:
+   - 13 bloques sidebar navegación + progress bar + auto-save localStorage cada 500ms
+   - Export Markdown + JSON, Import JSON (recovery)
+   - **Datos del sistema pre-cargados**: 134 clientes, 88 ventas Sep-Nov 2025, S/35,995 revenue, ticket promedio S/409, top categorías reales (Botox 50.1%, HA 15.9%, Hilos 11.1%, Esperma Salmón 7.1%, PRP 2.5%), distribución pagos, catálogo 21 tratamientos del ERP, campañas Bridge + Día Madre stats
+   - **Top 6 tratamientos pre-llenados** como fichas verdes con ventas + revenue + marcas sugeridas + áreas comunes
+   - 💡 **Hints visibles** debajo de cada pregunta importante con ejemplos concretos
+   - **Contexto local Cusco**: 6 painpoints específicos (clima altura, aceptación cultural, turista nacional, cliente extranjero, soroche, fototipo andino) + 2 slots libres
+   - **Botón "➕ Agregar otro tratamiento"** dinámico (genera ficha 11+, persiste contador, botón eliminar)
+   - **Upload fotos antes/después**: Canvas resize 600px + JPEG 70% compresión → base64 en localStorage → preview thumbnail + exportable en JSON
+
+### Decisiones tomadas
+
+1. **Bot guía activo SUTIL** (postura B), no pasivo reactivo. El bot avanza al objetivo (agendar consulta) en cada interacción.
+2. **Estrategia de precios B (rango con disclaimer + consulta gratuita)** — top de gama. No "te lo dice la doctora privado" ni precio fijo público.
+3. **NO bajar precios como respuesta a "es caro"** — devalúa. Agregar VALOR adicional (kit cuidado, seguimiento gratis).
+4. **NUNCA Claude Haiku como Capa 2 del parser** (doctrina #11). Si parser confidence < 0.5 → escalar a humano (doctora), no IA.
+5. **Interludio Estratégico (Fase 4A.6) PRIMERO, después Sprint 2.3** (workflow D1 completo). Codear sin contenido era mediocre.
+6. **App "Livskin Integraciones" en Development Mode** se queda así — scopes funcionan para nuestros propios assets sin App Review formal.
+7. **Tabla `wa_conversation_state` con UNIQUE PARTIAL** (no UNIQUE simple) en phone_lead para permitir history de conversaciones cerradas.
+8. **Templates Meta a submitir post-encuentro** (4-6): `new_lead_appointment_request`, `lead_confirmed_appointment`, `lead_rejected_proposal`, `lead_waiting_4h`, reminders T-24h/T-3h.
+
+### Hallazgos no obvios
+
+1. **Meta NO permite delete/rename WABAs via API** — solo UI manual.
+2. **Workflows ETL E1/E2 son UPSERT-only, no DELETE cascade** → orphan data en analytics warehouse al borrar en ERP.
+3. **Vtiger 8.2 community no purga soft-deletes** → leads quedan con `deleted=1` indefinidamente.
+4. **Webhook config Meta App requiere APP ACCESS TOKEN** (= `{app_id}|{app_secret}`) — System User token insuficiente para POST `/{app-id}/subscriptions`. PERO WABA subscription al app sí funciona con System User.
+5. **Meta `name_status: AVAILABLE_WITHOUT_REVIEW`** = display name aprobado sin esperar review humano (fast path).
+6. **WABA review status fluctúa** — APPROVED → PENDING tras agregar phone number nuevo (24-72h re-review).
+7. **Parser "hoy 8pm" bug** — timezone shift naive `+5h` causaba overflow de día. Fix: peruDate calculation con offset explícito.
+8. **localStorage tiene límite ~5-10MB** — fotos antes/después en base64 requieren canvas resize a 600px + JPEG 70% para que 12 fotos quepan en ~1.2MB.
+
+### Errores cometidos por Claude (autocrítica)
+
+1. **Construcción técnica sin contenido de negocio**: arrancamos Sprint 2 codeando tablas + parser + workflow sin diseñar primero customer journey + copy bot + scoring rules. Dario detectó. **Lección: mapa conceptual ANTES que código para componentes con alta carga de contenido (bot, email marketing, ads copy)**. Memoria nueva: `feedback_mapa_conceptual_antes_de_scaffold.md`.
+2. **Información ya disponible en el sistema pero pedida a Dario**: en primer draft del workbook pedía "traer 134 clientes segmentados, top 5 tratamientos" cuando YO los tengo via SQL. **Lección: antes de pedir info al usuario, verificar si está en mi acceso programático.**
+3. **Pedir cosas manuales innecesarias**: Dario corrigió *"Que sea la ultima vez que me pides hacer cosas manuales a mi, tienes acceso a todos mis sistemas, solo tienes que decirme que necesitas, que piensas hacer y mi confirmacion"*. **Lección: SSH/API yo, manual solo cuando no haya alternativa.** Memoria nueva: `feedback_no_pedir_manual_si_tengo_acceso.md`.
+4. **Iteración v1→v2→v3 del workbook** — primera versión print-friendly. **Lección: preguntar formato al inicio antes de producir 60KB de HTML en vano.**
+
+### Doctrinas confirmadas / refinadas
+
+- **Doctrina #11 (deterministic backbone first)**: confirmada — sustituimos Claude Haiku Capa 2 por escalar-a-humano cuando confidence < 0.5
+- **Doctrina #14 (interludio estratégico es PARTE del backbone)**: confirmada — pivote a interludio antes de Sprint 2.3
+- **Doctrina #8 (cero pago sin aprobación)**: confirmada — todo el día $0 nuevo
+- **Doctrina nueva implícita (candidata a Principio #15)**: "Cuando el componente tiene alta carga de CONTENIDO (no solo lógica), diseñar mapa conceptual + capturar voice/personas/copy ANTES de codear scaffold". A discutir formal en próxima sesión.
+
+### Files creados/modificados
+
+**Nuevos** (commit pendiente push):
+- `infra/docker/alembic-erp/migrations/versions/2026_05_16_1930-0008_wa_conversation.py`
+- `infra/n8n/lib/wa_parser.js`
+- `infra/n8n/workflows/D-conversation/d1-wa-inbound-parser.json`
+- `docs/brand/interludio-discovery.md`
+- `docs/brand/interludio-discovery-workbook.html`
+- `docs/sesiones/2026-05-17-sprint01-bot-broker-discovery-workbook.md`
+
+**Modificados** (gitignored):
+- `keys/.env.integrations` — META_SYSTEM_USER_ID/TOKEN, META_APP_SECRET, META_WEBHOOK_VERIFY_TOKEN, META_WA_PROD_* (5 keys)
+
+**Deploy VPS3**: migration 0008 aplicada, tablas `wa_conversation_state` + `wa_messages` creadas
+**Deploy VPS2**: n8n workflow `d0-wa-inbound-receiver` reemplazado con `[D1] WA Inbound + Parser`
+
+### Próxima sesión propuesta
+
+**Encuentro doctora (3-4h, presencial)** — Dario lleva laptop con `docs/brand/interludio-discovery-workbook.html` abierto en Chrome:
+
+1. **Pre-encuentro (1h antes)**: cuestionario corto a doctora día previo, pedir screenshots chats reales anonimizados, fotos clínica/profesional/logo, reseñas Google, investigar competencia Cusco.
+2. **Durante encuentro**: workbook abierto, auto-save activo, audio recorder en celular (con permiso), llenar 13 bloques, subir fotos antes/después.
+3. **Post-encuentro (~6h con Claude)**: codificar 12 outputs en `docs/brand/`: `voice-v1.md`, `personas.md`, `journey-map.md`, `catalogo-tratamientos.md`, `precios-strategy.md`, `painpoints-responses.md`, `diferenciacion.md`, `operacion.md`, `casos-exito.md`, `reengagement.md`, `scoring-rules.md`, `captacion-global.md`.
+4. **Después**: Sprint 2.3 (Workflow D1 completo) con COPY REAL en cada response del bot, no placeholders.
+
+---
+
 ## 📝 Estado al 2026-05-13 cierre (Sprint A — Email institucional info@livskin.site + cleanup Meta legacy)
 
 ### Sesión 2026-05-13 — modo PROYECTO declarado (#12)

@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Livskin — Discovery Workbook (Interactivo)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.5; color: #1a1a1a; margin: 0; background: #f5f7fa; }
+
+  /* Sidebar */
+  #sidebar { position: fixed; top: 0; left: 0; width: 220px; height: 100vh; background: #0d3b66; color: white; padding: 16px 12px; overflow-y: auto; z-index: 10; }
+  #sidebar h2 { color: white; margin: 0 0 8px 0; font-size: 14pt; }
+  #sidebar .progress-wrap { background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
+  #sidebar .progress-bar { background: #4ade80; height: 100%; width: 0%; transition: width 0.3s; }
+  #sidebar nav a { display: block; color: rgba(255,255,255,0.85); text-decoration: none; padding: 6px 8px; border-radius: 4px; font-size: 11pt; margin: 2px 0; }
+  #sidebar nav a:hover { background: rgba(255,255,255,0.1); color: white; }
+  #sidebar nav a.active { background: #2c5282; color: white; font-weight: 600; }
+  #sidebar .btn { display: block; width: 100%; padding: 8px 12px; margin: 4px 0; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 11pt; text-align: center; }
+  #sidebar .btn-primary { background: #4ade80; color: #064e3b; }
+  #sidebar .btn-secondary { background: rgba(255,255,255,0.15); color: white; }
+  #sidebar .btn-danger { background: #ef4444; color: white; }
+  #sidebar .saved-indicator { font-size: 9pt; color: #4ade80; margin-top: 4px; min-height: 12px; }
+
+  /* Main */
+  main { margin-left: 240px; padding: 30px 40px; max-width: 900px; }
+
+  h1 { color: #0d3b66; border-bottom: 3px solid #0d3b66; padding-bottom: 8px; margin-top: 0; }
+  h2 { color: white; background: #0d3b66; padding: 10px 16px; margin: 32px -16px 16px -16px; border-radius: 6px; scroll-margin-top: 20px; }
+  h3 { color: #2c5282; border-left: 4px solid #2c5282; padding-left: 10px; margin-top: 24px; }
+  h4 { color: #444; margin-top: 18px; }
+
+  /* Inputs */
+  input[type="text"], input[type="number"] { width: 100%; padding: 6px 10px; border: 1px solid #cbd5e0; border-radius: 4px; font-family: inherit; font-size: 14px; background: white; }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus { outline: 2px solid #2c5282; border-color: transparent; }
+  textarea { width: 100%; min-height: 60px; padding: 8px 10px; border: 1px solid #cbd5e0; border-radius: 4px; font-family: inherit; font-size: 14px; resize: vertical; background: white; }
+  textarea.large { min-height: 100px; }
+  textarea.xlarge { min-height: 150px; }
+  input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; vertical-align: middle; margin-right: 4px; }
+  label.cb-label { display: inline-block; margin-right: 16px; cursor: pointer; }
+
+  /* Hint / ejemplo */
+  .hint {
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+    padding: 6px 10px;
+    margin: 4px 0 8px 0;
+    font-size: 12px;
+    font-style: italic;
+    color: #57452a;
+    border-radius: 0 4px 4px 0;
+  }
+  .hint::before { content: "💡 "; font-style: normal; }
+  .hint strong { color: #92400e; font-style: normal; }
+
+  /* Data del sistema (read-only) */
+  .system-data {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 2px solid #0284c7;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+  }
+  .system-data h3 { color: #075985; margin-top: 0; border-left-color: #0284c7; }
+  .system-data .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .system-data .data-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #bae6fd; }
+  .system-data .data-item .label { font-size: 11px; color: #0369a1; text-transform: uppercase; letter-spacing: 0.5px; }
+  .system-data .data-item .value { font-size: 16px; font-weight: 600; color: #075985; margin-top: 2px; }
+  .system-data .data-item .sub { font-size: 11px; color: #666; }
+  .system-data table { background: white; }
+  .system-data th { background: #075985; color: white; }
+
+  /* Bloques especiales */
+  .example { background: #eef2f7; border-left: 4px solid #0d3b66; padding: 12px 16px; margin: 12px 0; border-radius: 0 4px 4px 0; }
+  .example strong { color: #0d3b66; }
+  .tip { background: #fef3c7; border-left: 4px solid #d97706; padding: 10px 14px; margin: 12px 0; border-radius: 0 4px 4px 0; font-size: 13px; }
+  .warning { background: #fee2e2; border-left: 4px solid #dc2626; padding: 10px 14px; margin: 12px 0; border-radius: 0 4px 4px 0; font-size: 13px; }
+  .notas-block { background: #f0fdf4; border: 2px dashed #4ade80; padding: 14px; margin: 24px 0; border-radius: 6px; }
+  .notas-block h4 { color: #065f46; margin: 0 0 8px 0; }
+
+  /* Tablas */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border-radius: 6px; overflow: hidden; }
+  th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #0d3b66; color: white; font-weight: 600; }
+  td.cell-input { background: #fafbfc; }
+  td.highlight { background: #dbeafe; font-weight: 600; }
+
+  /* Fichas */
+  .ficha { background: white; border: 2px solid #0d3b66; border-radius: 8px; padding: 16px; margin: 16px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+  .ficha h3 { background: #0d3b66; color: white; margin: -16px -16px 12px -16px; padding: 10px 16px; border-left: none; border-radius: 6px 6px 0 0; }
+  .ficha.arquetipo { border-color: #2c5282; }
+  .ficha.arquetipo h3 { background: #2c5282; }
+  .ficha.prefilled { border-color: #16a34a; background: #f0fdf4; }
+  .ficha.prefilled h3 { background: #16a34a; }
+
+  .row { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin: 8px 0; align-items: start; }
+  .row > label { font-weight: 600; padding-top: 4px; }
+
+  ul, ol { padding-left: 24px; }
+
+  #toast { position: fixed; bottom: 24px; right: 24px; background: #064e3b; color: white; padding: 10px 20px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; z-index: 100; font-size: 13px; }
+  #toast.show { opacity: 1; }
+
+  @media print {
+    #sidebar, #toast { display: none; }
+    main { margin-left: 0; padding: 0; }
+    h2 { page-break-before: always; }
+    input[type="text"], textarea { border: none; border-bottom: 1px dotted #888; background: transparent; }
+  }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <h2>📋 Workbook</h2>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div style="font-size: 10pt; margin-bottom: 8px;" id="progressText">0% completado</div>
+
+  <button class="btn btn-primary" onclick="exportToMarkdown()">⬇ Exportar Markdown</button>
+  <button class="btn btn-secondary" onclick="exportToJSON()">⬇ Exportar JSON</button>
+  <button class="btn btn-secondary" onclick="loadFromFile()">⬆ Cargar JSON</button>
+  <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="handleFileLoad(event)">
+  <button class="btn btn-danger" onclick="clearAll()">🗑 Limpiar todo</button>
+
+  <div class="saved-indicator" id="savedIndicator">✓ Auto-guardado activo</div>
+
+  <hr style="border-color: rgba(255,255,255,0.2); margin: 16px 0;">
+
+  <nav>
+    <a href="#datos-sistema">📊 Datos del sistema</a>
+    <a href="#bloque-0">0. Filosofía</a>
+    <a href="#bloque-1">1. Preparación</a>
+    <a href="#bloque-2">2. Tratamientos</a>
+    <a href="#bloque-3">3. Arquetipos</a>
+    <a href="#bloque-4">4. Brand Voice</a>
+    <a href="#bloque-5">5. Painpoints</a>
+    <a href="#bloque-6">6. Precios</a>
+    <a href="#bloque-7">7. Diferenciación</a>
+    <a href="#bloque-8">8. Operación</a>
+    <a href="#bloque-9">9. Casos éxito</a>
+    <a href="#bloque-10">10. Drop-off</a>
+    <a href="#bloque-11">11. Captación global</a>
+    <a href="#bloque-12">12. Priorización</a>
+    <a href="#bloque-13">13. Notas generales</a>
+  </nav>
+</aside>
+
+<main>
+
+<h1>LIVSKIN — Discovery Workbook (Interactivo)</h1>
+<p style="color: #666;">Encuentro con la Doctora — bitácora colaborativa</p>
+
+<table style="width: auto;">
+  <tr><td><strong>Fecha encuentro</strong></td><td><input type="text" data-id="fecha" placeholder="DD/MM/YYYY"></td></tr>
+  <tr><td><strong>Doctora</strong></td><td><input type="text" data-id="doctora_nombre" placeholder="Nombre completo"></td></tr>
+  <tr><td><strong>Modalidad</strong></td><td>
+    <label class="cb-label"><input type="checkbox" data-id="mod_presencial"> Presencial</label>
+    <label class="cb-label"><input type="checkbox" data-id="mod_video"> Videollamada</label>
+  </td></tr>
+</table>
+
+<!-- ============= DATOS DEL SISTEMA (pre-cargados, READ-ONLY) ============= -->
+<h2 id="datos-sistema">📊 Datos del sistema (pre-cargados)</h2>
+
+<p>Esta sección NO se llena en el encuentro — son datos REALES extraídos del ERP, Vtiger y campañas previas. Sirve como punto de partida + validación con la doctora.</p>
+
+<div class="system-data">
+<h3>Snapshot de operación (Sep–Nov 2025, periodo de 3 meses)</h3>
+<div class="data-grid">
+  <div class="data-item">
+    <div class="label">Total clientes</div>
+    <div class="value">134</div>
+    <div class="sub">registrados en ERP</div>
+  </div>
+  <div class="data-item">
+    <div class="label">Total ventas</div>
+    <div class="value">88 ventas</div>
+    <div class="sub">en 3 meses (Sep–Nov 2025)</div>
+  </div>
+  <div class="data-item">
+    <div class="label">Revenue total</div>
+    <div class="value">S/ 35,995</div>
+    <div class="sub">~S/ 12,000/mes promedio</div>
+  </div>
+  <div class="data-item">
+    <div class="label">Ticket promedio</div>
+    <div class="value">S/ 409</div>
+    <div class="sub">rango S/40 – S/1,800</div>
+  </div>
+  <div class="data-item">
+    <div class="label">Crecimiento mes a mes</div>
+    <div class="value">+160%, +87%</div>
+    <div class="sub">Sep 15 → Oct 39 → Nov 34 ventas</div>
+  </div>
+  <div class="data-item">
+    <div class="label">Mix de revenue</div>
+    <div class="value">82% Tratamientos</div>
+    <div class="sub">18% Productos</div>
+  </div>
+</div>
+</div>
+
+<div class="system-data">
+<h3>Top categorías por revenue (validar con doctora si esto refleja la realidad)</h3>
+<table>
+  <tr><th>#</th><th>Categoría</th><th>Tipo</th><th># ventas</th><th>Revenue</th><th>Ticket avg</th><th>% revenue</th></tr>
+  <tr><td>1</td><td><strong>Botox</strong> 🏆</td><td>Tratamiento</td><td>28</td><td>S/ 18,050</td><td>S/ 645</td><td><strong>50.1%</strong></td></tr>
+  <tr><td>2</td><td><strong>Ácido Hialurónico</strong></td><td>Tratamiento</td><td>5</td><td>S/ 5,720</td><td>S/ 1,144</td><td>15.9%</td></tr>
+  <tr><td>3</td><td><strong>Hilos</strong></td><td>Tratamiento</td><td>3</td><td>S/ 4,000</td><td>S/ 1,333</td><td>11.1%</td></tr>
+  <tr><td>4</td><td>Esperma de Salmón</td><td>Tratamiento</td><td>11</td><td>S/ 2,550</td><td>S/ 232</td><td>7.1%</td></tr>
+  <tr><td>5</td><td>PRP</td><td>Tratamiento</td><td>6</td><td>S/ 900</td><td>S/ 150</td><td>2.5%</td></tr>
+  <tr><td>6</td><td>Bléfaroplastia</td><td>Tratamiento</td><td>1</td><td>S/ 800</td><td>S/ 800</td><td>2.2%</td></tr>
+  <tr><td>7</td><td>Rinomodelación A.H.</td><td>Tratamiento</td><td>1</td><td>S/ 800</td><td>S/ 800</td><td>2.2%</td></tr>
+  <tr><td>8</td><td>Vitamina C / Cóctel</td><td>Tratamiento</td><td>3</td><td>S/ 760</td><td>S/ 253</td><td>2.1%</td></tr>
+  <tr><td>9</td><td>Bloqueador (producto)</td><td>Producto</td><td>4</td><td>S/ 370</td><td>S/ 93</td><td>1.0%</td></tr>
+  <tr><td>10</td><td>Exosoma / Vtech</td><td>Tratamiento</td><td>1</td><td>S/ 250</td><td>S/ 250</td><td>0.7%</td></tr>
+  <tr><td>11</td><td>Infiltración</td><td>Tratamiento</td><td>3</td><td>S/ 240</td><td>S/ 80</td><td>0.7%</td></tr>
+  <tr><td>12</td><td>Limpieza Facial</td><td>Tratamiento</td><td>3</td><td>S/ 120</td><td>S/ 40</td><td>0.3%</td></tr>
+</table>
+<div class="hint">
+<strong>Lectura clave:</strong> Botox concentra 50% del revenue con 32% del volumen. Es claramente el tratamiento estrella. Los high-ticket (HA S/1,144, Hilos S/1,333) tienen poco volumen pero alto valor. <strong>Esperma de Salmón</strong> aparece como un caso raro: 11 ventas pero ticket bajo (S/232) — preguntar a la doctora qué es y por qué tanto volumen.
+</div>
+</div>
+
+<div class="system-data">
+<h3>Distribución de pagos (de los S/35,995 totales)</h3>
+<table>
+  <tr><th>Método</th><th>Monto</th><th>%</th></tr>
+  <tr><td>💵 <strong>Efectivo</strong></td><td>S/ 15,840</td><td><strong>44%</strong> (crítico: casi mitad NO trazable por default)</td></tr>
+  <tr><td>📱 Yape</td><td>S/ 13,690</td><td>38%</td></tr>
+  <tr><td>📱 Plin</td><td>S/ 4,500</td><td>12%</td></tr>
+  <tr><td>🏦 Giro / Transferencia</td><td>S/ 1,900</td><td>5%</td></tr>
+  <tr><td>💳 Tarjeta crédito</td><td>S/ 0</td><td>0% (NO se usa hoy)</td></tr>
+</table>
+<div class="hint">
+<strong>Gap operacional:</strong> 44% efectivo significa que casi la mitad de las transacciones no tienen recibo digital ni huella en sistema bancario. Esto complica atribución de ROI por canal. Tarjeta no se acepta — preguntar a la doctora si quiere agregar (POS necesario, 3-5% comisión).
+</div>
+</div>
+
+<div class="system-data">
+<h3>Catálogo activo en el ERP (21 tratamientos)</h3>
+<p style="font-size: 13px; color: #555;">Lista del ERP de tratamientos que la doctora ya tiene registrados (no son los vendidos — son los <em>ofrecidos</em>):</p>
+<table>
+  <tr><th>#</th><th>Nombre</th><th>¿Vendido en últimos 3 meses?</th></tr>
+  <tr><td>1</td><td><strong>Botox</strong></td><td>✅ 28 ventas — TOP</td></tr>
+  <tr><td>2</td><td><strong>Ácido Hialurónico</strong></td><td>✅ 5 ventas</td></tr>
+  <tr><td>3</td><td>PRP</td><td>✅ 6 ventas</td></tr>
+  <tr><td>4</td><td><strong>Hilos</strong></td><td>✅ 3 ventas</td></tr>
+  <tr><td>5</td><td>Limpieza Facial</td><td>✅ 3 ventas</td></tr>
+  <tr><td>6</td><td>Exosoma / Vtech</td><td>✅ 1 venta</td></tr>
+  <tr><td>7</td><td>Esperma de Salmón</td><td>✅ 11 ventas</td></tr>
+  <tr><td>8</td><td>Vitamina C / Cóctel de vida</td><td>✅ 3 ventas</td></tr>
+  <tr><td>9</td><td>Ozono</td><td>❌ ninguna venta</td></tr>
+  <tr><td>10</td><td>Autohemoterapia</td><td>✅ 1 venta</td></tr>
+  <tr><td>11</td><td>Infiltración</td><td>✅ 3 ventas</td></tr>
+  <tr><td>12</td><td>Bioestimuladores</td><td>❌ ninguna venta</td></tr>
+  <tr><td>13</td><td>Rinomodelación con Ac. Hialurónico</td><td>✅ 1 venta</td></tr>
+  <tr><td>14</td><td>Bléfaroplastia</td><td>✅ 1 venta</td></tr>
+  <tr><td>15</td><td>Cauterización</td><td>✅ 1 venta</td></tr>
+  <tr><td>16</td><td>Lifting Facial</td><td>❌ ninguna venta</td></tr>
+  <tr><td>17</td><td>Microblending</td><td>❌ ninguna venta</td></tr>
+  <tr><td>18</td><td>Pigmentación de Labios</td><td>❌ ninguna venta</td></tr>
+  <tr><td>19</td><td>Retiro de Lipoma</td><td>❌ ninguna venta</td></tr>
+  <tr><td>20</td><td>Subcisión con PRP</td><td>✅ 1 venta</td></tr>
+  <tr><td>21</td><td>Endovenosos</td><td>❌ ninguna venta</td></tr>
+</table>
+<div class="hint">
+<strong>Tratamientos "dormant"</strong> (registrados pero sin ventas en 3 meses): Ozono, Bioestimuladores, Lifting Facial, Microblending, Pigmentación Labios, Retiro Lipoma, Endovenosos. Preguntar a la doctora: ¿siguen ofreciéndose? ¿por qué no se venden? ¿discontinuar o re-lanzar con campaña dedicada?
+</div>
+</div>
+
+<div class="system-data">
+<h3>Campañas previas (data real)</h3>
+<table>
+  <tr><th>Campaña</th><th>Fecha</th><th>Inversión</th><th>Leads</th><th>Landings</th><th>Resultado</th></tr>
+  <tr>
+    <td><strong>Bridge Episode</strong></td>
+    <td>3–8 may 2026</td>
+    <td>$100 USD</td>
+    <td>6 leads</td>
+    <td>3 (botox, prp, WA directo)</td>
+    <td>Cerró anticipado, conversaciones limitadas</td>
+  </tr>
+  <tr>
+    <td><strong>Día de la Madre 2026</strong></td>
+    <td>~may 2026</td>
+    <td>—</td>
+    <td>6 leads</td>
+    <td>—</td>
+    <td>Tracking sheet, sin breakdown completo</td>
+  </tr>
+</table>
+<div class="hint">
+<strong>Realidad cruda:</strong> 2 campañas pagas previas, 12 leads totales. Es muy poco volumen para concluir patrones — pero suficiente para extraer aprendizajes cualitativos: qué creative funcionó, qué objection apareció, qué landings convirtieron. Importante mostrar a la doctora estas conversaciones REALES (6 chats de Bridge) para que valide cómo respondería ella vs cómo respondieron en la práctica.
+</div>
+</div>
+
+<div class="system-data">
+<h3>Clientes — info disponible</h3>
+<div class="data-grid">
+  <div class="data-item">
+    <div class="label">Edad capturada</div>
+    <div class="value">2 de 134</div>
+    <div class="sub">99% sin edad registrada — gap a cerrar en Vtiger</div>
+  </div>
+  <div class="data-item">
+    <div class="label">Edad de los 2 conocidos</div>
+    <div class="value">25–37 años</div>
+    <div class="sub">promedio 31 años</div>
+  </div>
+</div>
+<div class="hint">
+<strong>Limitación:</strong> casi no tenemos edad de clientes en el sistema, así que NO podemos hacer segmentación demográfica con data dura. La conversación con la doctora suple esto: ella conoce a cada cliente. Su intuición + 134 ejemplos = arquetipos válidos.
+</div>
+</div>
+
+<div class="system-data">
+<h3>Canales de captación (configurados en ERP)</h3>
+<table>
+  <tr><th>Canal en sistema</th><th>Significado</th></tr>
+  <tr><td><code>direct</code></td><td>Walk-in directo (entró a la clínica sin invitación)</td></tr>
+  <tr><td><code>organic</code></td><td>SEO / contenido orgánico (IG, FB sin paid)</td></tr>
+  <tr><td><code>paid</code></td><td>FB Ads / Google Ads (campañas pagas)</td></tr>
+  <tr><td><code>referral</code></td><td>Boca a boca / referido</td></tr>
+  <tr><td><code>walk_in</code></td><td>(legacy, sinónimo de direct)</td></tr>
+  <tr><td><code>legacy</code></td><td>Clientes históricos pre-sistema</td></tr>
+</table>
+</div>
+
+<!-- ============= BLOQUE 0: FILOSOFÍA ============= -->
+<h2 id="bloque-0">0. Filosofía del bot que estamos construyendo</h2>
+
+<h3>Postura B (la que vamos a construir) — Bot guía activo SUTIL</h3>
+<p>Cliente escribe → bot responde + avanza hacia objetivo (agendar consulta). Cliente pregunta precio → bot da rango con contexto educativo + propone consulta. Cliente silencia → bot re-engage con valor.</p>
+
+<div class="example">
+<strong>Ejemplo de calidad que apuntamos:</strong>
+<br><br>
+<strong>Lead:</strong> Hola<br>
+<strong>Bot (~30s):</strong> ¡Hola! Bienvenida a Livskin 🌿 Soy el equipo virtual de la Dra. [Nombre]. ¿Qué te trajo por acá? Cuéntame qué te llama la atención (botox, ácido hialurónico, limpieza, peeling, algo más…) o si solo querés explorar.
+<br><br>
+<strong>Lead:</strong> Cuánto cuesta el botox?<br>
+<strong>Bot:</strong> Buena pregunta. El precio depende de las unidades necesarias. Rangos honestos:<br>
+• Entrecejo solo: desde S/350<br>
+• Frente completa: S/500-700<br>
+• Full face: S/700-1,100
+<br><br>
+⚠️ El precio EXACTO lo damos en consulta presencial gratuita (15 min). ¿Te animás a agendarla?
+</div>
+
+<h3>Decisiones que la doctora valida</h3>
+
+<div class="row">
+  <label>¿Acepta que el bot dé rangos de precio con disclaimers?</label>
+  <div>
+    <label class="cb-label"><input type="checkbox" data-id="rango_precios_si"> SÍ</label>
+    <label class="cb-label"><input type="checkbox" data-id="rango_precios_no"> NO</label>
+    <div class="hint"><strong>Importante:</strong> La diferencia entre "te lo dice la doctora por privado" (mediocre) y "rango con disclaimer + consulta gratuita" (top de gama). Sin esto, perdemos los leads que NO quieren contactar a nadie y solo quieren info de referencia.</div>
+    <textarea data-id="rango_precios_notas" placeholder="Notas o condiciones (ej: 'sí pero solo en tratamientos top, en bioestimuladores prefiero solo en consulta')"></textarea>
+  </div>
+</div>
+
+<div class="row">
+  <label>¿Consulta inicial gratuita o pagada?</label>
+  <div>
+    <label class="cb-label"><input type="checkbox" data-id="consulta_gratis"> Gratuita</label>
+    <label class="cb-label"><input type="checkbox" data-id="consulta_pagada"> Con costo</label>
+    <input type="text" data-id="consulta_costo" placeholder="Si pagada: S/______">
+    <label class="cb-label" style="margin-top: 6px;"><input type="checkbox" data-id="consulta_credita"> Se acredita si hace tratamiento</label>
+    <div class="hint"><strong>Recomendación:</strong> Gratuita o si pagada que se acredite al tratamiento. Es la palanca que el bot usa para mover lead de "preguntar" a "agendar". Si es S/50 pagada no acreditable, el bot pierde fuerza.</div>
+  </div>
+</div>
+
+<div class="row">
+  <label>¿Quiere que el bot tenga nombre/persona?</label>
+  <div>
+    <input type="text" data-id="bot_nombre" placeholder="Ej: Sofía, Camila, equipo virtual, asistente">
+    <div class="hint"><strong>Ejemplos:</strong> "Soy Camila, del equipo de Livskin" (humaniza, recordable) vs "Equipo virtual de Livskin" (anónimo, profesional). La doctora elige. Tip: si tiene nombre, mantener mismo siempre. Si descubren que es bot, no jugar a engañarlos.</div>
+  </div>
+</div>
+
+<div class="row">
+  <label>¿Acepta emojis ligeros (1 por mensaje máx)?</label>
+  <div>
+    <label class="cb-label"><input type="checkbox" data-id="emojis_si"> SÍ</label>
+    <label class="cb-label"><input type="checkbox" data-id="emojis_no"> NO</label>
+    <input type="text" data-id="emojis_permitidos" placeholder="Permitidos: 🌿 😊 ✨ ⚠️ ✅ ❌">
+    <div class="hint"><strong>Recomendación:</strong> 1 emoji por mensaje en saludos y cierres, NO en explicaciones técnicas. Evitar emojis de cara que sugieran emoción (😍 😘) — sentir artificial. Sí: 🌿 (marca natural), ✨ (premio), ⚠️ (warning).</div>
+  </div>
+</div>
+
+<div class="notas-block">
+  <h4>📝 Notas adicionales — Filosofía</h4>
+  <textarea class="large" data-id="notas_filosofia" placeholder="Comentarios, dudas, ajustes que surjan..."></textarea>
+</div>
+
+<!-- ============= BLOQUE 1: PREPARACIÓN ============= -->
+<h2 id="bloque-1">1. Preparación previa (validar listo)</h2>
+
+<div class="tip">Esta sección ya está casi cubierta por la sección "📊 Datos del sistema" arriba. Acá solo validamos los materiales visuales que la doctora trajo.</div>
+
+<h3>Material visual que la doctora trae al encuentro</h3>
+<table>
+  <tr><th>Material</th><th>Recibido</th></tr>
+  <tr><td>📱 15 screenshots de chats reales (anonimizados)</td><td><input type="checkbox" data-id="prep_c1"></td></tr>
+  <tr><td>📷 Fotos de la clínica (entrada, sala espera, sala procedimiento)</td><td><input type="checkbox" data-id="prep_c2"></td></tr>
+  <tr><td>👤 Foto profesional de la doctora</td><td><input type="checkbox" data-id="prep_c3"></td></tr>
+  <tr><td>🎨 Logo Livskin alta resolución</td><td><input type="checkbox" data-id="prep_c4"></td></tr>
+  <tr><td>🎨 Brand colors / paleta</td><td><input type="checkbox" data-id="prep_c5"></td></tr>
+  <tr><td>⭐ Reseñas Google positivas (screenshots)</td><td><input type="checkbox" data-id="prep_c6"></td></tr>
+  <tr><td>📋 Documentación legal (RUC, registro sanitario, colegiatura doctora)</td><td><input type="checkbox" data-id="prep_c7"></td></tr>
+</table>
+
+<h3>Análisis competitivo Cusco (Dario investigó previamente)</h3>
+<p><strong>Lista 5-10 clínicas Cusco que considerás competencia directa:</strong></p>
+<textarea class="large" data-id="competencia_lista" placeholder="Ej:&#10;1. Clínica X — Wanchaq, IG @clinicaX, precios públicos botox S/450-1200, tono cercano&#10;2. Clínica Y — San Blas, FB Page activo, no precios públicos, tono formal"></textarea>
+
+<p><strong>¿Qué hacen ELLOS mejor que nosotros hoy?</strong></p>
+<textarea class="large" data-id="competencia_mejor"></textarea>
+
+<p><strong>¿Qué hacemos NOSOTROS mejor que ellos?</strong></p>
+<textarea class="large" data-id="competencia_nuestro"></textarea>
+
+<!-- ============= BLOQUE 2: TRATAMIENTOS ============= -->
+<h2 id="bloque-2">2. Bloque A — Tratamientos (45 min)</h2>
+
+<div class="tip"><strong>Cómo conducir:</strong> Las primeras 6 fichas vienen pre-cargadas con tratamientos que YA están vendidos (de la data del sistema). Llenar primero esas, después agregar otras si la doctora los menciona.</div>
+
+<!-- Fichas pre-cargadas (top 6 por revenue) + 4 vacías -->
+<div id="tratamientos-container"></div>
+<div id="tratamientos-extra-container"></div>
+
+<div style="text-align: center; margin: 20px 0;">
+  <button type="button" onclick="agregarTratamiento()" style="background: #2c5282; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+    ➕ Agregar otro tratamiento
+  </button>
+  <p style="font-size: 12px; color: #666; margin-top: 6px;">
+    Si la doctora menciona tratamientos que no están en las 10 fichas, agregá fichas extra acá.
+  </p>
+</div>
+
+<div class="ficha">
+<h3>Brand pitch core (pregunta cualitativa de cierre)</h3>
+<p><em>"Si viniera un cliente nuevo hoy y te preguntara qué hacer, ¿qué le dirías para que entienda tu enfoque diferenciado vs ir a otra clínica?"</em></p>
+<textarea class="xlarge" data-id="brand_pitch_core"></textarea>
+<div class="hint"><strong>Ejemplo de respuesta esperada:</strong> "Acá no vendemos tratamientos en lote. Cada cara es distinta. Yo personalmente diagnostico, te explico qué necesitas y qué NO necesitas — porque a veces lo que pedís no es lo mejor para vos. Esa charla de 15 minutos gratis te ahorra ir al lugar equivocado." Eso es brand pitch real — emocional + específico + diferenciado.</div>
+</div>
+
+<div class="notas-block">
+  <h4>📝 Notas — Tratamientos</h4>
+  <textarea class="large" data-id="notas_tratamientos"></textarea>
+</div>
+
+<!-- ============= BLOQUE 3: ARQUETIPOS ============= -->
+<h2 id="bloque-3">3. Bloque B — Arquetipos (45 min)</h2>
+
+<p><strong>Pregunta apertura:</strong> "Si pensás en tus 134 clientes, ¿cómo los agruparías? ¿Hay 3-5 tipos diferentes que vienen por razones distintas?"</p>
+
+<div class="hint"><strong>Ejemplos de arquetipos típicos en medicina estética Cusco:</strong>
+<br>• <em>"Profesional mantención"</em>: mujer 35-50, oficinista, viene cada 4-6 meses, botox, ticket S/600-1,000
+<br>• <em>"Joven preventiva"</em>: 25-32, primer botox preventivo entrecejo, ticket bajo S/350-500
+<br>• <em>"Madura rejuvenecimiento"</em>: 50+, paquete HA + hilos, ticket alto S/1,500+
+<br>• <em>"Curiosa exploratoria"</em>: viene por limpieza facial / peeling barato, puede escalar a tratamientos altos
+<br>• <em>"Recomendada por amiga"</em>: viene con info de boca a boca, expectativa específica
+</div>
+
+<div id="arquetipos-container"></div>
+
+<h3>Tier económico</h3>
+<p><strong>¿Hay clientes con poco presupuesto vs los que compran todo?</strong></p>
+<textarea class="large" data-id="arq_tier_economico"></textarea>
+<div class="hint"><strong>Ejemplo:</strong> "Sí. Hay un 30% que vienen solo por limpieza facial S/40-60 y nunca escalan. Otro 50% son recurrentes que compran botox cada 5 meses (S/600-1000). Y un 20% son de alto valor — paquetes de HA + hilos (S/1500+) o que regresan 3-4 veces al año."</div>
+
+<p><strong>¿Cómo identificás un cliente de alto valor en los primeros 2 mensajes de WhatsApp?</strong></p>
+<textarea class="large" data-id="arq_alto_valor_signals"></textarea>
+<div class="hint"><strong>Ejemplo de respuesta útil:</strong> "Pregunta específica por tratamiento de alto ticket (HA, hilos, blefaro). Menciona timing concreto ('esta semana', 'antes de mi cumpleaños'). Tono educado pero directo. NO regatea precio en primera. A veces dice 'me recomendó X cliente tuya'."</div>
+
+<h3>Source channel real (validar con doctora — % estimado de los 134 clientes)</h3>
+<table>
+  <tr><th>Canal</th><th>% estimado</th><th>Cantidad estimada</th></tr>
+  <tr><td>Referido boca a boca</td><td><input type="text" data-id="src_referido_pct" placeholder="ej: 40"></td><td><input type="text" data-id="src_referido_cnt" placeholder="~54"></td></tr>
+  <tr><td>Instagram orgánico</td><td><input type="text" data-id="src_ig_pct"></td><td><input type="text" data-id="src_ig_cnt"></td></tr>
+  <tr><td>Facebook ads (paid)</td><td><input type="text" data-id="src_fb_pct"></td><td><input type="text" data-id="src_fb_cnt"></td></tr>
+  <tr><td>Google search</td><td><input type="text" data-id="src_google_pct"></td><td><input type="text" data-id="src_google_cnt"></td></tr>
+  <tr><td>Pasaron por la calle</td><td><input type="text" data-id="src_calle_pct"></td><td><input type="text" data-id="src_calle_cnt"></td></tr>
+  <tr><td>Web SEO orgánico</td><td><input type="text" data-id="src_seo_pct"></td><td><input type="text" data-id="src_seo_cnt"></td></tr>
+  <tr><td><input type="text" data-id="src_otro_nombre" placeholder="Otro"></td><td><input type="text" data-id="src_otro_pct"></td><td><input type="text" data-id="src_otro_cnt"></td></tr>
+</table>
+<div class="hint"><strong>Importante:</strong> esto es <em>intuición</em> de la doctora sobre los 134, no precisión exacta. Los % deben sumar ~100%. Sirve para validar dónde invertir más (si 60% viene de boca a boca y solo 5% de FB Ads, la palanca de escala NO es FB Ads sola, es activar referidos + IG orgánico).</div>
+
+<h3>Clientes problemáticos (filtro tier X)</h3>
+<p><strong>¿Qué patrones tienen los clientes que NO te gustaría atender?</strong></p>
+<textarea class="xlarge" data-id="arq_problematicos"></textarea>
+<div class="hint"><strong>Ejemplos de patrones rojos:</strong> Negocian precio agresivamente desde 1er mensaje. Comparan obsesivamente con otra clínica. Cancelan última hora repetidamente. Esperan resultados imposibles ("borrar todas mis arrugas"). Discuten contraindicaciones ("dame botox aunque esté embarazada"). El bot debe detectar estos patrones y filtrar (no escalar a la doctora).</div>
+
+<div class="notas-block">
+  <h4>📝 Notas — Arquetipos</h4>
+  <textarea class="large" data-id="notas_arquetipos"></textarea>
+</div>
+
+<!-- ============= BLOQUE 4: BRAND VOICE ============= -->
+<h2 id="bloque-4">4. Bloque C — Brand Voice (45 min)</h2>
+
+<div class="tip">Mirar los 15 screenshots de chats reales JUNTO con la doctora. Por cada uno preguntar: ¿por qué escribiste así? ¿qué palabras nunca usás? ¿cuándo emojis?</div>
+
+<h3>Tabla brand voice</h3>
+<table>
+  <tr><th style="width: 25%;">Dimensión</th><th>Valor (con doctora)</th><th>Ejemplo concreto</th></tr>
+  <tr>
+    <td>Tratamiento (tú/usted)</td>
+    <td><textarea data-id="bv_tratamiento"></textarea><div class="hint">Ej: "tú por default, cambio a usted si lead es señora 60+ o tono muy formal"</div></td>
+    <td><textarea data-id="bv_tratamiento_ej" placeholder="Ej de mensaje real"></textarea></td>
+  </tr>
+  <tr>
+    <td>Tono base</td>
+    <td><textarea data-id="bv_tono"></textarea><div class="hint">Ej: "cálido + profesional + ligeramente peruano sin coloquialismos fuertes"</div></td>
+    <td><textarea data-id="bv_tono_ej"></textarea></td>
+  </tr>
+  <tr>
+    <td>Emojis (cuáles SÍ)</td>
+    <td><textarea data-id="bv_emojis"></textarea><div class="hint">Ej: "1 por mensaje máx: 🌿 saludo, ✨ premium, ⚠️ warning, ✅ confirmación"</div></td>
+    <td><textarea data-id="bv_emojis_ej"></textarea></td>
+  </tr>
+  <tr>
+    <td>NO usar</td>
+    <td><textarea data-id="bv_no_usar"></textarea><div class="hint">Ej: "amor, hermosa, linda, querida, jerga médica complicada (vasodilatación, inhibición postsináptica), mayúsculas para gritar"</div></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Saludo standard</td>
+    <td><textarea data-id="bv_saludo"></textarea><div class="hint">Ej: "¡Hola [nombre]! Bienvenida a Livskin 🌿"</div></td>
+    <td><textarea data-id="bv_saludo_ej"></textarea></td>
+  </tr>
+  <tr>
+    <td>Despedida cita confirmada</td>
+    <td><textarea data-id="bv_despedida_cita"></textarea><div class="hint">Ej: "¡Nos vemos [día] a las [hora]! Cualquier consulta antes, acá estoy 🌿"</div></td>
+    <td><textarea data-id="bv_despedida_cita_ej"></textarea></td>
+  </tr>
+  <tr>
+    <td>Despedida lead frío</td>
+    <td><textarea data-id="bv_despedida_frio"></textarea><div class="hint">Ej: "Si más adelante te interesa, escribime cuando quieras. Sin compromiso ✨"</div></td>
+    <td><textarea data-id="bv_despedida_frio_ej"></textarea></td>
+  </tr>
+  <tr>
+    <td>Estructura típica mensaje</td>
+    <td><textarea data-id="bv_estructura"></textarea><div class="hint">Ej: "1) Reconocer lo que dijo · 2) Responder con valor · 3) Invitar al siguiente paso"</div></td>
+    <td><textarea data-id="bv_estructura_ej"></textarea></td>
+  </tr>
+  <tr>
+    <td>Largo típico mensaje</td>
+    <td><input type="text" data-id="bv_largo" placeholder="ej: 2-4 líneas"><div class="hint">Mensajes WhatsApp no deberían pasar 5 líneas. Si la info es larga, dividir en 2 mensajes consecutivos.</div></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Mayúsculas para énfasis</td>
+    <td colspan="2">
+      <label class="cb-label"><input type="checkbox" data-id="bv_mayus_si"> SÍ</label>
+      <label class="cb-label"><input type="checkbox" data-id="bv_mayus_no"> NO</label>
+      <div class="hint">Recomendación: NO. Las mayúsculas en WA se perciben como gritar. Usar **negrita** o *cursiva* si la app lo permite.</div>
+    </td>
+  </tr>
+  <tr>
+    <td>Signos exclamación !</td>
+    <td><input type="text" data-id="bv_exclama" placeholder="alta / media / baja"><div class="hint">Recomendación: bajo a medio. 1 ! por mensaje máx, solo en saludos y celebraciones.</div></td>
+    <td></td>
+  </tr>
+</table>
+
+<h3>Brand voice DON'T</h3>
+<p><strong>3 mensajes (de otras clínicas o propios viejos) que NO te representan más:</strong></p>
+<textarea class="xlarge" data-id="bv_dont"></textarea>
+<div class="hint"><strong>Ejemplos típicos a evitar:</strong> "Hermosa, recuerda que te queremos! 💋💋" (sobrefamiliar). "URGENTE: oferta solo HOY 30% OFF!! 🔥🔥🔥" (clickbait). "Te recomendamos hacerte el tratamiento porque te va a transformar la vida" (promesa imposible).</div>
+
+<h3>Palabras + frases marca (firma de la doctora)</h3>
+<p><strong>5-10 palabras o frases que la doctora usa MUCHO y son su sello:</strong></p>
+<textarea class="large" data-id="bv_palabras_marca"></textarea>
+<div class="hint"><strong>Ejemplos:</strong> "evaluación personalizada", "sin compromiso", "resultado natural", "te explico", "cada caso es distinto", "lo evaluamos juntos", "te diagnosticamos sin presión".</div>
+
+<div class="notas-block">
+  <h4>📝 Notas — Brand Voice</h4>
+  <textarea class="large" data-id="notas_brandvoice"></textarea>
+</div>
+
+<!-- ============= BLOQUE 5: PAINPOINTS ============= -->
+<h2 id="bloque-5">5. Bloque D — Painpoints + Objections (45 min)</h2>
+
+<table>
+  <tr><th style="width: 5%;">#</th><th style="width: 20%;">Painpoint</th><th style="width: 25%;">Manifestación típica</th><th>Cómo responde la doctora (palabras de ella)</th></tr>
+  <tr><td>1</td><td><strong>Miedo dolor</strong></td><td>"¿Duele mucho?"</td><td><textarea data-id="pp1"></textarea><div class="hint">Ej: "Con frío local previo es indolora. La mayoría dice que es menos que un pellizco. Si te incomoda, paramos."</div></td></tr>
+  <tr><td>2</td><td><strong>Miedo quedar "raro"</strong></td><td>"¿Me voy a quedar congelada?"</td><td><textarea data-id="pp2"></textarea><div class="hint">Ej: "Trabajamos dosis baja para naturalidad. Mirá @livskin antes/después. Si querés efecto sutil, lo hacemos. Vos decidís cuánta movilidad mantener."</div></td></tr>
+  <tr><td>3</td><td><strong>Precio percibido alto</strong></td><td>"Me parece caro"</td><td><textarea data-id="pp3"></textarea><div class="hint">⚠️ NO bajar precio. Ej: "Te entiendo. El precio refleja: producto Allergan (no genérico), 1h de evaluación + procedimiento, seguimiento a la semana, duración 4-6 meses. Si calculás por mes, es S/__/mes."</div></td></tr>
+  <tr><td>4</td><td><strong>Desconfianza marca</strong></td><td>"¿Cómo sé que sos profesional?"</td><td><textarea data-id="pp4"></textarea><div class="hint">Ej: "Soy Dra. [Nombre], colegiatura CMP [número], especialización medicina estética [universidad]. Acá podés ver mis certificados: [link]. 134 clientes en los últimos 3 meses."</div></td></tr>
+  <tr><td>5</td><td><strong>Inseguridad social</strong></td><td>"¿Mi pareja / familia va a notar?"</td><td><textarea data-id="pp5"></textarea><div class="hint">Ej: "Hacemos dosis ajustadas a vos. Si querés sutil, nadie va a notar el cambio — vos te sentirás mejor. Cada cliente decide cuánta visibilidad."</div></td></tr>
+  <tr><td>6</td><td><strong>Duda timing edad</strong></td><td>"¿Soy muy joven/vieja?"</td><td><textarea data-id="pp6"></textarea><div class="hint">Ej: "Para botox preventivo desde los 25 funciona muy bien. Para correctivo no hay límite máximo. Lo definimos según líneas reales en consulta, no solo edad."</div></td></tr>
+  <tr><td>7</td><td><strong>Contraindicaciones</strong></td><td>"Tengo X enfermedad, ¿puedo?"</td><td><textarea data-id="pp7"></textarea><div class="hint">⚠️ Bot NO da respuesta médica. Ej: "Eso lo evalúa la doctora en consulta — necesita ver tu historia clínica. Te agendo y vemos juntas. La consulta es gratuita."</div></td></tr>
+  <tr><td>8</td><td><strong>Falta tiempo</strong></td><td>"¿Cuánto tiempo necesita?"</td><td><textarea data-id="pp8"></textarea><div class="hint">Ej: "Sesión 30-60 min según tratamiento. Recuperación 0 — podés volver al trabajo. Lo único es evitar gym intenso ese día."</div></td></tr>
+  <tr><td>9</td><td><strong>Comparación competencia</strong></td><td>"En X clínica me cobran Y"</td><td><textarea data-id="pp9"></textarea><div class="hint">⚠️ NO entrar en guerra de precios. Ej: "Cada clínica tiene su enfoque. Nosotros usamos [marca premium] + 1h de diagnóstico personalizado. Te invito a venir a la consulta gratuita y ves la diferencia, después decidís."</div></td></tr>
+  <tr><td>10</td><td><strong>Distancia/ubicación</strong></td><td>"Estoy en Sicuani/Lima"</td><td><textarea data-id="pp10"></textarea><div class="hint">Ej: "Atendemos pacientes de toda la región. Si venís de fuera, podemos hacer la consulta por videollamada gratuita primero, y agendar el procedimiento para el día que vengás."</div></td></tr>
+  <tr><td>11</td><td><strong>Pago/facilidades</strong></td><td>"¿Acepta tarjeta? ¿Cuotas?"</td><td><textarea data-id="pp11"></textarea><div class="hint">Ej: "Aceptamos Yape, Plin, transferencia y efectivo. Tarjeta de crédito [SÍ/NO]. Cuotas [SÍ con __ / NO]."</div></td></tr>
+  <tr><td>12</td><td><strong>No sabe qué necesita</strong></td><td>"No sé qué necesito"</td><td><textarea data-id="pp12"></textarea><div class="hint">Ej: "Para eso es la consulta gratuita. Te diagnostico sin presión, te explico opciones según tu caso, y vos decidís. No es vendedora, es asesora."</div></td></tr>
+</table>
+
+<h3>Contexto local Cusco (painpoints que un cliente de Cusco siente y un cliente de Lima/costa NO)</h3>
+
+<div class="tip">
+<strong>¿Por qué este bloque importa?</strong> El bot va a hablar con leads que viven en Cusco — su realidad es distinta a Lima o el extranjero. Si el bot menciona algo desfasado de su contexto (ej: "ponte crema FPS 30" cuando en Cusco hay UV índice 11), pierde credibilidad. Acá capturamos lo que la doctora sabe del cliente Cusco real para que el bot suene LOCAL, no estándar.
+</div>
+
+<table>
+  <tr><th style="width: 5%;">#</th><th style="width: 30%;">Tema Cusco</th><th>Qué decir el bot / cómo lo maneja la doctora</th></tr>
+  <tr><td>13</td><td><strong>Clima de altura</strong> — Cusco está a 3,400m, sol UV intenso, frío seco. Afecta piel (deshidratación, manchas) y recuperación post-tratamiento</td><td><textarea data-id="pp_cusco_clima"></textarea><div class="hint">Ej de respuesta: "Acá en Cusco el sol pega mucho fuerte. Post-tratamiento te damos kit con bloqueador FPS 50+ y crema hidratante (incluido en el precio). El primer mes evitar exposición directa entre 10am-3pm."</div></td></tr>
+  <tr><td>14</td><td><strong>Aceptación cultural</strong> — ¿es tabú hablar de estética en Cusco? ¿Lo discuten abiertamente? ¿Hay diferencia entre generaciones?</td><td><textarea data-id="pp_cusco_cultura"></textarea><div class="hint">Ej: "Hace 5 años era muy tabú. Hoy mujeres profesionales 30-50 lo discuten abiertamente con amigas. Las 50+ todavía prefieren discreción — entran por la puerta lateral del edificio si quieren."</div></td></tr>
+  <tr><td>15</td><td><strong>Cliente turista nacional</strong> — peruanas de Lima/otras ciudades que vienen 3-7 días a Cusco y buscan tratamiento aprovechando viaje</td><td><textarea data-id="pp_cusco_turismo"></textarea><div class="hint">Ej: "Hay limeñas que vienen 4-5 días por turismo y aprovechan precios Cusco (30-40% menos que Lima). Atendemos en horario express, seguimiento por video al volver. Tip importante: tratamientos invasivos (HA, hilos) los hago al 2do día así tienen tiempo para vuelo de vuelta."</div></td></tr>
+  <tr><td>16</td><td><strong>Cliente extranjero</strong> (Italia, EEUU, Europa) de paso por Cusco — ¿lo atendés? ¿qué consideraciones?</td><td><textarea data-id="pp_cusco_extranjero"></textarea><div class="hint">Ej: "Sí, pero más cuidadoso. Tratamientos que no requieran seguimiento estricto (limpieza, peeling suave). NO botox a turistas express porque si hay reacción y ya volaron, no puedo verlos."</div></td></tr>
+  <tr><td>17</td><td><strong>Soroche / altitud</strong> — clientes recién llegados a Cusco con mal de altura, ¿afecta tratamientos?</td><td><textarea data-id="pp_cusco_soroche"></textarea><div class="hint">Ej: "Recomendar esperar 24-48h después de llegar a Cusco antes de hacer tratamiento. Cuerpo necesita aclimatarse, presión sanguínea irregular puede afectar resultado."</div></td></tr>
+  <tr><td>18</td><td><strong>Pacientes con piel quechua/andina</strong> — ¿hay consideraciones específicas de fototipo / pigmentación?</td><td><textarea data-id="pp_cusco_fototipo"></textarea><div class="hint">Ej: "Fototipos III-IV son los más comunes en Cusco. Mayor riesgo de hiperpigmentación post-procedimiento (peeling, láser). Hay que usar técnicas y productos adaptados — eso es expertise local que clínicas de Lima no manejan igual."</div></td></tr>
+  <tr><td>19</td><td><input type="text" data-id="pp_cusco_otro1_nombre" placeholder="Otro Cusco-específico (la doctora agrega)"></td><td><textarea data-id="pp_cusco_otro1"></textarea></td></tr>
+  <tr><td>20</td><td><input type="text" data-id="pp_cusco_otro2_nombre" placeholder="Otro"></td><td><textarea data-id="pp_cusco_otro2"></textarea></td></tr>
+</table>
+
+<div class="notas-block">
+  <h4>📝 Notas — Painpoints</h4>
+  <textarea class="large" data-id="notas_painpoints"></textarea>
+</div>
+
+<!-- ============= BLOQUE 6: PRECIOS ============= -->
+<h2 id="bloque-6">6. Bloque E — Estrategia Precios (30 min)</h2>
+
+<h3>Estrategia elegida</h3>
+<p><strong>¿Acepta la estrategia B (rango con disclaimer + consulta gratuita)?</strong></p>
+<label class="cb-label"><input type="checkbox" data-id="precio_estrategia_b"> ⭐ SÍ — usar rangos con disclaimer</label>
+<label class="cb-label"><input type="checkbox" data-id="precio_estrategia_a"> A (cero precio — solo consulta)</label>
+<label class="cb-label"><input type="checkbox" data-id="precio_estrategia_c"> C (precio fijo público)</label>
+<label class="cb-label"><input type="checkbox" data-id="precio_estrategia_d"> D (calculadora interactiva)</label>
+<textarea data-id="precio_estrategia_notas"></textarea>
+<div class="hint"><strong>Recomendación firme:</strong> B. Los datos del ERP muestran ticket promedio S/409 con rango S/40-1,800. Ese rango es difícil de comunicar sin info → cliente asume lo peor y se va. Mostrar rangos con disclaimer + consulta gratuita es lo que diferencia premium de commodity.</div>
+
+<h3>Política consulta inicial</h3>
+<div class="row">
+  <label>¿Gratuita o pagada?</label>
+  <div>
+    <label class="cb-label"><input type="checkbox" data-id="cons_gratis"> Gratuita</label>
+    <label class="cb-label"><input type="checkbox" data-id="cons_pagada"> Con costo: <input type="text" data-id="cons_costo" style="width: 120px;" placeholder="S/__"></label>
+  </div>
+</div>
+<div class="row">
+  <label>¿Se acredita si hace tratamiento?</label>
+  <div>
+    <label class="cb-label"><input type="checkbox" data-id="cons_credita_si"> SÍ</label>
+    <label class="cb-label"><input type="checkbox" data-id="cons_credita_no"> NO</label>
+  </div>
+</div>
+<div class="row">
+  <label>Duración consulta</label>
+  <input type="text" data-id="cons_duracion" placeholder="15 / 30 / 45 minutos">
+</div>
+<div class="row">
+  <label>Modalidades</label>
+  <div>
+    <label class="cb-label"><input type="checkbox" data-id="cons_mod_presencial"> Presencial</label>
+    <label class="cb-label"><input type="checkbox" data-id="cons_mod_video"> Videollamada</label>
+    <div class="hint">Videollamada es CRÍTICO para leads de fuera de Cusco (Sicuani, Lima, extranjero). Permite cerrar lead a distancia antes que viaje.</div>
+  </div>
+</div>
+
+<h3>Medios de pago aceptados (validar con doctora)</h3>
+<p style="font-size: 12px; color: #555;">Pre-marcados según data ERP. Verificar si quiere agregar/quitar:</p>
+<label class="cb-label"><input type="checkbox" data-id="pago_yape" checked> Yape (38% revenue)</label>
+<label class="cb-label"><input type="checkbox" data-id="pago_plin" checked> Plin (12% revenue)</label>
+<label class="cb-label"><input type="checkbox" data-id="pago_transferencia" checked> Transferencia / Giro (5%)</label>
+<label class="cb-label"><input type="checkbox" data-id="pago_efectivo" checked> Efectivo (44%)</label>
+<label class="cb-label"><input type="checkbox" data-id="pago_visa"> Visa</label>
+<label class="cb-label"><input type="checkbox" data-id="pago_mastercard"> Mastercard</label>
+<label class="cb-label"><input type="checkbox" data-id="pago_amex"> American Express</label>
+<label class="cb-label"><input type="checkbox" data-id="pago_cuotas"> Cuotas (sistema propio o tarjeta)</label>
+
+<div class="hint"><strong>Pregunta clave a la doctora:</strong> ¿Querés agregar tarjeta crédito? Requiere POS (terminal Visanet, Niubiz, etc.) con comisión 3-5%. Pero puede destrabar el segmento alto-ticket que no usa Yape para gastos S/1000+.</div>
+
+<p><strong>¿Descuento por pago contado total?</strong></p>
+<textarea data-id="pago_descuento"></textarea>
+
+<p><strong>Sistema cuotas (si aplica):</strong></p>
+<textarea class="large" data-id="pago_sistema_cuotas"></textarea>
+
+<div class="warning">
+NO ofrecer descuentos/promos como respuesta a "es caro". Eso devalúa. En cambio: ofrecer VALOR adicional (kit cuidado post-tratamiento, consulta seguimiento gratis a la semana). <strong>El precio nunca baja.</strong>
+</div>
+
+<p><strong>¿La doctora está de acuerdo con esta política "el precio no baja, agregamos valor"?</strong></p>
+<label class="cb-label"><input type="checkbox" data-id="precio_politica_acuerdo"> SÍ</label>
+<label class="cb-label"><input type="checkbox" data-id="precio_politica_no"> NO — explicar:</label>
+<textarea data-id="precio_politica_notas"></textarea>
+
+<div class="notas-block">
+  <h4>📝 Notas — Precios</h4>
+  <textarea class="large" data-id="notas_precios"></textarea>
+</div>
+
+<!-- ============= BLOQUE 7: DIFERENCIACIÓN ============= -->
+<h2 id="bloque-7">7. Bloque F — Diferenciación (20 min)</h2>
+
+<p><strong>P1: "¿Qué hacés vos que las otras clínicas Cusco NO hacen?"</strong></p>
+<textarea class="xlarge" data-id="dif_p1"></textarea>
+<div class="hint">Buscar respuestas <strong>específicas y verificables</strong>, no clichés. Mal: "atención personalizada" (todos dicen eso). Bien: "uso solo Allergan, no genéricos; tomo fotos antes/después de cada caso para mi propia evaluación; consulta dura 1h, no 15min como en otras."</div>
+
+<p><strong>P2: "¿Qué te diferencia como profesional?"</strong> (estudios, años, premios, especialización)</p>
+<textarea class="xlarge" data-id="dif_p2"></textarea>
+
+<p><strong>P3: "¿Por qué los 134 clientes te eligieron a vos vs ir a Lima o a otra clínica Cusco?"</strong></p>
+<textarea class="xlarge" data-id="dif_p3"></textarea>
+
+<p><strong>P4: "¿Qué te dicen los clientes que más valoran de vos?"</strong> (las palabras textuales que escucha)</p>
+<textarea class="xlarge" data-id="dif_p4"></textarea>
+<div class="hint">Pedir <strong>quotes verbales reales</strong> que la doctora ha escuchado. Eso es marketing gold — esas mismas frases las usamos en landings + ad copy.</div>
+
+<h3>3-5 ventajas core (síntesis al final)</h3>
+<input type="text" data-id="dif_v1" placeholder="Ventaja 1 (la más importante)">
+<input type="text" data-id="dif_v2" placeholder="Ventaja 2" style="margin-top: 4px;">
+<input type="text" data-id="dif_v3" placeholder="Ventaja 3" style="margin-top: 4px;">
+<input type="text" data-id="dif_v4" placeholder="Ventaja 4" style="margin-top: 4px;">
+<input type="text" data-id="dif_v5" placeholder="Ventaja 5" style="margin-top: 4px;">
+
+<div class="notas-block">
+  <h4>📝 Notas — Diferenciación</h4>
+  <textarea class="large" data-id="notas_diferenciacion"></textarea>
+</div>
+
+<!-- ============= BLOQUE 8: OPERACIÓN ============= -->
+<h2 id="bloque-8">8. Bloque G — Operación (20 min)</h2>
+
+<table>
+  <tr><th style="width: 35%;">Item</th><th>Respuesta</th></tr>
+  <tr><td>Horario semanal completo</td><td><textarea data-id="op_horario" placeholder="Ej: Lun-Vie 9-19h, Sáb 9-15h"></textarea><div class="hint">Ej: "Lunes a viernes 9am-7pm; sábados 9am-3pm; domingos previa coordinación"</div></td></tr>
+  <tr><td>¿Atiende domingos?</td><td>
+    <label class="cb-label"><input type="checkbox" data-id="op_domingo_si"> SÍ</label>
+    <label class="cb-label"><input type="checkbox" data-id="op_domingo_no"> NO</label>
+    <label class="cb-label"><input type="checkbox" data-id="op_domingo_coord"> Coordinar</label>
+  </td></tr>
+  <tr><td>Anticipación mínima para agendar</td><td><input type="text" data-id="op_anticipacion"><div class="hint">Ej: "24h mínimo. Slots last-minute disponibles si tengo huecos."</div></td></tr>
+  <tr><td>Duración por tratamiento</td><td><textarea data-id="op_duraciones" placeholder="Botox 30min, HA 45-60min, PRP 60min, Hilos 60-90min..."></textarea></td></tr>
+  <tr><td>Capacidad diaria máxima</td><td><input type="text" data-id="op_capacidad"><div class="hint">Ej: "6 sesiones/día máximo (limitada por mi tiempo personal, no por sala)"</div></td></tr>
+  <tr><td>Días pico (saturados)</td><td><input type="text" data-id="op_dias_pico"><div class="hint">Ej: "Viernes tarde + sábado mañana — saturados. Lunes y martes hay slots disponibles."</div></td></tr>
+  <tr><td>Política cancelación</td><td><textarea data-id="op_cancelacion"></textarea><div class="hint">Ej: "Avisar 24h antes vía WhatsApp, sin costo. Menos de 24h cobramos 30% del tratamiento."</div></td></tr>
+  <tr><td>Política no_show</td><td><textarea data-id="op_noshow"></textarea><div class="hint">Ej: "Cobramos 50% del tratamiento si no avisa. Cliente queda bloqueado para nueva cita hasta pagar."</div></td></tr>
+  <tr><td>Dirección completa</td><td><textarea data-id="op_direccion" placeholder="Calle + número + distrito + referencia"></textarea></td></tr>
+  <tr><td>Cómo llegar (referencia visual)</td><td><textarea data-id="op_referencia"></textarea><div class="hint">Ej: "Edificio rojo con jardín verde frontal, frente a [referencia]. 2do piso, oficina 203."</div></td></tr>
+  <tr><td>Parking</td><td>
+    <label class="cb-label"><input type="checkbox" data-id="op_park_gratis"> Gratis (edificio o calle)</label>
+    <label class="cb-label"><input type="checkbox" data-id="op_park_pagado"> Pagado</label>
+    <label class="cb-label"><input type="checkbox" data-id="op_park_no"> NO hay</label>
+  </td></tr>
+  <tr><td>WiFi sala espera</td><td>Red: <input type="text" data-id="op_wifi_red" style="width: 200px;"> Pwd: <input type="text" data-id="op_wifi_pwd" style="width: 200px;"></td></tr>
+  <tr><td>Vacaciones anuales</td><td><textarea data-id="op_vacaciones" placeholder="¿Cierre por temporada? ¿Dic? ¿Carnavales?"></textarea></td></tr>
+</table>
+
+<div class="notas-block">
+  <h4>📝 Notas — Operación</h4>
+  <textarea class="large" data-id="notas_operacion"></textarea>
+</div>
+
+<!-- ============= BLOQUE 9: CASOS ============= -->
+<h2 id="bloque-9">9. Bloque H — Casos de Éxito (15 min)</h2>
+
+<div class="tip">Pedirle a la doctora 3 casos REALES anonimizados que el bot pueda mencionar. Idealmente con foto antes/después autorizada.</div>
+
+<div id="casos-container"></div>
+
+<h3>Reseñas Google positivas (3 mejores quotes literales)</h3>
+<textarea class="xlarge" data-id="casos_resenas" placeholder="'La Dra. X me explicó todo con paciencia. El resultado fue exactamente lo que buscaba — natural y sutil.' - C.M, Cusco"></textarea>
+<div class="hint">Si la doctora ya tiene reseñas Google públicas, pedirle screenshots. Si NO tiene perfil Google Business — eso es item urgente para hacer (gratis, fundamental para SEO local Cusco).</div>
+
+<div class="notas-block">
+  <h4>📝 Notas — Casos éxito</h4>
+  <textarea class="large" data-id="notas_casos"></textarea>
+</div>
+
+<!-- ============= BLOQUE 10: DROP-OFF ============= -->
+<h2 id="bloque-10">10. Bloque I — Drop-off + Re-engagement (20 min)</h2>
+
+<table>
+  <tr><th>Drop</th><th>Escenario</th><th>Espera</th><th>Contenido/oferta</th><th>Canal + escalación</th></tr>
+  <tr><td><strong>D1</strong></td><td>Lead NUNCA respondió primer mensaje bot</td><td><input type="text" data-id="d1_espera" placeholder="48h"></td><td><textarea data-id="d1_contenido"></textarea><div class="hint">Ej: "Hola [nombre], quería confirmarte que recibimos tu mensaje. ¿Sigue siendo buen momento para conversar?"</div></td><td><textarea data-id="d1_canal"></textarea></td></tr>
+  <tr><td><strong>D2</strong></td><td>Respondió saludo pero abandonó en qualifying</td><td><input type="text" data-id="d2_espera"></td><td><textarea data-id="d2_contenido"></textarea><div class="hint">Ej: Día +2 — enviar contenido educativo del tratamiento que mostró interés (artículo blog / video corto Dra. explicando).</div></td><td><textarea data-id="d2_canal"></textarea></td></tr>
+  <tr><td><strong>D3</strong></td><td>Completó qualifying pero no agendó (objection)</td><td><input type="text" data-id="d3_espera"></td><td><textarea data-id="d3_contenido"></textarea><div class="hint">Identificar objection real (precio / tiempo / duda) → secuencia específica. Ej precio: caso de éxito de cliente similar. Ej duda: video de Dra. explicando proceso paso a paso.</div></td><td><textarea data-id="d3_canal"></textarea></td></tr>
+  <tr><td><strong>D4</strong></td><td>Agendó pero canceló / no asistió</td><td><input type="text" data-id="d4_espera"></td><td><textarea data-id="d4_contenido"></textarea><div class="hint">Día +1: mensaje cálido sin presión, ofrecer reagendar. Día +3: contenido educativo. Día +7: oferta slot premium (martes/jueves baja demanda) con valor agregado.</div></td><td><textarea data-id="d4_canal"></textarea></td></tr>
+  <tr><td><strong>D5</strong></td><td>Asistió consulta pero no compró</td><td><input type="text" data-id="d5_espera"></td><td><textarea data-id="d5_contenido"></textarea><div class="hint">Email + WA con resumen de lo discutido en consulta + caso similar exitoso + invitación a hacer 1ra sesión.</div></td><td><textarea data-id="d5_canal"></textarea></td></tr>
+  <tr><td><strong>D6</strong></td><td>Compró no volvió 90d+</td><td><input type="text" data-id="d6_espera"></td><td><textarea data-id="d6_contenido"></textarea><div class="hint">Reactivación temporal: "Tu botox ya cumplió 4 meses, momento de renovar para mantener resultado". Usar timing del tratamiento específico (botox 4m, HA 9m).</div></td><td><textarea data-id="d6_canal"></textarea></td></tr>
+</table>
+
+<p><strong>Touches máximo antes de stop:</strong> <input type="text" data-id="dropoff_max_touches" style="width: 80px;" placeholder="3-5"> touches</p>
+<p><strong>Días silencio = "perdido":</strong> <input type="text" data-id="dropoff_perdido_dias" style="width: 80px;" placeholder="14-21"> días</p>
+
+<div class="notas-block">
+  <h4>📝 Notas — Drop-off</h4>
+  <textarea class="large" data-id="notas_dropoff"></textarea>
+</div>
+
+<!-- ============= BLOQUE 11: CAPTACIÓN ============= -->
+<h2 id="bloque-11">11. Bloque J — Sistema Global Captación (30 min)</h2>
+
+<h3>Canales activos hoy</h3>
+<table>
+  <tr><th>Canal</th><th style="width: 100px;">Activo</th><th>Comentario</th></tr>
+  <tr><td>FB Ads paid</td><td><input type="checkbox" data-id="cap_fbads"></td><td><textarea data-id="cap_fbads_n"></textarea></td></tr>
+  <tr><td>Google Ads paid</td><td><input type="checkbox" data-id="cap_gads"></td><td><textarea data-id="cap_gads_n"></textarea></td></tr>
+  <tr><td>Instagram orgánico</td><td><input type="checkbox" data-id="cap_ig"></td><td><textarea data-id="cap_ig_n" placeholder="Frecuencia post / engagement / handle"></textarea></td></tr>
+  <tr><td>Facebook Page orgánico</td><td><input type="checkbox" data-id="cap_fb"></td><td><textarea data-id="cap_fb_n"></textarea></td></tr>
+  <tr><td>SEO sitio web</td><td><input type="checkbox" data-id="cap_seo"></td><td><textarea data-id="cap_seo_n"></textarea></td></tr>
+  <tr><td>Google My Business (mapa)</td><td><input type="checkbox" data-id="cap_gmb"></td><td><textarea data-id="cap_gmb_n"></textarea><div class="hint">CRÍTICO para Cusco. Si NO existe, hacerlo es item #1 — gratis y trae leads orgánicos de búsqueda local.</div></td></tr>
+  <tr><td>Boca a boca / referidos</td><td><input type="checkbox" data-id="cap_referidos" checked></td><td><textarea data-id="cap_referidos_n"></textarea></td></tr>
+  <tr><td>WhatsApp directo (clientes con tu número)</td><td><input type="checkbox" data-id="cap_wa" checked></td><td><textarea data-id="cap_wa_n"></textarea></td></tr>
+  <tr><td>Influencer marketing Cusco</td><td><input type="checkbox" data-id="cap_influ"></td><td><textarea data-id="cap_influ_n" placeholder="¿Hay micro-influencers Cusco/Perú belleza/lifestyle?"></textarea></td></tr>
+  <tr><td>Partnerships (peluquerías, spas, hoteles)</td><td><input type="checkbox" data-id="cap_partner"></td><td><textarea data-id="cap_partner_n"></textarea></td></tr>
+  <tr><td>Email marketing</td><td><input type="checkbox" data-id="cap_email"></td><td><textarea data-id="cap_email_n"></textarea></td></tr>
+  <tr><td>TikTok</td><td><input type="checkbox" data-id="cap_tiktok"></td><td><textarea data-id="cap_tiktok_n"></textarea></td></tr>
+</table>
+
+<p><strong>P1: ¿Cuál canal da los MEJORES clientes (calidad + LTV)?</strong></p>
+<textarea class="large" data-id="cap_p1"></textarea>
+<div class="hint">Pedir respuesta específica. Ej: "Los referidos son los mejores — vienen con expectativa correcta, no regatean, repiten. FB Ads trae mucho leads pero 40% son curiosos sin presupuesto."</div>
+
+<p><strong>P2: ¿Cuál canal da los MÁS PROBLEMÁTICOS?</strong></p>
+<textarea class="large" data-id="cap_p2"></textarea>
+
+<p><strong>P3: ¿Canales que NO usamos pero deberíamos?</strong></p>
+<textarea class="large" data-id="cap_p3"></textarea>
+
+<p><strong>P4: Programa referidos — ¿existe? ¿Cómo escalar?</strong></p>
+<textarea class="xlarge" data-id="cap_p4"></textarea>
+<div class="hint"><strong>Idea concreta:</strong> "Referida 1: la clienta que trae trae descuento 10% en su próximo tratamiento. La nueva también recibe 10% off en su primera sesión. Ambas ganan."</div>
+
+<div class="notas-block">
+  <h4>📝 Notas — Captación</h4>
+  <textarea class="large" data-id="notas_captacion"></textarea>
+</div>
+
+<!-- ============= BLOQUE 12: PRIORIZACIÓN ============= -->
+<h2 id="bloque-12">12. Bloque K — Priorización + Plan</h2>
+
+<h3>Tratamientos prioritarios para escalar</h3>
+<p><strong>¿Qué tratamiento querrías VENDER MÁS y por qué no estás vendiendo más hoy?</strong></p>
+
+<div class="hint"><strong>Tener en cuenta del data:</strong> Botox = 50% revenue (escalar lo que ya funciona). HA = 16% (alto ticket S/1,144). Hilos = 11% (super alto ticket S/1,333 pero solo 3 ventas). Bioestimuladores y Lifting Facial = 0 ventas pero altísimo ticket potencial — preguntar si quiere relanzarlos.</div>
+
+<div class="row"><label>Tratamiento prio 1</label><input type="text" data-id="prio_t1"></div>
+<div class="row"><label>Razón no escala hoy</label><textarea data-id="prio_t1_razon"></textarea></div>
+
+<div class="row"><label>Tratamiento prio 2</label><input type="text" data-id="prio_t2"></div>
+<div class="row"><label>Razón no escala hoy</label><textarea data-id="prio_t2_razon"></textarea></div>
+
+<div class="row"><label>Tratamiento prio 3</label><input type="text" data-id="prio_t3"></div>
+<div class="row"><label>Razón no escala hoy</label><textarea data-id="prio_t3_razon"></textarea></div>
+
+<h3>Plan estratégico 6 / 12 / 24 meses</h3>
+
+<p><strong>6 meses</strong> (qué tratamientos priorizar, qué canal escalar, meta volumen)</p>
+<textarea class="xlarge" data-id="plan_6m"></textarea>
+
+<p><strong>12 meses</strong> (meta ventas mensuales, nuevos servicios, expansión)</p>
+<textarea class="xlarge" data-id="plan_12m"></textarea>
+
+<p><strong>24 meses</strong> (segundo local, nuevos doctores, franquicia, otro distrito)</p>
+<textarea class="xlarge" data-id="plan_24m"></textarea>
+
+<div class="notas-block">
+  <h4>📝 Notas — Priorización + Plan</h4>
+  <textarea class="large" data-id="notas_priorizacion"></textarea>
+</div>
+
+<!-- ============= BLOQUE 13: NOTAS GENERALES ============= -->
+<h2 id="bloque-13">13. Notas generales del encuentro</h2>
+
+<p>Todo lo que surja y no encaja en los otros bloques. Quotes literales de la doctora, insights, ideas, observaciones:</p>
+<textarea class="xlarge" data-id="notas_generales" style="min-height: 300px;"></textarea>
+
+<h3>Próxima sesión</h3>
+<p><strong>Fecha próximo encuentro:</strong> <input type="text" data-id="proxima_fecha"></p>
+<p><strong>Temas pendientes:</strong></p>
+<textarea class="large" data-id="proxima_temas"></textarea>
+
+<p style="text-align: center; margin: 60px 0; color: #999;">
+— Fin del workbook —<br>
+<small>Recuerda exportar antes de cerrar: sidebar → botón verde "Exportar Markdown"</small>
+</p>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'livskin_workbook_v2';
+let autosaveTimer = null;
+
+// Pre-loaded data for tratamientos (top 6 por revenue)
+const PRECARGA_TRATAMIENTOS = [
+  { num: 1, prefilled: true, nombre: 'Botox', ventas: 28, revenue: 18050, ticket: 645, area_sugerida: 'Frente, entrecejo, patas de gallo', marcas_sugeridas: 'Allergan (Botox), Galderma (Dysport)' },
+  { num: 2, prefilled: true, nombre: 'Ácido Hialurónico', ventas: 5, revenue: 5720, ticket: 1144, area_sugerida: 'Labios, ojeras, surco nasogeniano', marcas_sugeridas: 'Juvederm, Restylane' },
+  { num: 3, prefilled: true, nombre: 'Hilos', ventas: 3, revenue: 4000, ticket: 1333, area_sugerida: 'Mandíbula, cuello, mejillas', marcas_sugeridas: 'PDO, PLLA, Silhouette' },
+  { num: 4, prefilled: true, nombre: 'Esperma de Salmón', ventas: 11, revenue: 2550, ticket: 232, area_sugerida: 'Rejuvenecimiento dérmico', marcas_sugeridas: '' },
+  { num: 5, prefilled: true, nombre: 'PRP', ventas: 6, revenue: 900, ticket: 150, area_sugerida: 'Rejuvenecimiento, alopecia, ojeras', marcas_sugeridas: '' },
+  { num: 6, prefilled: true, nombre: 'Limpieza Facial', ventas: 3, revenue: 120, ticket: 40, area_sugerida: 'Mantenimiento general', marcas_sugeridas: '' },
+  { num: 7, prefilled: false },
+  { num: 8, prefilled: false },
+  { num: 9, prefilled: false },
+  { num: 10, prefilled: false }
+];
+
+function generarFichaTratamiento(t) {
+  const cls = t.prefilled ? 'ficha prefilled' : 'ficha';
+  const titulo = t.prefilled
+    ? `<h3>Ficha #${t.num} — ${t.nombre} 📊 (pre-cargado del sistema)</h3>`
+    : `<h3>Ficha Tratamiento #${t.num} — <input type="text" data-id="t${t.num}_nombre" placeholder="Nombre del tratamiento (si la doctora menciona otro)" style="width: 60%;"></h3>`;
+
+  const dataPrecargado = t.prefilled
+    ? `<div class="hint"><strong>Data sistema (${t.ventas} ventas en 3 meses):</strong> Revenue S/${t.revenue.toLocaleString()} · Ticket promedio S/${t.ticket} · Validar con doctora si refleja realidad.</div>`
+    : '';
+
+  const valorPrellenadoNombre = t.prefilled ? `<input type="hidden" data-id="t${t.num}_nombre" value="${t.nombre}">` : '';
+
+  return `
+<div class="${cls}">
+  ${titulo}
+  ${dataPrecargado}
+  ${valorPrellenadoNombre}
+  <table>
+    <tr><th style="width:35%;">Pregunta</th><th>Respuesta</th></tr>
+    <tr><td>¿Qué es en 2 frases?</td><td><textarea class="large" data-id="t${t.num}_que_es"></textarea><div class="hint">Ej: "Toxina botulínica que relaja músculos faciales generando líneas de expresión. Resultado natural a los 5-7 días, dura 4-6 meses."</div></td></tr>
+    <tr><td>¿Para qué cliente es ideal?</td><td><textarea data-id="t${t.num}_ideal"></textarea><div class="hint">Edad típica + género + contexto (profesional, ama de casa, preventivo/correctivo)</div></td></tr>
+    <tr><td>¿Para quién NO es? (contraindicaciones)</td><td><textarea data-id="t${t.num}_no_es"></textarea><div class="hint">Ej Botox: embarazo, lactancia, enfermedad neuromuscular, alergia toxina</div></td></tr>
+    <tr><td>Duración + recuperación</td><td><textarea data-id="t${t.num}_duracion"></textarea><div class="hint">Ej: "30 min sesión, recuperación 0 — vas a casa y a tu vida normal"</div></td></tr>
+    <tr><td>Precio "desde" (caso simple)</td><td><input type="text" data-id="t${t.num}_precio_desde" placeholder="S/__"></td></tr>
+    <tr><td>Precio "hasta" (caso complejo)</td><td><input type="text" data-id="t${t.num}_precio_hasta" placeholder="S/__"></td></tr>
+    <tr><td>¿De qué depende el precio?</td><td><textarea data-id="t${t.num}_depende"></textarea><div class="hint">Lo que explica la varianza (unidades, zonas, complejidad caso, jeringas, sesiones)</div></td></tr>
+    <tr><td>Sesiones promedio</td><td><input type="text" data-id="t${t.num}_sesiones" placeholder="1 / mensual x 3 / etc"></td></tr>
+    <tr><td>Resultado realista esperado</td><td><textarea data-id="t${t.num}_resultado"></textarea><div class="hint">Qué SÍ hace + qué NO hace. Manejo de expectativas crítico para evitar quejas.</div></td></tr>
+    <tr><td>Top 3 objections del cliente</td><td><textarea class="large" data-id="t${t.num}_objections"></textarea><div class="hint">Las 3 preguntas/dudas más comunes que el cliente plantea sobre ESTE tratamiento específico.</div></td></tr>
+    <tr><td>Cross-sell típico</td><td><input type="text" data-id="t${t.num}_crosssell"></td></tr>
+    <tr><td>Edad mínima recomendada</td><td><input type="text" data-id="t${t.num}_edad"></td></tr>
+    <tr><td>Productos/marcas que usa</td><td><input type="text" data-id="t${t.num}_marcas" placeholder="${t.marcas_sugeridas || ''}"></td></tr>
+    <tr><td>¿Alta temporada? (verano, fiestas)</td><td><input type="text" data-id="t${t.num}_temporada"></td></tr>
+    ${t.area_sugerida ? `<tr><td>Áreas comunes (data sistema)</td><td><div class="hint">${t.area_sugerida}</div></td></tr>` : ''}
+  </table>
+</div>
+  `;
+}
+
+function generarFichaArquetipo(num) {
+  return `
+<div class="ficha arquetipo">
+  <h3>Arquetipo #${num} — <input type="text" data-id="a${num}_nombre" placeholder="Nombre segmento (ej: Profesional mantención 35-50)" style="width: 60%;"></h3>
+  <table>
+    <tr><th style="width:35%;">Atributo</th><th>Valor</th></tr>
+    <tr><td>Edad típica</td><td><input type="text" data-id="a${num}_edad"></td></tr>
+    <tr><td>Género / contexto</td><td><input type="text" data-id="a${num}_contexto"></td></tr>
+    <tr><td>¿Cómo se enteró de Livskin?</td><td><input type="text" data-id="a${num}_canal"></td></tr>
+    <tr><td>Tratamiento primero / preferido</td><td><input type="text" data-id="a${num}_tratamiento"></td></tr>
+    <tr><td>Qué le preocupa (painpoint)</td><td><textarea data-id="a${num}_painpoint"></textarea></td></tr>
+    <tr><td>Frecuencia retorno</td><td><input type="text" data-id="a${num}_frecuencia"></td></tr>
+    <tr><td>Ticket promedio</td><td><input type="text" data-id="a${num}_ticket"></td></tr>
+    <tr><td>Cliente REAL ejemplo (anonimizado)</td><td><textarea data-id="a${num}_ejemplo" placeholder="'M.A., 38, profesional. Botox cada 5m + HA labial 1x/año'"></textarea></td></tr>
+    <tr><td>Cómo le habla la doctora</td><td><input type="text" data-id="a${num}_tono"></td></tr>
+    <tr><td>Painpoint #1 específico</td><td><textarea data-id="a${num}_painpoint1"></textarea></td></tr>
+    <tr><td>Lo que la convence (cierra venta)</td><td><textarea data-id="a${num}_convence"></textarea></td></tr>
+    <tr><td>% del total clientes (de 134)</td><td><input type="text" data-id="a${num}_pct" placeholder="ej: 40 de 134 (30%)"></td></tr>
+  </table>
+</div>
+  `;
+}
+
+function generarFichaCaso(num) {
+  return `
+<div class="ficha">
+  <h3>Caso #${num}</h3>
+  <table>
+    <tr><th style="width:35%;">Item</th><th>Valor</th></tr>
+    <tr><td>Cliente (anonimizado)</td><td><input type="text" data-id="caso${num}_cliente" placeholder="Ej: M.A., 38 años, profesional"></td></tr>
+    <tr><td>Tratamiento(s)</td><td><textarea data-id="caso${num}_tratamiento"></textarea></td></tr>
+    <tr><td>Resultado / transformación</td><td><textarea class="large" data-id="caso${num}_resultado"></textarea><div class="hint">Describir cambio físico + emocional que el cliente experimentó. Ej: "Borrar líneas entrecejo profundo que la hacían verse 'enojada'. Recibió comentarios positivos en oficina sin que noten qué se hizo."</div></td></tr>
+    <tr><td>Emoción / quote del cliente</td><td><textarea data-id="caso${num}_quote" placeholder="'Me siento como yo de hace 5 años'"></textarea></td></tr>
+    <tr><td>¿Foto antes/después autorizada?</td><td>
+      <label class="cb-label"><input type="checkbox" data-id="caso${num}_foto_si"> SÍ — autorizada</label>
+      <label class="cb-label"><input type="checkbox" data-id="caso${num}_foto_no"> NO</label>
+    </td></tr>
+    <tr><td>📷 Foto ANTES</td><td>
+      <input type="file" accept="image/*" onchange="handleFotoUpload(this, ${num}, 'antes')" style="margin-bottom: 6px;">
+      <input type="hidden" data-id="caso${num}_foto_antes_data">
+      <div id="preview_caso${num}_antes" style="margin-top: 6px;"></div>
+      <div class="hint">Si la doctora trae fotos en celular, las subís acá. Se redimensionan a 600px y guardan comprimidas. Salen incluidas en el JSON de export.</div>
+    </td></tr>
+    <tr><td>📷 Foto DESPUÉS</td><td>
+      <input type="file" accept="image/*" onchange="handleFotoUpload(this, ${num}, 'despues')" style="margin-bottom: 6px;">
+      <input type="hidden" data-id="caso${num}_foto_despues_data">
+      <div id="preview_caso${num}_despues" style="margin-top: 6px;"></div>
+    </td></tr>
+    <tr><td>Notas adicionales del caso</td><td><textarea data-id="caso${num}_notas" placeholder="Tratamientos previos, contexto, lo que llamó la atención del caso"></textarea></td></tr>
+  </table>
+</div>
+  `;
+}
+
+// Manejo de upload de fotos con resize + compresión
+function handleFotoUpload(input, caseNum, tipo) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('Solo imágenes (JPG, PNG, WebP)');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 600;
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const ratio = Math.min(maxSize/w, maxSize/h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+      // Guardar en hidden field
+      document.querySelector(`[data-id="caso${caseNum}_foto_${tipo}_data"]`).value = dataUrl;
+      // Mostrar preview
+      const preview = document.getElementById(`preview_caso${caseNum}_${tipo}`);
+      preview.innerHTML = `
+        <img src="${dataUrl}" style="max-width: 200px; max-height: 200px; border: 2px solid #16a34a; border-radius: 6px;">
+        <div style="font-size: 11px; color: #666; margin-top: 4px;">Guardada: ${w}x${h}px, ~${sizeKB}KB</div>
+        <button type="button" onclick="eliminarFoto(${caseNum}, '${tipo}')" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-top: 4px; font-size: 11px;">🗑 Eliminar</button>
+      `;
+      saveToLocalStorage();
+      showToast(`Foto ${tipo} guardada (${sizeKB}KB)`);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function eliminarFoto(caseNum, tipo) {
+  document.querySelector(`[data-id="caso${caseNum}_foto_${tipo}_data"]`).value = '';
+  document.getElementById(`preview_caso${caseNum}_${tipo}`).innerHTML = '';
+  saveToLocalStorage();
+  showToast('Foto eliminada');
+}
+
+// Restaurar previews de fotos guardadas
+function restaurarPreviewsFotos() {
+  for (let i = 1; i <= 3; i++) {
+    ['antes', 'despues'].forEach(tipo => {
+      const el = document.querySelector(`[data-id="caso${i}_foto_${tipo}_data"]`);
+      if (el && el.value && el.value.startsWith('data:image')) {
+        const preview = document.getElementById(`preview_caso${i}_${tipo}`);
+        if (preview) {
+          const sizeKB = Math.round(el.value.length * 0.75 / 1024);
+          preview.innerHTML = `
+            <img src="${el.value}" style="max-width: 200px; max-height: 200px; border: 2px solid #16a34a; border-radius: 6px;">
+            <div style="font-size: 11px; color: #666; margin-top: 4px;">Guardada: ~${sizeKB}KB</div>
+            <button type="button" onclick="eliminarFoto(${i}, '${tipo}')" style="background: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-top: 4px; font-size: 11px;">🗑 Eliminar</button>
+          `;
+        }
+      }
+    });
+  }
+}
+
+let html = '';
+PRECARGA_TRATAMIENTOS.forEach(t => html += generarFichaTratamiento(t));
+document.getElementById('tratamientos-container').innerHTML = html;
+
+// Contador de fichas extras (más allá de las 10 pre-generadas)
+let extraTratamientoCount = 0;
+
+function agregarTratamiento() {
+  extraTratamientoCount++;
+  const num = 10 + extraTratamientoCount;
+  const html = generarFichaTratamiento({ num: num, prefilled: false });
+  // Wrap con un div para identificar y agregar botón eliminar
+  const wrapper = document.createElement('div');
+  wrapper.id = `tratamiento-extra-${num}`;
+  wrapper.innerHTML = html;
+  // Agregar botón eliminar al ficha
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = '🗑 Eliminar este tratamiento';
+  removeBtn.style.cssText = 'background:#ef4444;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;margin:8px 0;font-size:12px;';
+  removeBtn.onclick = () => {
+    if (confirm(`¿Eliminar la ficha de tratamiento #${num}?`)) {
+      // Limpiar campos en localStorage
+      document.querySelectorAll(`#tratamiento-extra-${num} [data-id]`).forEach(el => {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+      });
+      saveToLocalStorage();
+      wrapper.remove();
+      // Persistir cuántos extras existen actualmente
+      persistExtraCount();
+    }
+  };
+  wrapper.querySelector('.ficha').appendChild(removeBtn);
+  document.getElementById('tratamientos-extra-container').appendChild(wrapper);
+  persistExtraCount();
+  showToast(`Tratamiento #${num} agregado`);
+}
+
+function persistExtraCount() {
+  const existing = document.querySelectorAll('#tratamientos-extra-container > div').length;
+  localStorage.setItem(STORAGE_KEY + '_extra_count', String(existing));
+}
+
+function restaurarExtras() {
+  const stored = localStorage.getItem(STORAGE_KEY + '_extra_count');
+  if (!stored) return;
+  const count = parseInt(stored, 10);
+  if (isNaN(count) || count < 1) return;
+  for (let i = 0; i < count; i++) agregarTratamiento();
+}
+
+html = '';
+for (let i = 1; i <= 5; i++) html += generarFichaArquetipo(i);
+document.getElementById('arquetipos-container').innerHTML = html;
+
+html = '';
+for (let i = 1; i <= 3; i++) html += generarFichaCaso(i);
+document.getElementById('casos-container').innerHTML = html;
+
+// Save/Load/Export logic
+function getAllFields() {
+  const fields = {};
+  document.querySelectorAll('[data-id]').forEach(el => {
+    const id = el.getAttribute('data-id');
+    if (el.type === 'checkbox') fields[id] = el.checked;
+    else fields[id] = el.value;
+  });
+  return fields;
+}
+
+function loadAllFields(data) {
+  if (!data) return;
+  Object.keys(data).forEach(id => {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!data[id];
+    else el.value = data[id] || '';
+  });
+}
+
+function saveToLocalStorage() {
+  const data = getAllFields();
+  data._lastSaved = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  updateProgress();
+  showSavedIndicator();
+}
+
+function showSavedIndicator() {
+  const ind = document.getElementById('savedIndicator');
+  ind.textContent = '✓ Guardado ' + new Date().toLocaleTimeString();
+}
+
+function updateProgress() {
+  const all = document.querySelectorAll('[data-id]');
+  let filled = 0;
+  all.forEach(el => {
+    if (el.type === 'checkbox') { if (el.checked) filled++; }
+    else if (el.value && el.value.trim().length > 0) filled++;
+  });
+  const pct = Math.round((filled / all.length) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = pct + '% (' + filled + '/' + all.length + ')';
+}
+
+function clearAll() {
+  if (!confirm('¿Borrar TODOS los datos? Esto no se puede deshacer.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('[data-id]').forEach(el => {
+    if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+  });
+  updateProgress();
+  showToast('Todo borrado');
+}
+
+function exportToJSON() {
+  const data = getAllFields();
+  data._exported = new Date().toISOString();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `livskin-workbook-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('JSON descargado');
+}
+
+function loadFromFile() { document.getElementById('fileInput').click(); }
+
+function handleFileLoad(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      loadAllFields(data);
+      saveToLocalStorage();
+      showToast('Datos cargados desde archivo');
+    } catch (err) { alert('Error: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function exportToMarkdown() {
+  const f = getAllFields();
+  let md = `# Livskin Discovery Workbook\n\n**Fecha:** ${f.fecha||'?'} | **Doctora:** ${f.doctora_nombre||'?'}\n\n`;
+
+  md += `## Filosofía bot\n`;
+  md += `- Rangos precio con disclaimer: ${f.rango_precios_si?'SÍ':f.rango_precios_no?'NO':'—'}\n`;
+  md += `- Consulta: ${f.consulta_gratis?'Gratuita':f.consulta_pagada?'Pagada S/'+(f.consulta_costo||'?'):'—'}, acredita: ${f.consulta_credita?'SÍ':'NO'}\n`;
+  md += `- Bot nombre: ${f.bot_nombre||'—'} | Emojis: ${f.emojis_si?'SÍ':'NO'} (${f.emojis_permitidos||''})\n`;
+  md += `- Notas: ${f.notas_filosofia||'—'}\n\n`;
+
+  md += `## Competencia\n${f.competencia_lista||'—'}\n\nMejores que nosotros: ${f.competencia_mejor||'—'}\nNosotros mejor: ${f.competencia_nuestro||'—'}\n\n`;
+
+  md += `## Tratamientos\n\n`;
+  // Itera 1-50 para cubrir las 10 base + fichas extras agregadas dinámicamente
+  for (let i = 1; i <= 50; i++) {
+    const nom = f[`t${i}_nombre`];
+    if (!nom && i > 6) continue;  // skip si no hay nombre y no es pre-cargado
+    md += `### ${i}. ${nom||'(sin nombre)'}\n`;
+    md += `- Qué es: ${f[`t${i}_que_es`]||'—'}\n`;
+    md += `- Ideal para: ${f[`t${i}_ideal`]||'—'}\n`;
+    md += `- NO es para: ${f[`t${i}_no_es`]||'—'}\n`;
+    md += `- Duración: ${f[`t${i}_duracion`]||'—'}\n`;
+    md += `- Precio: S/${f[`t${i}_precio_desde`]||'?'} – S/${f[`t${i}_precio_hasta`]||'?'} (depende: ${f[`t${i}_depende`]||'?'})\n`;
+    md += `- Sesiones: ${f[`t${i}_sesiones`]||'—'}\n`;
+    md += `- Resultado: ${f[`t${i}_resultado`]||'—'}\n`;
+    md += `- Objections: ${f[`t${i}_objections`]||'—'}\n`;
+    md += `- Cross-sell: ${f[`t${i}_crosssell`]||'—'} | Edad mín: ${f[`t${i}_edad`]||'—'} | Marcas: ${f[`t${i}_marcas`]||'—'}\n\n`;
+  }
+  md += `**Brand pitch:** ${f.brand_pitch_core||'—'}\n\n**Notas:** ${f.notas_tratamientos||'—'}\n\n`;
+
+  md += `## Arquetipos\n\n`;
+  for (let i = 1; i <= 5; i++) {
+    const nom = f[`a${i}_nombre`]; if (!nom) continue;
+    md += `### ${i}. ${nom}\n- Edad: ${f[`a${i}_edad`]||'—'} | Contexto: ${f[`a${i}_contexto`]||'—'}\n- Canal: ${f[`a${i}_canal`]||'—'} | Tratamiento: ${f[`a${i}_tratamiento`]||'—'}\n- Painpoint: ${f[`a${i}_painpoint`]||'—'} | Frecuencia: ${f[`a${i}_frecuencia`]||'—'} | Ticket: ${f[`a${i}_ticket`]||'—'}\n- Ejemplo: ${f[`a${i}_ejemplo`]||'—'}\n- Tono doctora: ${f[`a${i}_tono`]||'—'}\n- Painpoint #1: ${f[`a${i}_painpoint1`]||'—'} | Convence: ${f[`a${i}_convence`]||'—'}\n- % total: ${f[`a${i}_pct`]||'—'}\n\n`;
+  }
+  md += `**Tier económico:** ${f.arq_tier_economico||'—'}\n**Alto valor signals:** ${f.arq_alto_valor_signals||'—'}\n**Problemáticos:** ${f.arq_problematicos||'—'}\n\n`;
+
+  md += `## Brand Voice\n`;
+  ['tratamiento','tono','emojis','no_usar','saludo','despedida_cita','despedida_frio','estructura','largo'].forEach(k => {
+    md += `- ${k}: ${f['bv_'+k]||'—'}\n`;
+  });
+  md += `- Mayúsculas énfasis: ${f.bv_mayus_si?'SÍ':'NO'} | Exclamación: ${f.bv_exclama||'—'}\n`;
+  md += `\n**DON'T:** ${f.bv_dont||'—'}\n**Palabras marca:** ${f.bv_palabras_marca||'—'}\n**Notas:** ${f.notas_brandvoice||'—'}\n\n`;
+
+  md += `## Painpoints\n`;
+  ['Miedo dolor','Miedo raro','Precio alto','Desconfianza','Inseguridad social','Timing edad','Contraindic','Falta tiempo','Comparación','Distancia','Pago/cuotas','No sabe qué necesita'].forEach((n,i) => {
+    md += `**${i+1}. ${n}:** ${f[`pp${i+1}`]||'—'}\n`;
+  });
+  md += `\n**Contexto local Cusco:**\n`;
+  md += `- Clima altura: ${f.pp_cusco_clima||'—'}\n`;
+  md += `- Aceptación cultural: ${f.pp_cusco_cultura||'—'}\n`;
+  md += `- Turista nacional: ${f.pp_cusco_turismo||'—'}\n`;
+  md += `- Cliente extranjero: ${f.pp_cusco_extranjero||'—'}\n`;
+  md += `- Soroche / altitud: ${f.pp_cusco_soroche||'—'}\n`;
+  md += `- Fototipo andino: ${f.pp_cusco_fototipo||'—'}\n\n`;
+
+  md += `## Precios\n`;
+  md += `- Estrategia: ${f.precio_estrategia_b?'B (rango+disclaimer)':f.precio_estrategia_a?'A':f.precio_estrategia_c?'C':f.precio_estrategia_d?'D':'—'}\n`;
+  md += `- Consulta: ${f.cons_gratis?'Gratis':'Pagada S/'+(f.cons_costo||'?')} | Acredita: ${f.cons_credita_si?'SÍ':'NO'} | ${f.cons_duracion||'—'}min\n`;
+  md += `- Pagos: `;
+  ['yape','plin','transferencia','efectivo','visa','mastercard','amex','cuotas'].forEach(p => { if(f[`pago_${p}`]) md+=`${p}, `; });
+  md += `\n- Descuento contado: ${f.pago_descuento||'—'}\n- Cuotas: ${f.pago_sistema_cuotas||'—'}\n\n**Notas:** ${f.notas_precios||'—'}\n\n`;
+
+  md += `## Diferenciación\n- P1: ${f.dif_p1||'—'}\n- P2: ${f.dif_p2||'—'}\n- P3: ${f.dif_p3||'—'}\n- P4: ${f.dif_p4||'—'}\n\n**Ventajas core:**\n`;
+  for (let i = 1; i <= 5; i++) if(f[`dif_v${i}`]) md += `${i}. ${f[`dif_v${i}`]}\n`;
+  md += `\n**Notas:** ${f.notas_diferenciacion||'—'}\n\n`;
+
+  md += `## Operación\n- Horario: ${f.op_horario||'—'}\n- Domingo: ${f.op_domingo_si?'SÍ':f.op_domingo_coord?'Coord':'NO'}\n- Anticipación: ${f.op_anticipacion||'—'}\n- Duraciones: ${f.op_duraciones||'—'}\n- Capacidad: ${f.op_capacidad||'—'} | Días pico: ${f.op_dias_pico||'—'}\n- Cancelación: ${f.op_cancelacion||'—'}\n- No-show: ${f.op_noshow||'—'}\n- Dirección: ${f.op_direccion||'—'} (${f.op_referencia||''})\n- Parking: ${f.op_park_gratis?'Gratis':f.op_park_pagado?'Pagado':'No hay'}\n- WiFi: ${f.op_wifi_red||'—'} / ${f.op_wifi_pwd||'—'}\n- Vacaciones: ${f.op_vacaciones||'—'}\n\n**Notas:** ${f.notas_operacion||'—'}\n\n`;
+
+  md += `## Casos\n`;
+  for (let i = 1; i <= 3; i++) {
+    if (!f[`caso${i}_cliente`]) continue;
+    md += `### ${i}. ${f[`caso${i}_cliente`]}\n`;
+    md += `- Tratamiento: ${f[`caso${i}_tratamiento`]||'—'}\n`;
+    md += `- Resultado: ${f[`caso${i}_resultado`]||'—'}\n`;
+    md += `- Quote: ${f[`caso${i}_quote`]||'—'}\n`;
+    md += `- Foto autorizada: ${f[`caso${i}_foto_si`]?'SÍ':'NO'}\n`;
+    md += `- Foto ANTES adjuntada: ${f[`caso${i}_foto_antes_data`]?'SÍ (en JSON)':'NO'}\n`;
+    md += `- Foto DESPUÉS adjuntada: ${f[`caso${i}_foto_despues_data`]?'SÍ (en JSON)':'NO'}\n`;
+    md += `- Notas: ${f[`caso${i}_notas`]||'—'}\n\n`;
+  }
+  md += `**Reseñas:** ${f.casos_resenas||'—'}\n\n`;
+
+  md += `## Drop-off\n`;
+  for (let i = 1; i <= 6; i++) md += `**D${i}:** espera=${f[`d${i}_espera`]||'—'} | contenido=${f[`d${i}_contenido`]||'—'} | canal=${f[`d${i}_canal`]||'—'}\n`;
+  md += `\n- Touches máx: ${f.dropoff_max_touches||'—'} | Días silencio=perdido: ${f.dropoff_perdido_dias||'—'}\n\n**Notas:** ${f.notas_dropoff||'—'}\n\n`;
+
+  md += `## Captación\n`;
+  ['fbads','gads','ig','fb','seo','gmb','referidos','wa','influ','partner','email','tiktok'].forEach(c => { if(f[`cap_${c}`]) md+=`- ${c}: ${f[`cap_${c}_n`]||''}\n`; });
+  md += `\n- Mejores clientes vienen de: ${f.cap_p1||'—'}\n- Más problemáticos: ${f.cap_p2||'—'}\n- Canales NO usados pero sí: ${f.cap_p3||'—'}\n- Programa referidos: ${f.cap_p4||'—'}\n\n**Notas:** ${f.notas_captacion||'—'}\n\n`;
+
+  md += `## Priorización\n`;
+  for (let i = 1; i <= 3; i++) if(f[`prio_t${i}`]) md += `**Prio ${i}:** ${f[`prio_t${i}`]} — razón: ${f[`prio_t${i}_razon`]||'—'}\n`;
+  md += `\n- 6 meses: ${f.plan_6m||'—'}\n- 12 meses: ${f.plan_12m||'—'}\n- 24 meses: ${f.plan_24m||'—'}\n\n**Notas:** ${f.notas_priorizacion||'—'}\n\n`;
+
+  md += `## Notas generales\n${f.notas_generales||'—'}\n\n**Próxima sesión:** ${f.proxima_fecha||'—'}\n**Temas:** ${f.proxima_temas||'—'}\n\n---\n_Generado: ${new Date().toLocaleString()}_\n`;
+
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `livskin-discovery-${new Date().toISOString().split('T')[0]}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Markdown descargado');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function debounce(fn, delay) {
+  return (...args) => { clearTimeout(autosaveTimer); autosaveTimer = setTimeout(() => fn(...args), delay); };
+}
+
+const debouncedSave = debounce(saveToLocalStorage, 500);
+
+document.addEventListener('input', e => { if (e.target.matches('[data-id]')) debouncedSave(); });
+document.addEventListener('change', e => { if (e.target.matches('[data-id]')) debouncedSave(); });
+
+window.addEventListener('scroll', () => {
+  const sections = document.querySelectorAll('h2[id]');
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  document.querySelectorAll('#sidebar nav a').forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  // 1. Restaurar fichas extras de tratamientos (si había)
+  restaurarExtras();
+
+  // 2. Cargar datos guardados
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      loadAllFields(JSON.parse(stored));
+      showToast('Datos previos cargados');
+    } catch (e) { console.error(e); }
+  }
+
+  // 3. Restaurar previews de fotos
+  restaurarPreviewsFotos();
+
+  updateProgress();
+});
+</script>
+
+</body>
+</html>
