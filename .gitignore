@@ -113,6 +113,11 @@ _build/
 _pending-uploads/*
 !_pending-uploads/README.md
 
+# --- Raw discovery material con PII (chats reales, credenciales doctora, audio encuentro) ---
+# Dario deja material crudo aquí; Claude lo procesa + extrae patterns anonimizados a docs/brand/*.md tracked
+docs/brand/raw/*
+!docs/brand/raw/README.md
+
 # --- Coverage / testing ---
 .coverage
 htmlcov/
