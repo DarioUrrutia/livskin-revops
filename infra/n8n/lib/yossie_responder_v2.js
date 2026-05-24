@@ -24,6 +24,22 @@
  */
 
 // ============================================================================
+// INTERNAL PHONES — Dario + doctora. El bot IGNORA mensajes inbound de estos
+// (no son leads, son operadores internos que reciben notificaciones).
+// ============================================================================
+
+const INTERNAL_PHONES = [
+  '+51982732978',   // Dario (control)
+  '+51910848995',   // Doctora Claudia (1)
+  '+51980727888',   // Doctora Claudia (2)
+];
+
+function isInternalPhone(phoneE164) {
+  if (!phoneE164) return false;
+  return INTERNAL_PHONES.includes(phoneE164);
+}
+
+// ============================================================================
 // DETECCIONES (regex defensivos sobre texto del lead — fallback si no usa botón)
 // ============================================================================
 
@@ -639,6 +655,16 @@ function processInbound(webhookBody, stateRow) {
   const inbound = parseInbound(webhookBody);
   if (!inbound) {
     return { action_type: 'no_action', reason: 'no inbound message (probably status callback)' };
+  }
+
+  // Bot IGNORA mensajes inbound de los 3 phones internos (Dario + 2 doctora).
+  // No crea lead, no responde, no envia notifs. Es solo proteccion contra loops.
+  if (isInternalPhone(inbound.phone_e164)) {
+    return {
+      action_type: 'no_action',
+      reason: `internal phone ignored (${inbound.phone_e164})`,
+      inbound: { from: inbound.from, phone_e164: inbound.phone_e164, text: inbound.text },
+    };
   }
 
   const decision = decideNextAction(inbound, stateRow);
