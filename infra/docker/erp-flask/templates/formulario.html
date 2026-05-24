@@ -1573,9 +1573,43 @@ function actualizarCodigoCliente() {
         if (em  && data.email)      em.value  = data.email;
         if (cum && data.cumpleanos) cum.value = parseToInputDate(data.cumpleanos);
     } else {
+        // FALLBACK: cliente NO está en CLIENTES_DATA (pre-cargado al renderizar).
+        // Esto pasa cuando el cliente fue creado DESPUÉS (ej. auto-creado por
+        // bot Yossie tras cita asistida). Hacemos fetch real al endpoint /cliente
+        // para verificar si existe en BD y rellenar campos automáticamente.
         const numStr = String(NEXT_CLIENT_NUM).padStart(4, '0');
-        texto.textContent = `Nuevo cliente — se asignará LIVCLIENT${numStr}`;
+        texto.textContent = `Buscando... (si es nuevo: LIVCLIENT${numStr})`;
         texto.style.color = '#bbb';
+        fetch('/cliente?nombre=' + encodeURIComponent(nombre))
+            .then(r => r.json())
+            .then(d => {
+                if (d && d.codigo) {
+                    // Cliente existe en BD pero no estaba en CLIENTES_DATA — populate
+                    texto.textContent = d.codigo;
+                    texto.style.color = '#999';
+                    const tel = document.getElementById('input-telefono-venta');
+                    const em  = document.getElementById('input-email-venta');
+                    const cum = document.getElementById('input-cumpleanos-venta');
+                    if (tel && d.telefono)   tel.value = d.telefono;
+                    if (em  && d.email)      em.value  = d.email;
+                    if (cum && d.cumpleanos) cum.value = parseToInputDate(d.cumpleanos);
+                    // Cache para próximas búsquedas
+                    CLIENTES_DATA[nombre.toLowerCase()] = {
+                        codigo: d.codigo,
+                        telefono: d.telefono || '',
+                        email: d.email || '',
+                        cumpleanos: d.cumpleanos || ''
+                    };
+                } else {
+                    texto.textContent = `Nuevo cliente — se asignará LIVCLIENT${numStr}`;
+                    texto.style.color = '#bbb';
+                }
+            })
+            .catch(err => {
+                console.warn('[actualizarCodigoCliente] fetch /cliente fallo:', err);
+                texto.textContent = `Nuevo cliente — se asignará LIVCLIENT${numStr}`;
+                texto.style.color = '#bbb';
+            });
     }
 
     // Verificar crédito disponible

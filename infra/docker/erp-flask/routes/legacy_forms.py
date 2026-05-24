@@ -17,7 +17,8 @@ from sqlalchemy import select
 
 from db import session_scope
 from models.cliente import Cliente
-from services import audit_service, cliente_service, gasto_service, pago_service, venta_service
+from models.lead import Lead
+from services import audit_service, capi_emitter_service, cliente_service, gasto_service, pago_service, venta_service
 
 bp = Blueprint("legacy_forms", __name__)
 
@@ -225,6 +226,57 @@ def venta_form():  # type: ignore[no-untyped-def]
                         entity_id=cod_cliente_creado,
                         after_state={"cod_cliente": cod_cliente_creado},
                     )
+
+            # --- CAPI Purchase emit (atribución full-funnel Lead → Purchase) ---
+            try:
+                if result.ventas:
+                    cliente_db = db.execute(
+                        select(Cliente).where(
+                            Cliente.cod_cliente == result.ventas[0].cod_cliente
+                        )
+                    ).scalar_one()
+
+                    event_id_purchase = None
+                    if cliente_db.cod_lead_origen:
+                        lead_origen = db.execute(
+                            select(Lead).where(
+                                Lead.cod_lead == cliente_db.cod_lead_origen
+                            )
+                        ).scalar_one_or_none()
+                        if lead_origen and lead_origen.event_id_at_capture:
+                            event_id_purchase = lead_origen.event_id_at_capture
+
+                    if not event_id_purchase:
+                        import uuid as _uuid
+                        event_id_purchase = (
+                            f"purchase_{result.ventas[0].cod_item}_"
+                            f"{_uuid.uuid4().hex[:12]}"
+                        )
+
+                    total_purchase = sum(
+                        (v.total or Decimal("0")) for v in result.ventas
+                    )
+
+                    capi_emitter_service.emit_event(
+                        db,
+                        event_name="Purchase",
+                        event_id=event_id_purchase,
+                        phone_e164=cliente_db.phone_e164,
+                        email=cliente_db.email_lower,
+                        external_id=cliente_db.cod_cliente,
+                        currency=str(result.ventas[0].moneda or "PEN"),
+                        value=total_purchase,
+                        content_category="medicina_estetica",
+                        content_name=",".join(cod_items) if cod_items else None,
+                        trigger_entity_type="venta",
+                        trigger_entity_id=",".join(cod_items) if cod_items else None,
+                    )
+            except Exception as capi_err:
+                import logging as _logging
+                _logging.error(
+                    "[CAPI Purchase emit failed] %s", capi_err, exc_info=True
+                )
+
         msg = f"Venta guardada ({len(result.ventas)} ítem(s))"
         if result.excedente_credito_generado > 0:
             msg += f" — Crédito generado: S/ {result.excedente_credito_generado}"

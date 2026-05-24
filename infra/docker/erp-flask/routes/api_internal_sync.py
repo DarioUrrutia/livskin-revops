@@ -144,6 +144,7 @@ def _serialize_venta(v: Venta, db: "Session" = None) -> dict[str, Any]:
     # Lookup attribution del cliente (cod_lead_origen + vtiger_lead_id_origen) para warehouse JOINs
     cod_lead_origen = None
     vtiger_lead_id_origen = None
+    event_id_meta = None  # event_id del lead originario (wamid/fbclid/UUID) — para CAPI dedup full-funnel
     if db is not None and v.cod_cliente:
         cliente = db.execute(
             select(Cliente).where(Cliente.cod_cliente == v.cod_cliente)
@@ -151,6 +152,13 @@ def _serialize_venta(v: Venta, db: "Session" = None) -> dict[str, Any]:
         if cliente:
             cod_lead_origen = cliente.cod_lead_origen
             vtiger_lead_id_origen = cliente.vtiger_lead_id_origen
+            # Lookup event_id del lead origen (mismo que se usó en CAPI Lead event)
+            if cod_lead_origen:
+                lead_origen = db.execute(
+                    select(Lead).where(Lead.cod_lead == cod_lead_origen)
+                ).scalar_one_or_none()
+                if lead_origen:
+                    event_id_meta = lead_origen.event_id_at_capture
 
     return {
         "id": v.id,
@@ -161,6 +169,7 @@ def _serialize_venta(v: Venta, db: "Session" = None) -> dict[str, Any]:
         # Attribution lookup (NULL si cliente word-of-mouth sin lead origen)
         "cod_lead_origen": cod_lead_origen,
         "vtiger_lead_id_origen": vtiger_lead_id_origen,
+        "event_id_meta": event_id_meta,
         "tipo": v.tipo,
         "cod_item": v.cod_item,
         "categoria": v.categoria,

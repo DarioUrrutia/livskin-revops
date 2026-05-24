@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: **2026-05-04 v3.1 (DOCTRINA DE MARCA + GOBERNANZA DE CONTEXTOS — Principios #12 (modo declarado proyecto/campaña) y #13 (modo bootstrap único hasta post-mortem 1ª campaña) agregados; doctrina de marca v0.1 BORRADOR en `docs/brand/`; primera campaña pivota a "Día de la Madre 2026" como test del sistema; runbook de modos en `docs/runbooks/sesion-modo-proyecto-vs-campana.md`)**
+> Última actualización: **2026-05-24 v3.3 (SESIÓN MASIVA REMEDIACIÓN — campaña FB Ads handoff humano S/350 en DRAFT como 2da campaña paga; pipeline E2E validado WA→Vtiger→ERP→CAPI Purchase; live patches productivos reconciliados al repo (legacy_forms.py + api_internal_sync.py + formulario.html + 8 workflows n8n); migration 0009 `is_test` flag aplicada en 5 tablas; test data limpiado cross-system (ERP+Vtiger+Analytics) preservando audit_log; 134 clientes son histórico boca a boca pre-Livskin RevOps; bootstrap #13 sigue ABIERTO hasta post-mortem 2da campaña)**
 
 ---
 
@@ -49,7 +49,7 @@ Lee en este orden antes de cualquier tarea sustantiva:
 10. **Responder a la profundidad pedida.** Táctica → concisa. Estratégica → comprehensiva.
 11. **Deterministic backbone first — IA es capa aditiva, no foundational.** El sistema debe operar 100% sin agentes IA. Si todos los agentes se apagan, la operación sigue. La IA se agrega sobre infraestructura validada con datos de campañas reales, no sobre hipótesis. Antes de aprobar un agente: aplicar filtro de 6 checks (memoria `project_agent_scope_audit_2026_05_03`). Articulado por Dario el 2026-05-03 tras audit honesto que reveló sobre-engineering del agent design original (5 agentes → 1 agente real + 2 scripts).
 12. **Modo de trabajo declarado por sesión.** Cada sesión declara explícitamente al iniciar: **modo PROYECTO** (toca sistema durable: master plan, ADRs, memorias críticas, infra core) o **modo CAMPAÑA** (toca solo `docs/campaigns/<actual>/` + `infra/landing-pages/<slug>/` + `infra/ad-creatives/<actual>/`). Las modificaciones se restringen al modo. Mezclar requiere división explícita en bloques con commit de barrera entre ellos. Sin modo declarado → la sesión deriva y contamina contextos. Articulado por Dario el 2026-05-04 tras detectar que sesiones largas mezclan tactical de campaña con doctrina durable. Workflow detallado en `docs/runbooks/sesion-modo-proyecto-vs-campana.md`. **Para arrancar campaña nueva**: ejecutar `python scripts/new-campaign.py` que fuerza al operador a declarar propósito + hipótesis + parámetros antes de generar archivos. Template en `docs/campaigns/_template/` (ver su `README.md`).
-13. **Modo BOOTSTRAP — régimen único transitorio para construcción del sistema.** Aplica SOLO mientras la doctrina de marca + el primer ciclo completo de campaña están siendo construidos en paralelo. Permite feedback bidireccional doctrina ↔ campaña con disciplina especial: doctrina vive en estado borrador versionado (`v0.X`), refinamientos a doctrina por aprendizajes de campaña requieren commit separado con prefix `docs(brand)` y comentario explícito del insight, memorias 🔥 CRÍTICAS de marca se crean al cierre del bootstrap (no durante). **Trigger de cierre formal — REVISADO 2026-05-08 por Dario**: post-mortem de la **2da campaña paga** (originalmente era la 1ra; tras Bridge Episode 2026-05-03/08 con solo 6 leads, los 14 INS + 6 R doctrina capturados no tienen evidencia suficiente para aplicar con 1 sola campaña — bootstrap permanece ABIERTO). Al cierre: doctrina asciende `v0.X → v1.0`, eliminamos header BORRADOR, creamos memorias críticas, principio #13 marca el bootstrap como cerrado. A partir de ahí, modos PROYECTO/CAMPAÑA son separados estrictos sin excepciones.
+13. **Modo BOOTSTRAP — régimen único transitorio para construcción del sistema.** Aplica SOLO mientras la doctrina de marca + el primer ciclo completo de campaña están siendo construidos en paralelo. Permite feedback bidireccional doctrina ↔ campaña con disciplina especial: doctrina vive en estado borrador versionado (`v0.X`), refinamientos a doctrina por aprendizajes de campaña requieren commit separado con prefix `docs(brand)` y comentario explícito del insight, memorias 🔥 CRÍTICAS de marca se crean al cierre del bootstrap (no durante). **Trigger de cierre formal — REVISADO 2026-05-08, REAFIRMADO 2026-05-24 por Dario**: post-mortem de la **2da campaña paga** (originalmente era la 1ra; tras Bridge Episode 2026-05-03/08 con solo 6 leads, los 14 INS + 6 R doctrina capturados no tienen evidencia suficiente para aplicar con 1 sola campaña — bootstrap permanece ABIERTO). La 2da campaña (FB Ads S/350/5d Click-to-WA, Cusco-Wanchaq 4km, hoy en DRAFT Campaign `120243301839000678`) es el trigger formal. Al cierre: doctrina asciende `v0.X → v1.0`, eliminamos header BORRADOR, creamos memorias críticas, principio #13 marca el bootstrap como cerrado. A partir de ahí, modos PROYECTO/CAMPAÑA son separados estrictos sin excepciones.
 
 14. **Sesión estratégica de agentes IA es bloque DEDICADO post-backbone determinístico cerrado.** Toda la layer multi-agente (Brand Orchestrator V1 con 5 subagentes, Acquisition synth script, Growth narrative script, Conversation Agent v0 rule-based formal, Infra+Security agent, VPS dedicado de agentes) se diseña en una sesión estratégica dedicada (4-8h totales, **divisible en 1-3 sesiones según necesidad** — Dario decide formato cuando lo arranque). Outputs: ADRs por agente, organigrama formal, skills inventory final, eval suites (mín 30 ejemplos), budget hard-caps, approval flows.
 
@@ -275,6 +275,111 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 10. **Saltar el trámite WhatsApp Business API.** 5-10 días hábiles de Meta, bloqueo real.
 11. **Tocar VPS en producción sin snapshot previo y sin staging validado.**
 12. **Borrar/modificar historial git** sin autorización explícita.
+
+---
+
+## 📝 Estado al 2026-05-24 cierre (Sesión masiva remediación + 2da campaña paga en DRAFT)
+
+### Doctrina de campañas (revisada esta sesión)
+
+| Campaña | Tipo | Estado | Outcome |
+|---|---|---|---|
+| **1ra** — Bridge Episode 2026-05-03/08 | FB Ads $100/5d, 3 destinos | ✅ **CERRADA** | 6 leads (insuficiente para cerrar bootstrap #13) |
+| **2da** — Click-to-WA hoy | FB Ads S/350/5d, Cusco-Wanchaq 4km, distribución 35/35/15/15 (Botox/AH/PRP/Limpieza) | 🟡 **DRAFT** (Campaign `120243301839000678`) | Pendiente bot test → launch |
+
+**Trigger cierre #13 bootstrap**: post-mortem de la **2da campaña paga** (la actual). Originalmente era la 1ra, revisado tras Bridge insuficiente. Tras post-mortem doctrina v0.X → v1.0 + memorias críticas marca.
+
+### Naturaleza de los datos (decisión arquitectónica clave)
+
+⭐ **El histórico de 134 clientes / 88 ventas / 84 pagos en ERP es data REAL de la doctora pre-Livskin RevOps** — captada boca a boca a lo largo de años de trabajo, importada para que el sistema tenga catálogo de tratamientos, ticket promedio, distribución de servicios, painpoints.
+
+**Implicación crítica para dashboards y análisis**:
+- ❌ NO tratar las 88 ventas como funnel de adquisición digital
+- ❌ NO calcular CAC, ROAS, attribution sobre este histórico
+- ❌ NO esperar `event_id_meta` / `cod_lead_origen` poblados (son NULL legítimamente)
+- ✅ Sí usar para: ticket promedio, distribución tratamientos, calendario estacionalidad, top clientes
+- ✅ La data DIGITAL nueva (post 2026-05-24) viene con `cod_lead_origen` + `event_id_meta` + `fbclid_at_capture` + UTMs
+
+**En el Master Dashboard Metabase**: separar visualmente histórico vs digital (sección "📊 Histórico Boca a Boca" vs "🚀 Adquisición Digital").
+
+### Sesión 2026-05-22/24 — remediación masiva + setup 2da campaña + análisis exhaustivo
+
+**Bloque 1 (~6h) — Diseño 2da campaña FB Ads + Yossie bot test**:
+- Custom Audience creada con 34 clientes ERP (PII hasheado SHA-256)
+- 7 templates Meta submitted (handoff humano + recordatorios + reengagement)
+- 4 banners uploaded (Botox / AH / PRP / Limpieza)
+- Campaign DRAFT `120243301839000678` con 4 ad sets distribución 35/35/15/15
+- Yossie bot regex testeado con 8 conversaciones reales → conclusión: bot rule-based no production-ready
+- **PIVOTE estratégico**: doctora pidió "top de gama" → migrar de bot a handoff humano puro a Dario (+51 982 732 978)
+- Workflow `[D1] WA Yossie HANDOFF` deployed: bot media inbound → genera Vtiger Lead → notifica a Dario humano
+
+**Bloque 2 (~4h) — Pipeline E2E validación**:
+- Sale LIVTRAT0072 @ 12:01:41 emitió CAPI Purchase exitosamente (audit_log 273 + G3 exec 39563)
+- 60 eventos canónicos auditables en producción
+- Bidireccional ERP↔Vtiger funcional (A2 cron sync leadstatus)
+- Bug detectado: leadsource "Web Site" cuando WA Direct → patch A1 con mapping coherente (`_source=wa-inbound` → "WhatsApp Direct", `_source=wa-click` → "WhatsApp Ad Click", neither → "Web Site")
+- Bug detectado: `event_id_meta` vacío en analytics → patch api_internal_sync.py con JOIN Lead
+
+**Bloque 3 (~3h) — Análisis exhaustivo + remediación P0**:
+- 4 agentes paralelos audit doctrina/operacional/coherencia/código
+- 15 archivos untracked + 3 live patches NO en git detectados como riesgo P0
+- **Live patches reconciliados** al repo:
+  - `legacy_forms.py` +52 líneas (CAPI Purchase emit hook)
+  - `api_internal_sync.py` +9 líneas (event_id_meta JOIN Lead)
+  - `formulario.html` +34 líneas (auto-fill teléfono via fetch /cliente)
+  - 8 workflows n8n exportados via CLI a repo (A1+A2+B1+B3+D1+E1+E2+G3)
+
+**Bloque 4 (~2h) — Cleanup test data cross-system**:
+- ERP: 2 ventas + 2 pagos + 1 cliente (LIVCLIENT0136 Jean Urrutia TEST WA) + 1 lead (LIVLEAD0001) eliminados
+- Vtiger: 2 leads test (LEA69 Maria + LEA70 Jean Urrutia) cascade DELETE 6 tablas
+- Analytics: 2 opportunities + 1 lead test eliminados
+- audit_log PRESERVADO + entrada `system.test_data_cleanup` registrada
+- **Estado final**: 134 clientes (histórico boca a boca) / 88 ventas histórico / 84 pagos histórico / 0 leads digitales / 0 opportunities digitales nuevas
+
+**Bloque 5 (~1h) — Migration 0009 defensiva**:
+- Columna `is_test BOOLEAN NOT NULL DEFAULT FALSE` agregada a 5 tablas (`leads`, `clientes`, `ventas`, `pagos`, `appointments`)
+- Index parcial `WHERE is_test = true` para queries rápidas
+- Patrón futuro: smoke tests → `is_test=true`, dashboards filtran `WHERE is_test = false`
+
+### Files creados/modificados en sesión
+
+**Reconciliados (live patches del container)**:
+- `infra/docker/erp-flask/routes/legacy_forms.py`
+- `infra/docker/erp-flask/routes/api_internal_sync.py`
+- `infra/docker/erp-flask/templates/formulario.html`
+
+**Exportados desde n8n productivo**:
+- `infra/n8n/workflows/A-acquisition/a1-form-submit-to-vtiger-lead.json`
+- `infra/n8n/workflows/A-acquisition/a2-sync-erp-to-vtiger-leadstatus.json`
+- `infra/n8n/workflows/B-bridge/b1-vtiger-lead-changed-to-erp-mirror.json`
+- `infra/n8n/workflows/B-bridge/b3-vtiger-modified-cron-pull.json`
+- `infra/n8n/workflows/D-conversation/d1-wa-handoff.json`
+- `infra/n8n/workflows/E-etl/e1-erp-leads-to-analytics.json`
+- `infra/n8n/workflows/E-etl/e2-erp-ventas-to-analytics.json`
+- `infra/n8n/workflows/G-growth/g3-capi-emit-to-meta.json`
+
+**Nuevos**:
+- `infra/docker/alembic-erp/migrations/versions/2026_05_24_1300-0009_is_test_flag.py`
+- `infra/n8n/lib/yossie_responder.js` (dispatcher bot, 511 líneas)
+- `integrations/whatsapp/templates/drafts-v1.md` + `submitted-v1.json` (7 templates)
+- `scripts/meta_*.py` (6 scripts campaña FB Ads via API)
+- `scripts/debug_yossie_executions.py` + `transcribe_encuentro.py`
+- `docs/brand/` 12 outputs codificados (voice + personas + journey + catálogo + precios + painpoints + diferenciación + operación + casos éxito + reengagement + scoring + captación global)
+- 5 audit folders `docs/audits/erp-*` (existing, no tocados)
+
+### Próxima sesión propuesta
+
+**Pre-launch checklist 2da campaña paga**:
+1. Verificar bot Yossie en HANDOFF mode funciona sin errores (5 conversaciones smoke)
+2. Pre-aprobar 7 templates Meta WhatsApp
+3. Activate Campaign `120243301839000678` desde DRAFT
+4. Monitor cron jobs A1+A2+B3 cada 2 min durante 1ra hora
+5. CAPI Purchase auto-emit en ventas reales (validado E2E hoy)
+
+**Post-campaña (día +6)**:
+- Post-mortem completo (CAC, ROAS, conversion rate)
+- **CIERRE BOOTSTRAP #13** → doctrina v0.X → v1.0
+- Memorias 🔥 críticas marca + Principio #15 (mapa conceptual antes scaffold) formalizado
 
 ---
 
