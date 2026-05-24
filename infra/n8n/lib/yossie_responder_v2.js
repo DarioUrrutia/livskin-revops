@@ -611,10 +611,20 @@ function buildHandoffPayloads(inbound, state, decision) {
     `💬 Mensaje original:\n"${text || '(botón)'}"\n\n` +
     `👉 wa.me/${phone_e164.replace('+', '')}`;
 
+  // Lista de phones que reciben la notif (sin +, formato Meta API)
+  // Dario: control. Doctoras 1 y 2: las que responden al lead.
+  const notif_recipients = [
+    { name: 'Dario (control)', phone: '51982732978' },
+    { name: 'Doctora Claudia (1)', phone: '51910848995' },
+    { name: 'Doctora Claudia (2)', phone: '51980727888' },
+  ];
+
   return {
     vtiger_payload,
-    dario_notif_text,
-    dario_phone: '51982732978', // Sin + por Meta API
+    dario_notif_text,    // backward-compat (mismo texto para todos los destinatarios)
+    dario_phone: '51982732978',  // legacy
+    notif_text: dario_notif_text,
+    notif_recipients,
   };
 }
 
