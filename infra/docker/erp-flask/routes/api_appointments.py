@@ -32,7 +32,8 @@ from schemas.appointment import (
     AppointmentRescheduleRequest,
     AppointmentUpdate,
 )
-from services import appointment_service
+from services import appointment_service, capi_emitter_service
+from sqlalchemy import select
 
 bp = Blueprint("api_appointments", __name__)
 
@@ -138,6 +139,53 @@ def create_appointment():  # type: ignore[no-untyped-def]
                 created_by=_current_user_id(),
             )
             response = AppointmentRead.model_validate(apt).model_dump(mode="json")
+
+            # --- CAPI Schedule emit (atribución funnel Lead → Schedule → Purchase) ---
+            try:
+                from models.lead import Lead
+                from models.cliente import Cliente
+
+                event_id = apt.cod_appointment
+                phone_e164 = None
+                email = None
+                external_id = None
+
+                if apt.lead_id:
+                    lead = db.execute(
+                        select(Lead).where(Lead.id == apt.lead_id)
+                    ).scalar_one_or_none()
+                    if lead:
+                        if lead.event_id_at_capture:
+                            event_id = lead.event_id_at_capture
+                        phone_e164 = lead.phone_e164
+                        email = lead.email_lower
+                        external_id = lead.cod_lead
+                elif apt.cod_cliente:
+                    cli = db.execute(
+                        select(Cliente).where(Cliente.cod_cliente == apt.cod_cliente)
+                    ).scalar_one_or_none()
+                    if cli:
+                        phone_e164 = cli.phone_e164
+                        email = cli.email_lower
+                        external_id = cli.cod_cliente
+
+                capi_emitter_service.emit_event(
+                    db,
+                    event_name="Schedule",
+                    event_id=event_id,
+                    phone_e164=phone_e164,
+                    email=email,
+                    external_id=external_id,
+                    content_category="medicina_estetica",
+                    content_name=apt.treatment,
+                    trigger_entity_type="appointment",
+                    trigger_entity_id=apt.cod_appointment,
+                )
+            except Exception as capi_err:
+                import logging as _logging
+                _logging.error(
+                    "[CAPI Schedule emit failed] %s", capi_err, exc_info=True
+                )
     except appointment_service.SubjectMissingError as e:
         return jsonify({"error": str(e)}), 400
     except appointment_service.LeadNotFoundError as e:
