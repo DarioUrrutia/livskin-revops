@@ -1,0 +1,60 @@
+{
+  "submitted_at": "2026-05-24T00:24:49",
+  "results": [
+    {
+      "name": "new_lead_appointment_request_v1",
+      "result": {
+        "id": "4387337808261053",
+        "status": "PENDING",
+        "category": "UTILITY"
+      }
+    },
+    {
+      "name": "lead_confirmed_appointment_v1",
+      "result": {
+        "id": "1300325178893048",
+        "status": "PENDING",
+        "category": "UTILITY"
+      }
+    },
+    {
+      "name": "lead_proposed_alternatives_v1",
+      "result": {
+        "id": "27971228212466208",
+        "status": "PENDING",
+        "category": "UTILITY"
+      }
+    },
+    {
+      "name": "lead_waiting_4h_followup_v1",
+      "result": {
+        "id": "1547654803628906",
+        "status": "PENDING",
+        "category": "UTILITY"
+      }
+    },
+    {
+      "name": "appointment_reminder_24h_v1",
+      "result": {
+        "id": "27422316557376442",
+        "status": "PENDING",
+        "category": "UTILITY"
+      }
+    },
+    {
+      "name": "appointment_reminder_3h_v1",
+      "result": {
+        "_error_code": 400,
+        "_error_body": "{\"error\":{\"message\":\"Invalid parameter\",\"type\":\"OAuthException\",\"code\":100,\"error_subcode\":2388299,\"is_transient\":false,\"error_user_title\":\"No se permite incluir par\\u00e1metros al principio ni al final\",\"error_user_msg\":\"Las variables no pueden estar al principio ni al final de la plantilla.\",\"fbtrace_id\":\"Az7LD07MmYMzEmxpyLGk36o\"}}"
+      }
+    },
+    {
+      "name": "reengagement_inactive_30d_v1",
+      "result": {
+        "id": "1527624245589609",
+        "status": "PENDING",
+        "category": "MARKETING"
+      }
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "id": "d0-wa-inbound-receiver",
+  "name": "[D1] WA Full Pipeline (parser + responder + send)",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "wa-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "Webhook GET (handshake)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 200],
+      "webhookId": "wa-inbound-get"
+    },
+    {
+      "parameters": {
+        "jsCode": "const params = $input.first().json.query || {};\nconst challenge = params['hub.challenge'] || '';\nconst verifyToken = params['hub.verify_token'] || '';\nconst expectedToken = 'livskin_wa_webhook_2026';\n\nif (verifyToken === expectedToken && challenge) {\n  return [{ json: { response: challenge, statusCode: 200 } }];\n} else {\n  return [{ json: { response: 'forbidden', statusCode: 403 } }];\n}"
+      },
+      "id": "22222222-2222-2222-2222-222222222222",
+      "name": "Verify Handshake",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.response }}",
+        "options": { "responseCode": "={{ $json.statusCode }}" }
+      },
+      "id": "33333333-3333-3333-3333-333333333333",
+      "name": "Respond Handshake",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [640, 200]
+    },
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wa-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "44444444-4444-4444-4444-444444444444",
+      "name": "Webhook POST (events)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 460],
+      "webhookId": "wa-inbound-post"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "OK",
+        "options": { "responseCode": 200 }
+      },
+      "id": "55555555-5555-5555-5555-555555555555",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [420, 460]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// === PARSER + RESPONDER (Yossie) — sync con infra/n8n/lib/yossie_responder.js ===\n// Doctrina #11: deterministic, NO IA fallback.\n\nconst DAYS_OF_WEEK = { domingo:0,dom:0,lunes:1,lun:1,martes:2,mar:2,miercoles:3,'miércoles':3,mie:3,'mié':3,mier:3,jueves:4,jue:4,viernes:5,vie:5,sabado:6,'sábado':6,sab:6,'sáb':6 };\nconst INTENT_PATTERNS = {\n  confirm: /^\\s*(s[ií]+|ok+|dale|perfecto|confirmo|listo|de\\s*acuerdo|me\\s*sirve|est[áa]\\s*bien|esta\\s*perfect|👍|✅)([\\s,.!]+(perfecto|listo|claro|excelente|genial|👍|✅))*\\s*[.!]*\\s*$/i,\n  reject: /^\\s*(no|no\\s*me\\s*sirve|no\\s*puedo|no\\s*podr[ée]|no\\s*podemos|❌)\\s*[.!]*\\s*$/i,\n  ask_price: /(cu[áa]nto|precio|costo|cuesta|tarifa|cobr[áa]n|paga[mr]|valor)\\b/i,\n  ask_human: /(hablar\\s+(con(\\s+la|\\s+el)?|al?)\\s+(doctora?|m[eé]dica?|humana?|alguien|persona|ti|ud|usted)|atenderme|que\\s+me\\s+atienda|llam[aoe]r(me)?|tel[eé]fono|hablar\\s+contigo)/i,\n  ask_info: /(qu[ée]\\s+es|c[oó]mo\\s+(funciona|es|hace)|info|informaci[oó]n|me\\s+puede[sn]?\\s+(decir|contar|explicar)|necesito\\s+saber)/i,\n  greeting: /^\\s*(hola|buenas|buen\\s*d[ií]a|buenas\\s*tardes|buenas\\s*noches|saludos|hi|hello)\\b/i,\n  cancel: /(cancel[aoe]r|anul[aoe]r|ya\\s*no\\s*quiero|no\\s*ir[ée]|no\\s*podr[ée]\\s*ir)\\b/i,\n  reschedule: /(reagend[aoe]r|reprogram[aoe]r|cambi[aoe]r\\s+(fecha|d[ií]a|hora)|otra\\s*fecha|otro\\s*d[ií]a)\\b/i,\n};\nconst REFERRAL_PRODUCT_PATTERNS = {\n  botox: /\\b(botox|toxina|arrugas|expresi[óo]n|tercio)\\b/i,\n  acido: /(\\b(acido|[áa]cido)\\s+(hialuronico|hialur[óo]nico)\\b)|\\bhialur[óo]nico\\b|\\brinomodelaci[óo]n\\b/i,\n  prp: /\\b(prp|plasma|plaquetas)\\b/i,\n  limpieza: /(limpieza\\s+facial|facial\\s+profunda)/i,\n};\nconst RED_FLAG_PATTERNS = {\n  contraindication: /\\b(embaraz|gestaci[óo]n|c[áa]ncer|lupus|autoinmune|alergi[ac]\\s+grave|lactancia|amamantando|anticoagulant|warfarina)\\b/i,\n  aggressive_negotiation: /\\b(reg[áa]l[ao]me?|gratis|invita\\s+la\\s+casa|b[áa]j[au][lm]e|h[áa]z[mt]e\\s+un\\s+gran\\s+descuento|m[áa]s\\s+barato\\s+que)\\b/i,\n  impossible_expectations: /\\b(borrar\\s+(todas?\\s+)?mis?\\s+arrugas|c[áa]mbiame\\s+la\\s+cara|garantizado\\s+100|sin\\s+ning[úu]n\\s+riesgo)\\b/i,\n  aggressive_language: /\\b(idiota|est[úu]pid[oa]|imb[éé]cil|estafa|fraude|tramposo)\\b/i,\n};\nconst PAINPOINT_PATTERNS = {\n  miedo_dolor: /\\b(duele|dolor|me\\s+va\\s+a\\s+doler|sufre|sufrir|adormecimiento)\\b/i,\n  miedo_cambio: /\\b(cambiar?\\s+(la?\\s+)?(rostro|cara)|que\\s+me\\s+cambies?|raro|congelad[ao]|aparecer\\s+congelad)\\b/i,\n  precio_alto: /\\b(caro|costoso|muy\\s+alto|por\\s+el\\s+precio|fuera\\s+de\\s+mi\\s+presupuesto|no\\s+me\\s+alcanza)\\b/i,\n  desconfianza: /\\b(colegiada|certificad|m[ée]dica?\\s+real|t[íi]tulo|estudios?)\\b/i,\n  inseguridad_social: /\\b(pareja\\s+note|esposo|que\\s+digan|que\\s+dir[áa]n)\\b/i,\n  timing_edad: /\\b(muy\\s+joven|muy\\s+vieja|edad\\s+correcta|mi\\s+edad)\\b/i,\n  falta_tiempo: /\\b(no\\s+tengo\\s+tiempo|horario|fin\\s+de\\s+semana|domingo)\\b/i,\n  comparacion: /\\b(otra\\s+cl[íi]nica|cobran\\s+menos|munay|beysa|valderma)\\b/i,\n  distancia: /\\b(vivo\\s+en|lejos|viene\\s+de|distancia|viajar|desde\\s+lima|desde\\s+arequipa)\\b/i,\n  cuotas: /\\b(cr[ée]dito|cuotas|tarjeta\\s+cr[ée]dito|pagar\\s+despu[ée]s)\\b/i,\n  no_sabe: /\\b(no\\s+s[ée]\\s+qu[ée]|qu[ée]\\s+me\\s+recomiendas?|cu[áa]l\\s+me\\s+conviene|qu[ée]\\s+necesito)\\b/i,\n  primera_vez: /\\b(primera\\s+vez|nunca\\s+me\\s+he\\s+hecho|primer\\s+tratamiento)\\b/i,\n};\nfunction normalize(t){return typeof t==='string'?t.trim().toLowerCase():''}\nfunction stripAccents(s){return s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')}\nfunction detectIntent(text){let intent='unknown';let conf=0;if(INTENT_PATTERNS.ask_price.test(text)){intent='ask_price';conf=0.9}else if(INTENT_PATTERNS.ask_human.test(text)){intent='ask_human';conf=0.9}else if(INTENT_PATTERNS.cancel.test(text)){intent='cancel';conf=0.85}else if(INTENT_PATTERNS.reschedule.test(text)){intent='reschedule';conf=0.85}else if(INTENT_PATTERNS.confirm.test(text)){intent='confirm';conf=0.95}else if(INTENT_PATTERNS.reject.test(text)){intent='reject';conf=0.9}else if(INTENT_PATTERNS.ask_info.test(text)){intent='ask_info';conf=0.7}else if(INTENT_PATTERNS.greeting.test(text)){intent='greeting';conf=0.8}return{intent,confidence:conf}}\nfunction detectProduct(text){if(!text)return null;for(const[p,re]of Object.entries(REFERRAL_PRODUCT_PATTERNS))if(re.test(text))return p;return null}\nfunction detectRedFlag(text){for(const[t,re]of Object.entries(RED_FLAG_PATTERNS))if(re.test(text))return t;return null}\nfunction detectPainpoint(text){for(const[t,re]of Object.entries(PAINPOINT_PATTERNS))if(re.test(text))return t;return null}\nfunction detectInfo(text){const t=(text||'').toLowerCase();if(/(direcci[óo]n|d[óo]nde\\s+(est[áa]n|queda)|ubicaci[óo]n|c[óo]mo\\s+llegar)/i.test(t))return'direccion';if(/(pago|forma\\s+de\\s+pago|yape|plin|tarjeta|efectivo)/i.test(t))return'pagos';if(/(horario|cu[áa]ndo\\s+atienden|domingos?|s[áa]bados?)/i.test(t))return'horario';return null}\n\n// === COPY (extraído de docs/brand/) ===\nconst COPY = {\n  greeting_botox: n => `Hola${n?' '+n:''} ☺️ Gracias por escribirnos a Livskin.\\n\\nSoy Yossie, asistente de la Dra. Claudia Delgado.\\n\\nTe aclaro los precios del Botox:\\n• S/250 por zona individual (frente, entrecejo, patas de gallo, etc.)\\n• S/700 tratamiento FULL FACE (todas las zonas — tercio superior + medio + inferior)\\n\\nLa Dra. evalúa qué zonas trabajar según tu caso en la consulta gratuita (30 min, sin compromiso).\\n\\n¿Quieres agendar?`,\n  greeting_acido: n => `Hola${n?' '+n:''} ☺️ Gracias por escribirnos a Livskin.\\n\\nSoy Yossie, asistente de la Dra. Claudia Delgado.\\n\\nVi que te interesa el Ácido Hialurónico — sirve para rinomodelación, ojeras, pómulos, labios o mentón. Da volumen, modela y los resultados son inmediatos. Dura 18-24 meses.\\n\\nEl precio se cotiza solo en consulta porque depende de la cantidad de producto. La consulta es gratuita.\\n\\n¿Agendamos?`,\n  greeting_prp: n => `Hola${n?' '+n:''} ☺️ Gracias por escribirnos a Livskin.\\n\\nSoy Yossie, asistente de la Dra. Claudia Delgado.\\n\\nEl PRP (Plasma Rico en Plaquetas) usa tu propia sangre para regenerar la piel. Mejora calidad, grosor, textura. S/220 por sesión, son 3 sesiones (una cada mes).\\n\\n¿Quieres agendar consulta gratuita?`,\n  greeting_limpieza: n => `Hola${n?' '+n:''} ☺️ Gracias por escribirnos a Livskin.\\n\\nSoy Yossie, asistente de la Dra. Claudia Delgado.\\n\\nLa Limpieza Facial Profunda parte desde S/70 (básica) hasta S/120 (premium). Dura 45-60 min, sin recuperación, recomendada cada 3-4 semanas.\\n\\nIdeal para conocer a la Dra. y mantener tu piel limpia + radiante.\\n\\n¿Agendamos?`,\n  greeting_default: n => `Hola${n?' '+n:''} ☺️ Gracias por escribirnos a Livskin.\\n\\nSoy Yossie, asistente de la Dra. Claudia Delgado.\\n\\nLa Dra. es Médico Cirujano colegiada (CMP 091029) con 10+ años de experiencia en Cusco.\\n\\n¿Qué tratamiento te interesa? Tenemos Botox, Ácido Hialurónico, PRP, Limpieza Facial y más. La consulta es gratuita.`,\n  greeting_recurrente: n => `Hola${n?' '+n:''} ☺️ Qué bueno saber de ti.\\n¿En qué te ayudo?`,\n  painpoint_miedo_dolor: 'Todo duele un poquito ☺️\\nPero los resultados valen — la Dra. usa técnicas suaves y aplica anestesia local cuando es necesario.\\n\\n¿Quieres agendar consulta para que te explique según tu caso?',\n  painpoint_miedo_cambio: 'Esta es una pregunta clave para la Dra. ☺️\\n\\nSu filosofía es opuesta a \"cambiar el rostro\": trabaja sobre TUS facciones, devolviendo lo que tenías antes. No cambia estructura, no bloquea gestos.\\n\\nLa Dra. usa sus propios productos — ella misma es ejemplo de resultados naturales.\\n\\n¿Te gustaría conocerla en consulta gratuita?',\n  painpoint_precio_alto: 'Sí, los productos médicos certificados tienen un costo ☺️\\n\\nLa Dra. usa marcas como Reach (Botox) y Yvoire (Ácido Hialurónico) — puedes verificar precios online si quieres comparar.\\n\\nTambién hay versiones más económicas que te puede ofrecer en consulta — no tienen exactamente el mismo resultado pero pueden funcionar para tu caso.',\n  painpoint_desconfianza: 'Totalmente válida la pregunta ☺️\\n\\nLa Dra. Claudia Delgado es Médico Cirujano colegiada — CMP 091029. Cursa la Maestría en Medicina Estética en la Universidad Científica del Sur.\\n\\n10+ años de experiencia, formación intensiva en Argentina, USA y Colombia.',\n  painpoint_inseguridad_social: 'Mira, los varones casi nunca notan nada ☺️\\nY si lo notan, tienes suerte.\\n\\nLa filosofía de la Dra. es justo esa — que el cambio se vea natural, sin que parezca que te hiciste algo.',\n  painpoint_timing_edad: 'La edad ideal depende de tu genética y cómo gesticulas ☺️\\n\\nCada persona envejece distinto. La Dra. lo evalúa caso por caso.\\n\\n¿Quieres una evaluación gratuita en consulta?',\n  painpoint_falta_tiempo: 'La Dra. tiene flexibilidad horaria ☺️\\n\\nAtiende desde temprano hasta tarde, incluso domingos previa coordinación.\\n\\n¿Qué horario te queda mejor?',\n  painpoint_comparacion: 'Cada clínica tiene sus propios productos y precios ☺️\\n\\nLo que cambia: la marca del producto, los años de experiencia de quien lo aplica, y el seguimiento.\\n\\nLa Dra. Claudia usa marcas médicas certificadas (Reach, Yvoire). La Dra. puede ajustar entre S/20-30 según tu caso en consulta.',\n  painpoint_distancia: 'La Dra. tiene consideraciones para pacientes de lejos ☺️\\n\\nPuede agendar horarios que te acomoden, concentrar tratamientos en una visita, o lo que necesites.\\n\\n¿De dónde vienes?',\n  painpoint_cuotas: 'Por ahora el pago es al momento del tratamiento ☺️\\n\\nAceptamos Yape, Plin, transferencia y efectivo.\\n\\nSi te vuelves cliente recurrente, la Dra. puede manejar crédito caso por caso.',\n  painpoint_no_sabe: 'Entendido ☺️\\n\\nPara eso es la consulta gratuita — la Dra. evalúa tu caso específico y te recomienda los tratamientos. Dura 30 min, sin compromiso.\\n\\n¿Quieres agendar?',\n  painpoint_primera_vez: 'Bienvenida ✨ Es normal tener dudas la primera vez.\\n\\nLa Dra. tiene 10+ años trabajando con pacientes primerizos. Te explica todo en detalle antes de cualquier decisión.\\n\\nLa consulta es gratuita y sin compromiso. ¿Agendamos?',\n  ask_price_botox: 'Los precios del Botox son ☺️\\n\\n• S/250 por zona individual\\n• S/700 tratamiento FULL FACE (todas las zonas)\\n\\nLa Dra. evalúa qué zonas trabajar según tu caso en la consulta gratuita.\\n\\n¿Quieres agendar?',\n  ask_price_acido: 'El Ácido Hialurónico se cotiza solo en consulta ☺️\\n\\nEs porque el precio depende mucho de la cantidad de producto que cada persona necesita.\\n\\nLa consulta con la Dra. es gratuita y dura 30 min. ¿Agendamos?',\n  ask_price_prp: 'El PRP está en S/220 por sesión ☺️\\nSon 3 sesiones, una cada mes.\\n\\nO S/200 solo infiltrado (sin Dermapen).\\n\\n¿Te gustaría agendar consulta gratuita?',\n  ask_price_limpieza: 'La Limpieza Facial parte desde S/70 (básica) hasta S/120 (premium) ☺️\\n\\nDura 45-60 min, recomendada cada 3-4 semanas.\\n\\n¿Agendamos?',\n  ask_price_default: 'Te cuento los rangos ☺️\\n\\n• Botox: S/250 por zona / S/700 full face\\n• Ácido Hialurónico: solo en consulta\\n• PRP: S/200-250\\n• Limpieza Facial: S/70-120\\n• Esperma de Salmón: S/250-500\\n• Exosomas: S/250-600\\n\\nLa consulta con la Dra. es gratuita.',\n  escalate_contraindication: n => `${n||'Hola'} ☺️ Este caso lo evalúa directamente la Dra. Claudia.\\n\\nCada condición médica requiere análisis individual.\\n\\nLe paso tu consulta y te responde apenas pueda.`,\n  escalate_red_flag: n => `${n||''} ☺️ Te paso con la Dra. Claudia para que coordine directamente contigo.\\n\\nTe responde en breve.`,\n  escalate_ask_human: n => `Claro ☺️ Le paso a la Dra. Claudia para que vea tu mensaje y te responda directamente.\\n\\nMientras tanto, si quieres adelantarme algo sobre lo que buscas, lo anoto para ella.`,\n  escalate_low_conf: n => `${n||''} ☺️ Para responderte bien, te paso directo con la Dra.\\n\\nTe responde apenas pueda.`,\n  confirm_ack: n => `${n?'Listo '+n:'Listo'} ☺️\\nLe paso a la Dra. y te confirmo el horario en breve.`,\n  reject_ack: 'Oki, entendido ☺️\\nSi más adelante quieres conversar, aquí estoy. Estamos en contacto.',\n  cancel_ack: 'Oki, entendido ☺️\\nSi quieres volver a agendar, aquí estoy.',\n  reschedule_req: 'Tranquila ☺️ ¿Cuándo te queda mejor? La Dra. tiene flexibilidad — temprano, tarde, domingos.',\n  info_direccion: '📍 Estamos en Urbanización La Florida O-7, Wanchaq, Cusco.\\n\\nDetrás del templo de los Mormones, media cuadra encima.\\n\\nParking gratis frente al consultorio ☺️',\n  info_pagos: 'Aceptamos Yape, Plin, transferencia y efectivo ☺️\\n\\nEl pago es al momento del tratamiento.',\n  info_horario: 'La Dra. atiende previa coordinación con flexibilidad — desde temprano hasta tarde, incluso domingos.\\n\\n¿Qué día y horario te queda mejor?',\n  default_helpful: 'Cuéntame un poquito más sobre qué buscas ☺️\\n\\n¿Es para suavizar líneas, dar volumen, mejorar luminosidad o algo específico? Con eso te oriento mejor.',\n};\n\n// === MAIN ===\nconst body = $input.first().json.body || {};\nconst entries = body.entry || [];\nconst outputs = [];\n\nfor (const entry of entries) {\n  for (const change of (entry.changes || [])) {\n    const value = change.value || {};\n    const messages = value.messages || [];\n    for (const msg of messages) {\n      const from = msg.from;\n      const messageId = msg.id;\n      const timestamp = msg.timestamp;\n      const type = msg.type;\n      let bodyText = '';\n      if (type === 'text') bodyText = msg.text?.body || '';\n      else if (type === 'button') bodyText = msg.button?.text || '';\n      else if (type === 'interactive') bodyText = msg.interactive?.button_reply?.title || msg.interactive?.list_reply?.title || '';\n      \n      // Referral del Click-to-WhatsApp (Meta Ads)\n      const referral = msg.referral || msg.context?.referral || null;\n      \n      // Detección\n      const intentRes = detectIntent(bodyText);\n      const product = detectProduct(referral ? (referral.headline + ' ' + (referral.body||'')) : bodyText);\n      const redFlag = detectRedFlag(bodyText);\n      const painpoint = detectPainpoint(bodyText);\n      const infoType = detectInfo(bodyText);\n      \n      // Dispatch\n      let actionType, responseText, auditReason, escalate = false;\n      const name = ''; // TODO: lookup ERP en próximo nodo\n      \n      if (redFlag === 'contraindication') {\n        actionType = 'escalate_contraindication';\n        responseText = COPY.escalate_contraindication(name);\n        auditReason = 'contraindication_medical';\n        escalate = true;\n      } else if (redFlag) {\n        actionType = 'escalate_red_flag';\n        responseText = COPY.escalate_red_flag(name);\n        auditReason = `red_flag_${redFlag}`;\n        escalate = true;\n      } else if (intentRes.intent === 'ask_human') {\n        actionType = 'escalate_ask_human';\n        responseText = COPY.escalate_ask_human(name);\n        auditReason = 'user_requested_human';\n        escalate = true;\n      } else if (intentRes.intent === 'greeting' || intentRes.intent === 'unknown' || intentRes.intent === 'ask_info') {\n        // First contact — pick by product\n        if (product === 'botox') { actionType = 'greeting_botox'; responseText = COPY.greeting_botox(name); }\n        else if (product === 'acido') { actionType = 'greeting_acido'; responseText = COPY.greeting_acido(name); }\n        else if (product === 'prp') { actionType = 'greeting_prp'; responseText = COPY.greeting_prp(name); }\n        else if (product === 'limpieza') { actionType = 'greeting_limpieza'; responseText = COPY.greeting_limpieza(name); }\n        else { actionType = 'greeting_default'; responseText = COPY.greeting_default(name); }\n        auditReason = `greeting_${product || 'default'}`;\n      } else if (intentRes.intent === 'confirm') {\n        actionType = 'confirm_ack';\n        responseText = COPY.confirm_ack(name);\n        auditReason = 'lead_confirmed';\n      } else if (intentRes.intent === 'reject') {\n        actionType = 'reject_ack'; responseText = COPY.reject_ack; auditReason = 'lead_rejected';\n      } else if (intentRes.intent === 'cancel') {\n        actionType = 'cancel_ack'; responseText = COPY.cancel_ack; auditReason = 'lead_cancelled'; escalate = true;\n      } else if (intentRes.intent === 'reschedule') {\n        actionType = 'reschedule_req'; responseText = COPY.reschedule_req; auditReason = 'lead_reschedule'; escalate = true;\n      } else if (painpoint) {\n        const k = `painpoint_${painpoint}`;\n        actionType = k; responseText = COPY[k] || COPY.default_helpful; auditReason = k;\n      } else if (intentRes.intent === 'ask_price') {\n        if (product === 'botox') { actionType = 'ask_price_botox'; responseText = COPY.ask_price_botox; }\n        else if (product === 'acido') { actionType = 'ask_price_acido'; responseText = COPY.ask_price_acido; }\n        else if (product === 'prp') { actionType = 'ask_price_prp'; responseText = COPY.ask_price_prp; }\n        else if (product === 'limpieza') { actionType = 'ask_price_limpieza'; responseText = COPY.ask_price_limpieza; }\n        else { actionType = 'ask_price_default'; responseText = COPY.ask_price_default; }\n        auditReason = actionType;\n      } else if (infoType === 'direccion') { actionType = 'info_direccion'; responseText = COPY.info_direccion; auditReason = 'info_direccion'; }\n      else if (infoType === 'pagos') { actionType = 'info_pagos'; responseText = COPY.info_pagos; auditReason = 'info_pagos'; }\n      else if (infoType === 'horario') { actionType = 'info_horario'; responseText = COPY.info_horario; auditReason = 'info_horario'; }\n      else if (intentRes.confidence < 0.5) {\n        actionType = 'escalate_low_conf'; responseText = COPY.escalate_low_conf(name); auditReason = 'confidence_low'; escalate = true;\n      } else {\n        actionType = 'default_helpful'; responseText = COPY.default_helpful; auditReason = 'default_fallback';\n      }\n      \n      console.log(`[YOSSIE] from=${from} intent=${intentRes.intent} product=${product} action=${actionType} escalate=${escalate}`);\n      \n      outputs.push({\n        json: {\n          from,\n          messageId,\n          timestamp,\n          type,\n          inbound_text: bodyText,\n          referral: referral || null,\n          referral_product: product,\n          intent: intentRes.intent,\n          confidence: intentRes.confidence,\n          red_flag: redFlag,\n          painpoint,\n          info_type: infoType,\n          action_type: actionType,\n          response_text: responseText,\n          audit_reason: auditReason,\n          escalate,\n          phone_number_id: value.metadata?.phone_number_id,\n        }\n      });\n    }\n  }\n}\n\nreturn outputs.length > 0 ? outputs : [{ json: { skip: true, reason: 'no_messages_to_process' } }];"
+      },
+      "id": "66666666-6666-6666-6666-666666666666",
+      "name": "Parse + Dispatch (Yossie)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 600]
+    },
+
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "notEqual" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "77777777-7777-7777-7777-777777777777",
+      "name": "Has Message To Process?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [640, 600]
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $json.phone_number_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.from }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"preview_url\": false,\n    \"body\": {{ JSON.stringify($json.response_text) }}\n  }\n}",
+        "options": {
+          "response": { "response": { "fullResponse": false, "neverError": true } }
+        }
+      },
+      "id": "88888888-8888-8888-8888-888888888888",
+      "name": "Send WA Outbound",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 540],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "meta-wa-header-auth",
+          "name": "Meta WA System User"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO wa_messages (\n  phone_lead, direction, meta_message_id, body, message_type,\n  intent, parsed_dates, meta_payload_raw, action_type, audit_reason\n) VALUES (\n  $1, 'inbound', $2, $3, $4,\n  $5, $6::jsonb, $7::jsonb, $8, $9\n) ON CONFLICT (meta_message_id) DO NOTHING\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ $('Parse + Dispatch (Yossie)').item.json.from }},{{ $('Parse + Dispatch (Yossie)').item.json.messageId }},{{ JSON.stringify($('Parse + Dispatch (Yossie)').item.json.inbound_text) }},{{ $('Parse + Dispatch (Yossie)').item.json.type }},{{ $('Parse + Dispatch (Yossie)').item.json.intent }},{{ JSON.stringify({}) }},{{ JSON.stringify($('Parse + Dispatch (Yossie)').item.json.referral || {}) }},{{ $('Parse + Dispatch (Yossie)').item.json.action_type }},{{ $('Parse + Dispatch (Yossie)').item.json.audit_reason }}"
+        }
+      },
+      "id": "99999999-9999-9999-9999-999999999999",
+      "name": "Save Inbound to wa_messages",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1080, 540],
+      "credentials": {
+        "postgres": {
+          "id": "livskin-erp-pg",
+          "name": "livskin_erp Postgres"
+        }
+      },
+      "continueOnFail": true
+    },
+
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO wa_conversation_state (\n  phone_lead, state, last_inbound_at, last_action_type, message_count, agent_paused, context_json\n) VALUES (\n  $1, 'open', NOW(), $2, 1, false, $3::jsonb\n) ON CONFLICT (phone_lead) WHERE state != 'closed' DO UPDATE SET\n  last_inbound_at = NOW(),\n  last_action_type = EXCLUDED.last_action_type,\n  message_count = wa_conversation_state.message_count + 1,\n  state = CASE WHEN EXCLUDED.context_json->>'escalate' = 'true' THEN 'escalated' ELSE wa_conversation_state.state END,\n  updated_at = NOW();",
+        "options": {
+          "queryReplacement": "={{ $('Parse + Dispatch (Yossie)').item.json.from }},{{ $('Parse + Dispatch (Yossie)').item.json.action_type }},{{ JSON.stringify({referral_product: $('Parse + Dispatch (Yossie)').item.json.referral_product, intent: $('Parse + Dispatch (Yossie)').item.json.intent, escalate: $('Parse + Dispatch (Yossie)').item.json.escalate}) }}"
+        }
+      },
+      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "name": "Upsert wa_conversation_state",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1300, 540],
+      "credentials": {
+        "postgres": {
+          "id": "livskin-erp-pg",
+          "name": "livskin_erp Postgres"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Webhook GET (handshake)": {
+      "main": [[{ "node": "Verify Handshake", "type": "main", "index": 0 }]]
+    },
+    "Verify Handshake": {
+      "main": [[{ "node": "Respond Handshake", "type": "main", "index": 0 }]]
+    },
+    "Webhook POST (events)": {
+      "main": [[
+        { "node": "Respond 200 OK", "type": "main", "index": 0 },
+        { "node": "Parse + Dispatch (Yossie)", "type": "main", "index": 0 }
+      ]]
+    },
+    "Parse + Dispatch (Yossie)": {
+      "main": [[{ "node": "Has Message To Process?", "type": "main", "index": 0 }]]
+    },
+    "Has Message To Process?": {
+      "main": [
+        [{ "node": "Send WA Outbound", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Send WA Outbound": {
+      "main": [[{ "node": "Save Inbound to wa_messages", "type": "main", "index": 0 }]]
+    },
+    "Save Inbound to wa_messages": {
+      "main": [[{ "node": "Upsert wa_conversation_state", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
