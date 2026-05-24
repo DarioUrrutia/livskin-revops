@@ -70,17 +70,24 @@ const TREATMENT_LABELS = {
 function buildGreetingWithProduct(name, treatmentKey) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
   const treatment = TREATMENT_LABELS[treatmentKey] || 'medicina estética';
-  return `Hola${safeName} ☺️\n\nSoy Yossie, asistente de la Dra. Claudia Delgado en Livskin Cusco.\n\nLa Dra. es Médico Cirujano colegiada (CMP 091029) con más de 10 años atendiendo en Cusco.\n\nVi que llegas por nuestro anuncio de ${treatment}. ¿Es ese tratamiento el que te interesa, o tienes otra duda?`;
+  return `Hola${safeName} ☺️ soy Yossie de Livskin Cusco.\n\nVi que llegas por nuestro anuncio de ${treatment}. ¿Es ese el tratamiento que te interesa?`;
 }
 
 function buildGreetingWithoutProduct(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Hola${safeName} ☺️\n\nSoy Yossie, asistente de la Dra. Claudia Delgado en Livskin Cusco.\n\nLa Dra. es Médico Cirujano colegiada (CMP 091029) con más de 10 años atendiendo en Cusco.\n\n¿En qué tratamiento te puedo orientar?`;
+  return `Hola${safeName} ☺️ soy Yossie de Livskin Cusco.\n\n¿En qué tratamiento te puedo orientar?`;
 }
 
 function buildQ2FirstTime(treatmentKey) {
   const treatment = TREATMENT_LABELS[treatmentKey] || 'este tratamiento';
-  return `${treatment} es uno de nuestros tratamientos más pedidos ☺️\n\nCuéntame: ¿es tu primera vez con este tipo de tratamiento, o ya te has hecho antes?`;
+  return `Cuéntame: ¿es tu primera vez con ${treatment}, o ya te has hecho antes?`;
+}
+
+function buildGreetingPlusQ2(name, treatmentKey) {
+  // Caso: lead escribe "vengo por botox" — saludo + Q2 en UN solo mensaje compacto
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  const treatment = TREATMENT_LABELS[treatmentKey] || 'este tratamiento';
+  return `Hola${safeName} ☺️ soy Yossie de Livskin Cusco.\n\nCuéntame: ¿es tu primera vez con ${treatment}, o ya te has hecho antes?`;
 }
 
 function buildQ3Urgency() {
@@ -301,14 +308,10 @@ function decideNextAction(inbound, state) {
     const initialTreatment = referral_product || detectedFromText;
 
     if (initialTreatment) {
-      // Tratamiento ya conocido → saltar directo a Q2 (primera vez vs experiencia)
-      // Pero saludamos primero con confirmación implícita
+      // Tratamiento ya conocido → saludo compacto + Q2 directo (un solo mensaje)
       return {
         action_type: 'send_interactive_buttons',
-        message:
-          buildGreetingWithProduct(profile_name, initialTreatment) +
-          '\n\n' +
-          buildQ2FirstTime(initialTreatment),
+        message: buildGreetingPlusQ2(profile_name, initialTreatment),
         buttons: [
           { id: 'q2_first_time', title: 'Primera vez' },
           { id: 'q2_repeat', title: 'Ya me he hecho' },
