@@ -25,6 +25,7 @@ def register_public_endpoints() -> None:
     """Llamar desde app.py para que estos endpoints no requieran login bcrypt."""
     PUBLIC_ENDPOINTS.add("api_internal_wa_state.get_state")
     PUBLIC_ENDPOINTS.add("api_internal_wa_state.upsert_state")
+    PUBLIC_ENDPOINTS.add("api_internal_wa_state.pending_followup")
 
 
 def _check_internal_token() -> None:
@@ -63,6 +64,49 @@ def _row_to_dict(row: Any) -> dict[str, Any]:
         "escalation_to": row.escalation_to,
         "started_at": row.started_at.isoformat() if row.started_at else None,
     }
+
+
+@bp.get("/pending-followup")
+def pending_followup():  # type: ignore[no-untyped-def]
+    """GET /api/internal/wa-state/pending-followup?hours_since_inbound=4
+
+    Devuelve lista de leads que:
+    - state = 'qualifying' (flow incompleto)
+    - last_inbound_at < NOW() - hours_since_inbound
+    - context_json.followup_sent != true
+
+    Usado por workflow re-engagement-4h-followup (cron) para enviar template Meta.
+    """
+    _check_internal_token()
+
+    try:
+        hours = int(request.args.get("hours_since_inbound", "4"))
+    except ValueError:
+        abort(400, description="hours_since_inbound debe ser int")
+
+    from datetime import timedelta
+    from models.wa_conversation_state import WaConversationState
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+    with session_scope() as db:
+        rows = db.execute(
+            select(WaConversationState)
+            .where(WaConversationState.state == "qualifying")
+            .where(WaConversationState.last_inbound_at < cutoff)
+            .order_by(WaConversationState.id.desc())
+            .limit(100)
+        ).scalars().all()
+
+        # Filter out rows where context_json.followup_sent = true
+        out = []
+        for r in rows:
+            ctx = r.context_json or {}
+            if ctx.get("followup_sent"):
+                continue
+            out.append(_row_to_dict(r))
+
+        return jsonify({"items": out, "count": len(out)})
 
 
 @bp.get("")
