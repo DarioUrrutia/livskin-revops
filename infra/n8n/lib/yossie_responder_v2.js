@@ -86,12 +86,12 @@ const TREATMENT_LABELS = {
 function buildGreetingWithProduct(name, treatmentKey) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
   const treatment = TREATMENT_LABELS[treatmentKey] || 'medicina estética';
-  return `Hola${safeName} ☺️ soy Yossie de Livskin Cusco.\n\nVi que llegas por nuestro anuncio de ${treatment}. ¿Es ese el tratamiento que te interesa?`;
+  return `Hola${safeName} ☺️ soy Yossie, asistente de la Dra. Claudia Delgado (CMP 091029) en Livskin Cusco.\n\nVi que llegas por nuestro anuncio de ${treatment}. ¿Es ese el tratamiento que te interesa?`;
 }
 
 function buildGreetingWithoutProduct(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Hola${safeName} ☺️ soy Yossie de Livskin Cusco.\n\n¿En qué tratamiento te puedo orientar?`;
+  return `Hola${safeName} ☺️ soy Yossie, asistente de la Dra. Claudia Delgado (CMP 091029) en Livskin Cusco.\n\n¿En qué tratamiento te puedo orientar?`;
 }
 
 function buildQ2FirstTime(treatmentKey) {
@@ -103,7 +103,7 @@ function buildGreetingPlusQ2(name, treatmentKey) {
   // Caso: lead escribe "vengo por botox" — saludo + Q2 en UN solo mensaje compacto
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
   const treatment = TREATMENT_LABELS[treatmentKey] || 'este tratamiento';
-  return `Hola${safeName} ☺️ soy Yossie de Livskin Cusco.\n\nCuéntame: ¿es tu primera vez con ${treatment}, o ya te has hecho antes?`;
+  return `Hola${safeName} ☺️ soy Yossie, asistente de la Dra. Claudia Delgado (CMP 091029) en Livskin Cusco.\n\nCuéntame: ¿es tu primera vez con ${treatment}, o ya te has hecho antes?`;
 }
 
 function buildQ3Urgency() {
