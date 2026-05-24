@@ -11,6 +11,8 @@ from routes.api_internal import register_public_endpoints as _register_internal_
 from routes.api_internal_sync import bp as api_internal_sync_bp
 from routes.api_internal_vtiger_sync import bp as api_internal_vtiger_sync_bp
 from routes.api_internal_vtiger_sync import register_public_endpoints as _register_vtiger_sync_public
+from routes.api_internal_wa_state import bp as api_internal_wa_state_bp
+from routes.api_internal_wa_state import register_public_endpoints as _register_wa_state_public
 from routes.api_client_lookup import bp as client_lookup_bp
 from routes.api_leads_sync import bp as leads_sync_bp
 from routes.api_leads_sync import register_public_endpoints as _register_leads_sync_public
@@ -36,9 +38,11 @@ def create_app() -> Flask:
     flask_app.register_blueprint(api_internal_bp)
     flask_app.register_blueprint(api_internal_sync_bp)
     flask_app.register_blueprint(api_internal_vtiger_sync_bp)  # ADR-0036 — Workflow [A2] ERP→Vtiger sync
+    flask_app.register_blueprint(api_internal_wa_state_bp)  # Yossie v2 — WA conversation state CRUD interna
     flask_app.register_blueprint(views_bp)
     _register_internal_public()  # marcar /api/system-map.json + /api/internal/* como públicos
     _register_vtiger_sync_public()  # ADR-0036 — endpoint /api/internal/leads/pending-vtiger-sync
+    _register_wa_state_public()  # Yossie v2 — endpoints /api/internal/wa-state
     flask_app.register_blueprint(legacy_forms_bp)
     flask_app.register_blueprint(client_lookup_bp)
     flask_app.register_blueprint(leads_sync_bp)
