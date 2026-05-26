@@ -122,7 +122,7 @@ function buildQ3Urgency() {
 
 function buildClosing(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Listo${safeName} ✨\n\nLe paso ahora tu información a la Dra. Claudia. Ella revisa cada caso personalmente porque cada paciente es distinto.\n\n📍 Estamos en Urb. La Florida O-7, Wanchaq, Cusco\n(Detrás del templo de los Mormones, media cuadra arriba)\n\nApenas la Dra. revise tu info, te escribe por aquí mismo ☺️`;
+  return `Listo${safeName} ✨\n\nLe paso tu información a la Dra. Claudia. Te escribe por aquí en breve para coordinar contigo ☺️\n\n📍 Urb. La Florida O-7, Wanchaq, Cusco`;
 }
 
 function buildQ4InfoTopics() {
@@ -132,7 +132,7 @@ function buildQ4InfoTopics() {
 function buildClosingWithInfo(name, topics) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
   const topicsList = (topics || []).join(', ');
-  return `Gracias${safeName} ✨\n\nLe paso a la Dra. Claudia tus inquietudes${topicsList ? ` sobre ${topicsList}` : ''} para que te responda con todo el detalle.\n\n📍 Estamos en Urb. La Florida O-7, Wanchaq, Cusco\n(Detrás del templo de los Mormones, media cuadra arriba)\n\nTe escribe por aquí mismo en breve ☺️`;
+  return `Gracias${safeName} ✨\n\nLe paso a la Dra. Claudia tus inquietudes${topicsList ? ` sobre ${topicsList}` : ''}. Te responde por aquí en breve ☺️\n\n📍 Urb. La Florida O-7, Wanchaq, Cusco`;
 }
 
 function buildPriceObjection(name) {
@@ -142,7 +142,7 @@ function buildPriceObjection(name) {
 
 function buildEscapeToHuman(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Por supuesto${safeName} ☺️\n\nLe paso tu interés a la Dra. Claudia ahora mismo. Ella revisa personalmente cada caso porque cada persona es distinta.\n\nTe escribe por aquí en breve para conversar contigo directamente ✨`;
+  return `Por supuesto${safeName} ☺️\n\nLe paso tu interés a la Dra. Claudia. Te escribe por aquí en breve para conversar directamente ✨`;
 }
 
 function buildRedFlagResponse(name, flagType) {
@@ -185,7 +185,7 @@ function buildOptInQuestion(name) {
 // Lead aceptó recibir promociones futuras
 function buildOptInYesResponse(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Perfecto${safeName} ✨\n\nQuedas en nuestra lista para que te avisemos de promociones especiales y novedades de la clínica.\n\n¡Muchas gracias y hasta pronto! ☺️`;
+  return `Perfecto${safeName} ✨\n\nQuedas en nuestra lista para avisarte de promociones y novedades. ¡Hasta pronto! ☺️`;
 }
 
 // Lead pidió que eliminemos sus datos
