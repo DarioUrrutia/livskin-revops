@@ -194,6 +194,12 @@ function buildOptInNoResponse(name) {
   return `Listo${safeName}, eliminaremos tus datos de nuestra base ☺️\n\nGracias por escribirnos. ¡Que estés muy bien!`;
 }
 
+// Gap K — Lead vuelve a escribir post-escalado (state=escalated, nueva conversacion)
+function buildLeadReturnedResponse(name) {
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  return `Nos alegra que hayas vuelto${safeName} ✨\n\nTe pasamos directamente con la Dra. Claudia. Te responde en breve ☺️`;
+}
+
 // ============================================================================
 // INTERACTIVE BUTTONS PAYLOADS
 // ============================================================================
@@ -721,11 +727,26 @@ function decideNextAction(inbound, state) {
     };
   }
 
-  // Estado 'escalated' o 'closed' → bot NO responde (humano takes over)
-  if (stateName === 'escalated' || stateName === 'closed') {
+  // Gap K — Lead vuelve a escribir post-escalado (state=escalated)
+  // En lugar de ignorar: bot responde con saludo cordial + notif a humanos
+  // destacando que es LEAD RETURNANTE (no es lead nuevo).
+  if (stateName === 'escalated') {
+    return {
+      action_type: 'lead_returned_handoff',
+      message: buildLeadReturnedResponse(profile_name),
+      new_state_name: 'escalated', // se mantiene escalated
+      handoff: {
+        triggered: true,
+        flag: 'lead_returned_after_escalation',
+        urgency: 'HIGH',
+      },
+    };
+  }
+  // state=closed: lead pidió no contactar más → bot NO responde
+  if (stateName === 'closed') {
     return {
       action_type: 'no_action',
-      reason: `bot disabled while state=${stateName}`,
+      reason: 'bot disabled while state=closed (lead opted out previously)',
     };
   }
 
@@ -824,13 +845,18 @@ function buildHandoffPayloads(inbound, state, decision) {
   // Las variables NO pueden tener saltos de linea, asi que aplanamos el texto del mensaje
   const flattenText = (t) => (t || '').replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, 250).trim();
 
+  // Gap K — si lead volvió post-escalado, prefijar mensaje con [LEAD RETURNANTE]
+  // para que doctora distinga al instante que NO es lead nuevo.
+  const isReturning = decision.handoff?.flag === 'lead_returned_after_escalation';
+  const messagePrefix = isReturning ? '[LEAD QUE VOLVIO] ' : '';
+
   const template_params = {
     nombre: profile_name || `Lead WA ${phone_e164.slice(-4)}`,
     telefono: phone_e164,
-    tratamiento: treatmentLabel,
+    tratamiento: isReturning ? `${treatmentLabel} (returnante)` : treatmentLabel,
     experiencia: firstTimeLabel,
     urgencia: urgencyLabel,
-    mensaje: flattenText(text) || '(sin mensaje)',
+    mensaje: messagePrefix + (flattenText(text) || '(sin mensaje)'),
   };
 
   return {
