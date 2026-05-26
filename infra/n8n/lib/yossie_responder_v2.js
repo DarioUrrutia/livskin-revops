@@ -106,7 +106,7 @@ function buildGreetingWithoutProduct(name) {
 
 function buildQ2FirstTime(treatmentKey) {
   const treatment = TREATMENT_LABELS[treatmentKey] || 'este tratamiento';
-  return `Cuéntame: ¿es tu primera vez con ${treatment}, o ya te has hecho antes?`;
+  return `Para que la Dra. te dé la mejor orientación, cuéntame: ¿es tu primera vez con ${treatment}, o ya te lo has hecho antes? ☺️`;
 }
 
 function buildGreetingPlusQ2(name, treatmentKey) {
@@ -117,7 +117,7 @@ function buildGreetingPlusQ2(name, treatmentKey) {
 }
 
 function buildQ3Urgency() {
-  return `Gracias. Una última cosa: ¿cuándo te gustaría empezar?`;
+  return `Genial ☺️ Una última cosa para que la Dra. pueda revisar su agenda contigo: ¿cuándo te gustaría empezar?`;
 }
 
 function buildClosing(name) {
@@ -126,7 +126,7 @@ function buildClosing(name) {
 }
 
 function buildQ4InfoTopics() {
-  return `¿Qué te gustaría saber? Cuéntame y le paso toda la info a la Dra. para que te explique mejor.`;
+  return `Claro, antes de pasarte con la Dra. — ¿qué es lo que más te gustaría saber? Así ella te puede explicar con todo el detalle apenas converse contigo ☺️`;
 }
 
 function buildClosingWithInfo(name, topics) {
@@ -142,7 +142,7 @@ function buildPriceObjection(name) {
 
 function buildEscapeToHuman(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Por supuesto${safeName} ☺️ La Dra. te escribe en breve.`;
+  return `Por supuesto${safeName} ☺️\n\nLe paso tu interés a la Dra. Claudia ahora mismo. Ella revisa personalmente cada caso porque cada persona es distinta.\n\nTe escribe por aquí en breve para conversar contigo directamente ✨`;
 }
 
 function buildRedFlagResponse(name, flagType) {
@@ -161,19 +161,19 @@ function buildMediaReceivedResponse(name, mediaType) {
     location: 'tu ubicación',
   };
   const label = labels[mediaType] || 'tu mensaje';
-  return `Recibí${safeName} ${label} ☺️\n\nLe paso a la Dra. Claudia para que lo revise. Te escribe por aquí en breve ✨`;
+  return `Gracias${safeName} ☺️\n\nLe paso ${label} a la Dra. Claudia para que la revise con atención. Ella te responde por aquí en breve con su observación ✨`;
 }
 
 // Lead respondió "Sí, sigo interesada" al follow-up — HANDOFF directo
 function buildFollowupYesResponse(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Genial${safeName} ✨\n\nLe paso tu interés a la Dra. Claudia ahora mismo. Te escribe por aquí en breve ☺️`;
+  return `Qué bueno${safeName} ✨\n\nLe aviso a la Dra. Claudia que sigues interesada. Ella revisa tu caso personalmente y te escribe por aquí en breve para coordinar contigo ☺️`;
 }
 
 // Lead respondió "Más tarde respondo" — snooze 24h
 function buildFollowupLaterResponse(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Listo${safeName} ☺️\n\nTe escribimos mañana a esta hora para retomar la conversación. ¡Estamos atentos!`;
+  return `Perfecto${safeName} ☺️\n\nTe escribimos mañana para retomar la conversación cuando tengas más tiempo. Quedamos atentas a tu respuesta ✨`;
 }
 
 // Lead respondió "Ya no, gracias" — pregunta opt-in marketing
@@ -185,19 +185,19 @@ function buildOptInQuestion(name) {
 // Lead aceptó recibir promociones futuras
 function buildOptInYesResponse(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Perfecto${safeName} ✨\n\nQuedas en nuestra lista para promociones especiales. ¡Hasta pronto!`;
+  return `Perfecto${safeName} ✨\n\nQuedas en nuestra lista para que te avisemos de promociones especiales y novedades de la clínica.\n\n¡Muchas gracias y hasta pronto! ☺️`;
 }
 
 // Lead pidió que eliminemos sus datos
 function buildOptInNoResponse(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Listo${safeName}, eliminaremos tus datos de nuestra base ☺️\n\nGracias por escribirnos. ¡Que estés muy bien!`;
+  return `Listo${safeName}, eliminaremos tus datos de nuestra base ☺️\n\nRespetamos tu decisión. Gracias por habernos escrito y te deseamos lo mejor ✨`;
 }
 
 // Gap K — Lead vuelve a escribir post-escalado (state=escalated, nueva conversacion)
 function buildLeadReturnedResponse(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
-  return `Nos alegra que hayas vuelto${safeName} ✨\n\nTe pasamos directamente con la Dra. Claudia. Te responde en breve ☺️`;
+  return `¡Qué bueno que hayas vuelto${safeName}! ✨\n\nLe aviso a la Dra. Claudia que retomas tu interés. Como ya conoce tu caso, te responde por aquí muy en breve para continuar contigo ☺️`;
 }
 
 // ============================================================================
@@ -845,18 +845,25 @@ function buildHandoffPayloads(inbound, state, decision) {
   // Las variables NO pueden tener saltos de linea, asi que aplanamos el texto del mensaje
   const flattenText = (t) => (t || '').replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, 250).trim();
 
-  // Gap K — si lead volvió post-escalado, prefijar mensaje con [LEAD RETURNANTE]
-  // para que doctora distinga al instante que NO es lead nuevo.
+  // Gap K — si lead volvió post-escalado, MARCAR FUERTE en TODAS las variables
+  // para que doctora distinga al instante (header del template dice "nuevo lead" hardcoded
+  // pero cada line del body grita RETURNANTE)
   const isReturning = decision.handoff?.flag === 'lead_returned_after_escalation';
-  const messagePrefix = isReturning ? '[LEAD QUE VOLVIO] ' : '';
 
-  const template_params = {
+  const template_params = isReturning ? {
+    nombre: `🔄 ${profile_name || `Lead WA ${phone_e164.slice(-4)}`} (YA HABLO ANTES)`,
+    telefono: phone_e164,
+    tratamiento: `🔄 RETURNANTE — ${treatmentLabel}`,
+    experiencia: `🔄 LEAD QUE VOLVIO (ya conversaba antes)`,
+    urgencia: `🔄 ALTA — retomar conversacion`,
+    mensaje: `🔄 [VOLVIO] ${flattenText(text) || '(sin mensaje)'}`,
+  } : {
     nombre: profile_name || `Lead WA ${phone_e164.slice(-4)}`,
     telefono: phone_e164,
-    tratamiento: isReturning ? `${treatmentLabel} (returnante)` : treatmentLabel,
+    tratamiento: treatmentLabel,
     experiencia: firstTimeLabel,
     urgencia: urgencyLabel,
-    mensaje: messagePrefix + (flattenText(text) || '(sin mensaje)'),
+    mensaje: flattenText(text) || '(sin mensaje)',
   };
 
   return {
