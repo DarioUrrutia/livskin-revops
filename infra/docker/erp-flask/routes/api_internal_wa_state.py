@@ -98,12 +98,23 @@ def pending_followup():  # type: ignore[no-untyped-def]
             .limit(100)
         ).scalars().all()
 
-        # Filter out rows where context_json.followup_sent = true
+        # Filter: skip followup_sent=true AND skip leads en snooze activo
+        from datetime import datetime as _dt
         out = []
+        now_utc = _dt.now(timezone.utc)
         for r in rows:
             ctx = r.context_json or {}
             if ctx.get("followup_sent"):
                 continue
+            # Snooze check: si snoozed_until > NOW, skip
+            snoozed = ctx.get("snoozed_until")
+            if snoozed:
+                try:
+                    snoozed_dt = _dt.fromisoformat(snoozed.replace("Z", "+00:00"))
+                    if snoozed_dt > now_utc:
+                        continue
+                except (ValueError, AttributeError):
+                    pass
             out.append(_row_to_dict(r))
 
         return jsonify({"items": out, "count": len(out)})

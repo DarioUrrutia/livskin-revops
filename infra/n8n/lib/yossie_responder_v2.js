@@ -64,6 +64,16 @@ const PRICE_OBJECTION_PATTERNS = /\b(cu[áa]nto\s+(cuesta|sale|vale)|precio|cost
 
 const ESCAPE_TO_HUMAN_PATTERNS = /\b(hablar\s+(con|directo)|hablar\s+con\s+(la\s+)?(doctora|m[ée]dico)|saltar\s+preguntas|sin\s+preguntas|ya\s+s[ée]\s+lo\s+que\s+quiero|d[ée]jame\s+hablar|directamente)/i;
 
+// === FOLLOWUP TEMPLATE BUTTONS — texto exacto de lead_waiting_4h_followup_v1 ===
+// Meta envía type=button con button.text al clickear quick reply de template
+const FOLLOWUP_YES_PATTERNS = /^s[íi]\s*,?\s*sigo\s+interesad/i;
+const FOLLOWUP_LATER_PATTERNS = /m[áa]s\s+tarde\s+respondo|m[áa]s\s+tarde|despu[ée]s\s+respondo/i;
+const FOLLOWUP_NO_PATTERNS = /^ya\s+no\s*,?\s*gracias|^no\s*,?\s*gracias|ya\s+no\s+me\s+interes/i;
+
+// === OPT-IN MARKETING — respuestas tras "Ya no, gracias" ===
+const OPTIN_YES_PATTERNS = /^s[íi]\s*,?\s*mant[ée]n|mant[ée]nme\s+informad|s[íi]\s+a\s+las\s+promociones|me\s+gustar[íi]a/i;
+const OPTIN_NO_PATTERNS = /^no\s*,?\s*eliminar|elimina(r|me)?\s+mis\s+datos|borra(r|me)?\s+(mis\s+)?datos|no\s+quiero\s+(m[áa]s|nada)/i;
+
 // ============================================================================
 // CATÁLOGO TRATAMIENTOS (canonical names — valida workbook discovery)
 // ============================================================================
@@ -138,6 +148,36 @@ function buildEscapeToHuman(name) {
 function buildRedFlagResponse(name, flagType) {
   const safeName = name && name.trim() ? `${name.trim()}, ` : '';
   return `${safeName}gracias por contarme. Este tipo de caso la Dra. Claudia lo revisa personalmente antes de cualquier paso. Le paso tu info ahora mismo y te responde en breve ☺️`;
+}
+
+// Lead respondió "Sí, sigo interesada" al follow-up — HANDOFF directo
+function buildFollowupYesResponse(name) {
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  return `Genial${safeName} ✨\n\nLe paso tu interés a la Dra. Claudia ahora mismo. Te escribe por aquí en breve ☺️`;
+}
+
+// Lead respondió "Más tarde respondo" — snooze 24h
+function buildFollowupLaterResponse(name) {
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  return `Listo${safeName} ☺️\n\nTe escribimos mañana a esta hora para retomar la conversación. ¡Estamos atentos!`;
+}
+
+// Lead respondió "Ya no, gracias" — pregunta opt-in marketing
+function buildOptInQuestion(name) {
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  return `Entendido${safeName}, gracias por avisarnos ☺️\n\nUna última cosa: ¿prefieres que te enviemos promociones ocasionales en el futuro, o prefieres que eliminemos tus datos de nuestra base?`;
+}
+
+// Lead aceptó recibir promociones futuras
+function buildOptInYesResponse(name) {
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  return `Perfecto${safeName} ✨\n\nQuedas en nuestra lista para promociones especiales. ¡Hasta pronto!`;
+}
+
+// Lead pidió que eliminemos sus datos
+function buildOptInNoResponse(name) {
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  return `Listo${safeName}, eliminaremos tus datos de nuestra base ☺️\n\nGracias por escribirnos. ¡Que estés muy bien!`;
 }
 
 // ============================================================================
@@ -271,6 +311,98 @@ function decideNextAction(inbound, state) {
   const stateName = state?.state || 'new';
   // Progress dentro del estado 'qualifying' — guardado en context_json.progress
   const progress = state?.context_json?.progress || null;
+
+  // === RESPUESTAS AL TEMPLATE FOLLOWUP — interceptar ANTES de state machine normal ===
+  // Solo aplica si followup_sent=true y state aun qualifying (no escalated/closed)
+  const followupSent = state?.context_json?.followup_sent === true;
+  if (followupSent && stateName === 'qualifying') {
+    // (1) Lead respondió "Sí, sigo interesada" → HANDOFF directo a doctora
+    if (FOLLOWUP_YES_PATTERNS.test(text)) {
+      return {
+        action_type: 'followup_yes_handoff',
+        message: buildFollowupYesResponse(profile_name),
+        new_state_name: 'escalated',
+        handoff: {
+          triggered: true,
+          flag: 'followup_yes_interested',
+          urgency: 'HIGH',
+        },
+      };
+    }
+    // (2) Lead respondió "Más tarde respondo" → snooze 24h, state queda qualifying
+    if (FOLLOWUP_LATER_PATTERNS.test(text)) {
+      const snoozeUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      return {
+        action_type: 'followup_snooze_24h',
+        message: buildFollowupLaterResponse(profile_name),
+        new_state_name: 'qualifying',
+        new_progress: progress, // mantiene Q1/Q2/Q3 donde se quedó
+        snoozed_until: snoozeUntil,
+        reset_followup_sent: true, // F1 podrá reenviar tras snooze
+      };
+    }
+    // (3) Lead respondió "Ya no, gracias" → preguntar opt-in marketing
+    if (FOLLOWUP_NO_PATTERNS.test(text)) {
+      return {
+        action_type: 'send_interactive_buttons',
+        message: buildOptInQuestion(profile_name),
+        buttons: [
+          { id: 'q5_optin_yes', title: 'Sí, mantenme' },
+          { id: 'q5_optin_no', title: 'No, eliminar' },
+        ],
+        new_state_name: 'qualifying',
+        new_progress: 'q5_optin',
+      };
+    }
+  }
+
+  // === RESPUESTAS AL OPT-IN (Q5) — tras "Ya no, gracias" ===
+  if (stateName === 'qualifying' && progress === 'q5_optin') {
+    let optInMarketing = null;
+    if (button_id === 'q5_optin_yes') optInMarketing = true;
+    else if (button_id === 'q5_optin_no') optInMarketing = false;
+    else if (OPTIN_YES_PATTERNS.test(text)) optInMarketing = true;
+    else if (OPTIN_NO_PATTERNS.test(text)) optInMarketing = false;
+
+    if (optInMarketing === true) {
+      return {
+        action_type: 'closed_optin_yes',
+        message: buildOptInYesResponse(profile_name),
+        new_state_name: 'closed',
+        opt_in_marketing: true,
+        handoff: {
+          triggered: true,
+          flag: 'closed_opt_in_marketing',
+          urgency: 'LOW',
+        },
+      };
+    }
+    if (optInMarketing === false) {
+      return {
+        action_type: 'closed_optin_no',
+        message: buildOptInNoResponse(profile_name),
+        new_state_name: 'closed',
+        opt_in_marketing: false,
+        request_data_deletion: true,
+        handoff: {
+          triggered: true,
+          flag: 'closed_opt_out_delete_data',
+          urgency: 'LOW',
+        },
+      };
+    }
+    // No matcheó — repreguntar
+    return {
+      action_type: 'send_interactive_buttons',
+      message: 'No te entendí bien ☺️ ¿Prefieres recibir promociones ocasionales o eliminar tus datos?',
+      buttons: [
+        { id: 'q5_optin_yes', title: 'Sí, mantenme' },
+        { id: 'q5_optin_no', title: 'No, eliminar' },
+      ],
+      new_state_name: 'qualifying',
+      new_progress: 'q5_optin',
+    };
+  }
 
   // RED FLAGS — siempre escalar inmediato, en cualquier state
   const redFlag = detectRedFlag(text);
@@ -698,7 +830,14 @@ function processInbound(webhookBody, stateRow) {
     referral_source_url: inbound.referral_source_url || prevContext.referral_source_url || null,
     referral_headline: inbound.referral_headline || prevContext.referral_headline || null,
     referral_product: inbound.referral_product || prevContext.referral_product || null,
-    followup_sent: prevContext.followup_sent || false,
+    // followup_sent: si decision pide reset (snooze 24h) -> false, sino mantener
+    followup_sent: decision.reset_followup_sent ? false : (prevContext.followup_sent || false),
+    // snoozed_until: tras "Más tarde respondo" — F1 NO debe reenviar antes de esta fecha
+    snoozed_until: decision.snoozed_until || prevContext.snoozed_until || null,
+    // opt_in_marketing: respuesta del lead a Q5 (true=acepta promos, false=pide eliminacion)
+    opt_in_marketing: decision.opt_in_marketing != null ? decision.opt_in_marketing : prevContext.opt_in_marketing,
+    // request_data_deletion: bandera para que ops elimine datos PII de este lead
+    request_data_deletion: decision.request_data_deletion === true ? true : prevContext.request_data_deletion,
   };
 
   const result = {
