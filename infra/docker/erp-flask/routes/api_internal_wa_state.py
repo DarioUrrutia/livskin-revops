@@ -26,6 +26,9 @@ def register_public_endpoints() -> None:
     PUBLIC_ENDPOINTS.add("api_internal_wa_state.get_state")
     PUBLIC_ENDPOINTS.add("api_internal_wa_state.upsert_state")
     PUBLIC_ENDPOINTS.add("api_internal_wa_state.pending_followup")
+    PUBLIC_ENDPOINTS.add("api_internal_wa_state.cold_candidates")
+    PUBLIC_ENDPOINTS.add("api_internal_wa_state.gdpr_pending")
+    PUBLIC_ENDPOINTS.add("api_internal_wa_state.gdpr_execute")
 
 
 def _check_internal_token() -> None:
@@ -118,6 +121,187 @@ def pending_followup():  # type: ignore[no-untyped-def]
             out.append(_row_to_dict(r))
 
         return jsonify({"items": out, "count": len(out)})
+
+
+@bp.get("/cold-candidates")
+def cold_candidates():  # type: ignore[no-untyped-def]
+    """GET /api/internal/wa-state/cold-candidates?hours_since_inbound=72
+
+    Lista leads en 'qualifying' con followup_sent=true y last_inbound > N horas.
+    Workflow F2 los marca como closed_cold.
+    """
+    _check_internal_token()
+    try:
+        hours = int(request.args.get("hours_since_inbound", "72"))
+    except ValueError:
+        abort(400, description="hours_since_inbound debe ser int")
+
+    from datetime import timedelta
+    from models.wa_conversation_state import WaConversationState
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    with session_scope() as db:
+        rows = db.execute(
+            select(WaConversationState)
+            .where(WaConversationState.state == "qualifying")
+            .where(WaConversationState.last_inbound_at < cutoff)
+            .order_by(WaConversationState.id.desc())
+            .limit(200)
+        ).scalars().all()
+
+        out = []
+        for r in rows:
+            ctx = r.context_json or {}
+            if not ctx.get("followup_sent"):
+                continue
+            d = _row_to_dict(r)
+            now = datetime.now(timezone.utc)
+            if r.last_inbound_at:
+                d["hours_silent"] = round((now - r.last_inbound_at).total_seconds() / 3600, 1)
+            out.append(d)
+
+        return jsonify({"items": out, "count": len(out)})
+
+
+@bp.get("/gdpr-pending")
+def gdpr_pending():  # type: ignore[no-untyped-def]
+    """GET /api/internal/wa-state/gdpr-pending
+
+    Lista leads con context_json.request_data_deletion=true y state='closed'.
+    Workflow F3 los procesa para eliminar PII cross-system.
+    """
+    _check_internal_token()
+
+    from models.wa_conversation_state import WaConversationState
+
+    with session_scope() as db:
+        rows = db.execute(
+            select(WaConversationState)
+            .where(WaConversationState.state == "closed")
+            .order_by(WaConversationState.id.desc())
+            .limit(200)
+        ).scalars().all()
+
+        out = []
+        for r in rows:
+            ctx = r.context_json or {}
+            if not ctx.get("request_data_deletion"):
+                continue
+            # NO incluir si ya fue procesado
+            if ctx.get("gdpr_deleted_at"):
+                continue
+            out.append(_row_to_dict(r))
+
+        return jsonify({"items": out, "count": len(out)})
+
+
+@bp.post("/gdpr-execute")
+def gdpr_execute():  # type: ignore[no-untyped-def]
+    """POST /api/internal/wa-state/gdpr-execute
+
+    Body: { "phone_lead": "+51..." }
+
+    Ejecuta DELETE cross-system para un lead que pidió eliminación:
+    - wa_messages WHERE phone_lead
+    - wa_conversation_state WHERE phone_lead (MARK gdpr_deleted_at en context, NO delete row)
+    - leads ERP asociados (phone match)
+    - lead_touchpoints (cascade)
+    - form_submissions (cascade)
+    Audit log: system.gdpr_data_deletion (con phone hasheado para compliance trail).
+
+    NO toca: audit_log (inmutable), analytics.opportunities historicas.
+    """
+    _check_internal_token()
+
+    payload = request.get_json(silent=True) or {}
+    phone = (payload.get("phone_lead") or "").strip()
+    if not phone:
+        abort(400, description="phone_lead requerido")
+
+    import hashlib
+    from sqlalchemy import text as sa_text
+    from models.wa_conversation_state import WaConversationState
+    from models.lead import Lead
+    from models.lead_touchpoint import LeadTouchpoint
+    from models.form_submission import FormSubmission
+
+    deleted = {"wa_messages": 0, "leads": 0, "lead_touchpoints": 0, "form_submissions": 0, "wa_state_marked": 0}
+    phone_hash = hashlib.sha256(phone.encode()).hexdigest()[:16]
+
+    with session_scope() as db:
+        # 1. wa_messages
+        res = db.execute(
+            sa_text("DELETE FROM wa_messages WHERE phone_lead = :phone"),
+            {"phone": phone},
+        )
+        deleted["wa_messages"] = res.rowcount
+
+        # 2. Leads asociados (phone match)
+        leads = db.execute(
+            select(Lead).where(Lead.phone_e164 == phone)
+        ).scalars().all()
+        lead_ids = [l.id for l in leads]
+
+        if lead_ids:
+            # 2a. lead_touchpoints
+            res = db.execute(
+                sa_text("DELETE FROM lead_touchpoints WHERE lead_id = ANY(:ids)"),
+                {"ids": lead_ids},
+            )
+            deleted["lead_touchpoints"] = res.rowcount
+
+            # 2b. form_submissions
+            res = db.execute(
+                sa_text("DELETE FROM form_submissions WHERE lead_id = ANY(:ids)"),
+                {"ids": lead_ids},
+            )
+            deleted["form_submissions"] = res.rowcount
+
+            # 2c. leads (después de cascades)
+            for l in leads:
+                db.delete(l)
+            deleted["leads"] = len(leads)
+
+        # 3. wa_conversation_state: marcar (NO delete — preservar para audit)
+        # Pero ANONIMIZAR el phone y context_json (eliminar PII pero preservar row)
+        ws_rows = db.execute(
+            select(WaConversationState).where(WaConversationState.phone_lead == phone)
+        ).scalars().all()
+        for ws in ws_rows:
+            ctx = ws.context_json or {}
+            ctx["gdpr_deleted_at"] = datetime.now(timezone.utc).isoformat()
+            ctx["profile_name_hash"] = hashlib.sha256(
+                (ctx.get("profile_name") or "").encode()
+            ).hexdigest()[:16] if ctx.get("profile_name") else None
+            # Eliminar PII identificable
+            ctx.pop("profile_name", None)
+            ctx.pop("last_inbound_text", None)
+            ws.context_json = ctx
+            ws.last_inbound_text = None
+            ws.last_outbound_text = None
+            ws.phone_lead = f"DELETED_{phone_hash}"  # anonimizar phone
+            deleted["wa_state_marked"] += 1
+
+        db.flush()
+
+        # Audit log: documentar deletion (con phone hasheado para trazabilidad sin PII)
+        from models.audit_log import AuditLog
+        audit_entry = AuditLog(
+            action="system.gdpr_data_deletion",
+            category="infra",
+            entity_type="system",
+            entity_id=f"gdpr-{phone_hash}",
+            occurred_at=datetime.now(timezone.utc),
+            result="success",
+            audit_metadata={
+                "phone_hash_sha256_16": phone_hash,
+                "deleted_counts": deleted,
+                "executed_via": "workflow_F3_gdpr",
+            },
+        )
+        db.add(audit_entry)
+
+        return jsonify({"ok": True, "phone_hash": phone_hash, "deleted": deleted}), 200
 
 
 @bp.get("")

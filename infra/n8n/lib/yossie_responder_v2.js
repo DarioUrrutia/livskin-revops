@@ -150,6 +150,20 @@ function buildRedFlagResponse(name, flagType) {
   return `${safeName}gracias por contarme. Este tipo de caso la Dra. Claudia lo revisa personalmente antes de cualquier paso. Le paso tu info ahora mismo y te responde en breve ☺️`;
 }
 
+// Gap C — handler para media types (image, audio, video, document, location)
+function buildMediaReceivedResponse(name, mediaType) {
+  const safeName = name && name.trim() ? ` ${name.trim()}` : '';
+  const labels = {
+    image: 'tu foto',
+    audio: 'tu mensaje de voz',
+    video: 'tu video',
+    document: 'tu documento',
+    location: 'tu ubicación',
+  };
+  const label = labels[mediaType] || 'tu mensaje';
+  return `Recibí${safeName} ${label} ☺️\n\nLe paso a la Dra. Claudia para que lo revise. Te escribe por aquí en breve ✨`;
+}
+
 // Lead respondió "Sí, sigo interesada" al follow-up — HANDOFF directo
 function buildFollowupYesResponse(name) {
   const safeName = name && name.trim() ? ` ${name.trim()}` : '';
@@ -274,6 +288,18 @@ function parseInbound(webhookBody) {
         } else if (type === 'button') {
           text = msg.button?.text || '';
           buttonId = msg.button?.payload || null;
+        } else if (type === 'image') {
+          text = '[imagen]' + (msg.image?.caption ? ' ' + msg.image.caption : '');
+        } else if (type === 'audio') {
+          text = '[audio]';
+        } else if (type === 'video') {
+          text = '[video]' + (msg.video?.caption ? ' ' + msg.video.caption : '');
+        } else if (type === 'document') {
+          text = '[documento]' + (msg.document?.filename ? ' ' + msg.document.filename : '');
+        } else if (type === 'location') {
+          text = `[ubicación] ${msg.location?.latitude || ''},${msg.location?.longitude || ''}`;
+        } else if (type === 'sticker') {
+          text = '[sticker]';
         }
 
         const referral = msg.referral || msg.context?.referral || null;
@@ -311,6 +337,29 @@ function decideNextAction(inbound, state) {
   const stateName = state?.state || 'new';
   // Progress dentro del estado 'qualifying' — guardado en context_json.progress
   const progress = state?.context_json?.progress || null;
+
+  // === MEDIA TYPES — image/audio/video/document/location → HANDOFF a doctora ===
+  // Stickers se ignoran (common WA quirk). Texto puro sigue flow normal.
+  const mediaTypes = ['image', 'audio', 'video', 'document', 'location'];
+  if (mediaTypes.includes(inbound.type)) {
+    return {
+      action_type: 'media_handoff',
+      message: buildMediaReceivedResponse(profile_name, inbound.type),
+      new_state_name: 'escalated',
+      handoff: {
+        triggered: true,
+        flag: `lead_sent_${inbound.type}`,
+        urgency: 'MEDIUM',
+      },
+    };
+  }
+  if (inbound.type === 'sticker') {
+    // Sticker: ignorar sin responder (common quirk, evitar spam)
+    return {
+      action_type: 'no_action',
+      reason: 'sticker ignored',
+    };
+  }
 
   // === RESPUESTAS AL TEMPLATE FOLLOWUP — interceptar ANTES de state machine normal ===
   // Solo aplica si followup_sent=true y state aun qualifying (no escalated/closed)
