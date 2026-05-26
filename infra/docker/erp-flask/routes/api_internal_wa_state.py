@@ -268,15 +268,16 @@ def gdpr_execute():  # type: ignore[no-untyped-def]
             select(WaConversationState).where(WaConversationState.phone_lead == phone)
         ).scalars().all()
         for ws in ws_rows:
-            ctx = ws.context_json or {}
-            ctx["gdpr_deleted_at"] = datetime.now(timezone.utc).isoformat()
-            ctx["profile_name_hash"] = hashlib.sha256(
-                (ctx.get("profile_name") or "").encode()
-            ).hexdigest()[:16] if ctx.get("profile_name") else None
-            # Eliminar PII identificable
-            ctx.pop("profile_name", None)
-            ctx.pop("last_inbound_text", None)
-            ws.context_json = ctx
+            old_ctx = dict(ws.context_json or {})  # copy
+            name_hash = (
+                hashlib.sha256((old_ctx.get("profile_name") or "").encode()).hexdigest()[:16]
+                if old_ctx.get("profile_name") else None
+            )
+            new_ctx = {k: v for k, v in old_ctx.items() if k not in ("profile_name", "last_inbound_text")}
+            new_ctx["gdpr_deleted_at"] = datetime.now(timezone.utc).isoformat()
+            new_ctx["profile_name_hash"] = name_hash
+            # Reasignar el dict completo — SQLAlchemy JSONB requiere reasignacion (no muta in-place)
+            ws.context_json = new_ctx
             ws.last_inbound_text = None
             ws.last_outbound_text = None
             ws.phone_lead = f"DELETED_{phone_hash}"  # anonimizar phone
