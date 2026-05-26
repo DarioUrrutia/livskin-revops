@@ -638,12 +638,27 @@ function buildHandoffPayloads(inbound, state, decision) {
     { name: 'Doctora Claudia (2)', phone: '51980727888' },
   ];
 
+  // Template params para doctor_lead_notification_v1 (APPROVED)
+  // Body: "Hola Dra. Claudia, llegó un nuevo lead:\n\nNombre: {{1}}\nTeléfono: {{2}}\nTratamiento de interés: {{3}}\nExperiencia previa: {{4}}\nUrgencia: {{5}}\n\nMensaje original del lead:\n\"{{6}}\""
+  // Las variables NO pueden tener saltos de linea, asi que aplanamos el texto del mensaje
+  const flattenText = (t) => (t || '').replace(/\n+/g, ' ').replace(/\s+/g, ' ').slice(0, 250).trim();
+
+  const template_params = {
+    nombre: profile_name || `Lead WA ${phone_e164.slice(-4)}`,
+    telefono: phone_e164,
+    tratamiento: treatmentLabel,
+    experiencia: firstTimeLabel,
+    urgencia: urgencyLabel,
+    mensaje: flattenText(text) || '(sin mensaje)',
+  };
+
   return {
     vtiger_payload,
-    dario_notif_text,    // backward-compat (mismo texto para todos los destinatarios)
+    dario_notif_text,    // backward-compat (texto libre, legacy)
     dario_phone: '51982732978',  // legacy
     notif_text: dario_notif_text,
     notif_recipients,
+    template_params,    // NUEVO: usado por Yossie Master para envio via template doctor_lead_notification_v1
   };
 }
 
