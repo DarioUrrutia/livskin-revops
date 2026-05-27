@@ -432,4 +432,56 @@ def upsert_state():  # type: ignore[no-untyped-def]
             db.refresh(new_row)
             row = new_row
 
+        # ─────────────────────────────────────────────────────────────────
+        # Persistir wa_messages rows si el payload incluye inbound_message/outbound_message.
+        # Fix bug 2026-05-27: el bot v2 actualizaba solo last_inbound/outbound_text pero NO
+        # persistía bodies en wa_messages. Sin esto no podemos analizar copy quality
+        # post-campaña ni debuggear conversaciones específicas.
+        # Idempotency: meta_message_id UNIQUE — segunda inserción del mismo id retorna OK silently.
+        # ─────────────────────────────────────────────────────────────────
+        inbound_msg = payload.get("inbound_message")
+        outbound_msg = payload.get("outbound_message")
+        if inbound_msg or outbound_msg:
+            from models.wa_message import WaMessage  # type: ignore[import-not-found]
+            from sqlalchemy.exc import IntegrityError
+
+            def _insert_message(msg_data: dict[str, Any], direction: str) -> None:
+                if not msg_data:
+                    return
+                meta_id = msg_data.get("meta_message_id")
+                if meta_id:
+                    existing_msg = db.execute(
+                        select(WaMessage).where(WaMessage.meta_message_id == meta_id).limit(1)
+                    ).scalar_one_or_none()
+                    if existing_msg:
+                        return  # ya persistido, skip (idempotency)
+                msg = WaMessage(
+                    conversation_id=row.id,
+                    meta_message_id=meta_id,
+                    phone_lead=phone,
+                    direction=direction,
+                    message_type=msg_data.get("message_type") or "text",
+                    body=msg_data.get("body"),
+                    template_name=msg_data.get("template_name"),
+                    template_params=msg_data.get("template_params"),
+                    meta_status=msg_data.get("meta_status"),
+                    meta_status_updated_at=now if msg_data.get("meta_status") else None,
+                    meta_error_code=msg_data.get("meta_error_code"),
+                    meta_error_message=msg_data.get("meta_error_message"),
+                    intent=msg_data.get("intent"),
+                    parsed_dates=msg_data.get("parsed_dates"),
+                    meta_payload_raw=msg_data.get("meta_payload_raw"),
+                    sent_at=now,
+                    processed_at=now,
+                    created_at=now,
+                )
+                try:
+                    db.add(msg)
+                    db.flush()
+                except IntegrityError:
+                    db.rollback()  # race en meta_message_id duplicate, ya está persistido por otra request
+
+            _insert_message(inbound_msg, "inbound")
+            _insert_message(outbound_msg, "outbound")
+
         return jsonify(_row_to_dict(row)), 200

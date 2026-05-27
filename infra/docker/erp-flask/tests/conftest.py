@@ -51,6 +51,8 @@ from models import pago  # noqa: F401, E402
 from models import user  # noqa: F401, E402
 from models import user_session  # noqa: F401, E402
 from models import venta  # noqa: F401, E402
+from models import wa_conversation_state  # noqa: F401, E402
+from models import wa_message  # noqa: F401, E402
 
 
 TRIGGER_DEBE_SQL = """

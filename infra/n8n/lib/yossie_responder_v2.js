@@ -613,20 +613,41 @@ function decideNextAction(inbound, state) {
   // Estado 'qualifying' progress=q2 → procesando respuesta a Q2 → Q3
   if (stateName === 'qualifying' && progress === 'q2') {
     let firstTime = null;
+    const txt = (text || '').toLowerCase().trim();
+    const q2WasReasked = state?.context_json?.q2_reasked === true;
+    const q2TreatmentKey = state?.context_json?.q1_treatment;
     if (button_id === 'q2_first_time') firstTime = true;
     else if (button_id === 'q2_repeat') firstTime = false;
-    else if (/primera\s+vez/i.test(text)) firstTime = true;
-    else if (/ya\s+(me\s+he\s+hecho|he\s+(hecho|tenido))/i.test(text)) firstTime = false;
+    // Primera vez (true)
+    else if (/\bprimera\s+vez\b|\bes\s+(mi|la)\s+primera\b|\bnunca\b|\bjam[áa]s\b|\bnuev[ao]\b|\bdebut\b/i.test(txt)) firstTime = true;
+    // Ya se ha hecho (false)
+    else if (/\bya\s+(me\s+he\s+hecho|he\s+(hecho|tenido))\b|\bya\s+me\s+lo\s+hice\b|\bya\s+lo\s+he\b|\botra\s+vez\b|\brepit/i.test(txt)) firstTime = false;
+    // Respuestas binarias cortas (yes/no) — interpretacion contextual SOLO post-reask
+    else if (q2WasReasked && /^(s[ií]|sip|claro|afirmativo|correcto)$/i.test(txt)) firstTime = true;
+    else if (q2WasReasked && /^(no|nop|nada|jamas|jam[áa]s)$/i.test(txt)) firstTime = false;
 
-    // Si no pudimos parsear → handoff
+    // Si no pudimos parsear → primero re-ask explicito, luego escalate
     if (firstTime === null) {
+      if (!q2WasReasked) {
+        // Primera vez que no parsea: re-ask con framing yes/no explicito
+        const treatmentLbl = TREATMENT_LABELS[q2TreatmentKey] || 'ese tratamiento';
+        const nameBit = profile_name && profile_name.trim() ? ' ' + profile_name.trim() : '';
+        return {
+          action_type: 'send_text',
+          message: `Disculpa${nameBit} ☺️ para entenderte mejor:\n\n¿es tu *primera vez* con ${treatmentLbl}?\n\nRespóndeme *Sí* (primera vez) o *No* (ya me lo he hecho)`,
+          new_state_name: 'qualifying',
+          new_progress: 'q2',
+          q2_reasked: true,
+        };
+      }
+      // Segunda vez que no parsea: handoff con flag granular
       return {
         action_type: 'handoff_q2_unparseable',
         message: buildEscapeToHuman(profile_name),
         new_state_name: 'escalated',
         handoff: {
           triggered: true,
-          flag: 'q2_unparseable',
+          flag: 'q2_ambiguous_after_reask',
           urgency: 'LOW',
         },
       };
@@ -920,6 +941,8 @@ function processInbound(webhookBody, stateRow) {
     opt_in_marketing: decision.opt_in_marketing != null ? decision.opt_in_marketing : prevContext.opt_in_marketing,
     // request_data_deletion: bandera para que ops elimine datos PII de este lead
     request_data_deletion: decision.request_data_deletion === true ? true : prevContext.request_data_deletion,
+    // q2_reasked: flag de re-ask en q2 cuando primera respuesta fue ambigua (fix 2026-05-27)
+    q2_reasked: decision.q2_reasked === true ? true : (prevContext.q2_reasked || false),
   };
 
   const result = {
