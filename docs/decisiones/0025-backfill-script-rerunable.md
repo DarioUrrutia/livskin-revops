@@ -203,17 +203,17 @@ Per memoria `project_erp_migration` y ADR-0014:
 ```
 def backfill(source_path, mode, write_mode):
     log_init()
-    
+
     # 1. Leer Excel
     workbook = read_excel(source_path)
     log("Excel leído: {} hojas", len(workbook.sheets))
-    
+
     # 2. Hoja Listas → catalogos (más NUEVOS hardcoded)
     catalogos_excel = transform_listas(workbook['Listas'])
     catalogos_nuevos = hardcoded_catalogos()  # fuente, canal_adquisicion, metodo_pago
     if mode == 'apply':
         write_catalogos(catalogos_excel + catalogos_nuevos, write_mode)
-    
+
     # 3. Hoja Clientes → clientes (con defaults legacy)
     clientes = transform_clientes(workbook['Clientes'])
     if mode == 'apply':
@@ -223,7 +223,7 @@ def backfill(source_path, mode, write_mode):
             except Exception as e:
                 log_error(e, row=cliente)  # decisión 7: continuar
                 continue
-    
+
     # 4. Hoja Ventas → ventas (preserva flat)
     ventas = transform_ventas(workbook['Ventas'])
     if mode == 'apply':
@@ -233,7 +233,7 @@ def backfill(source_path, mode, write_mode):
             except Exception as e:
                 log_error(e, row=venta)
                 continue
-    
+
     # 5. Hoja Pagos → pagos
     pagos = transform_pagos(workbook['Pagos'])
     if mode == 'apply':
@@ -243,7 +243,7 @@ def backfill(source_path, mode, write_mode):
             except Exception as e:
                 log_error(e, row=pago)
                 continue
-    
+
     # 6. Reporte final
     log_summary({
         'catalogos': len(catalogos_excel),
@@ -253,7 +253,7 @@ def backfill(source_path, mode, write_mode):
         'ventas_errors': ventas_errors,
         ...
     })
-    
+
     if mode == 'verify':
         run_verifiers(workbook, postgres_state)
 ```

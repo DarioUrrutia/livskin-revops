@@ -180,7 +180,7 @@ Nosotros mejor: Nuestro mayor diferenciador es nuestra doctora, quien es reconoc
 - Mayúsculas énfasis: NO | Exclamación: media
 
 **DON'T:** nunca mucha efusividad, "Hermosa, recuerda que te queremos! 💋💋" (sobrefamiliar). "URGENTE: oferta solo HOY 30% OFF!! 🔥🔥🔥" (clickbait). "Te recomendamos hacerte el tratamiento porque te va a transformar la vida" (promesa imposible). NO USAR ENGANOS
-**Palabras marca:** OKI, 
+**Palabras marca:** OKI,
 **Notas:** —
 
 ## Painpoints
@@ -208,7 +208,7 @@ Nosotros mejor: Nuestro mayor diferenciador es nuestra doctora, quien es reconoc
 ## Precios
 - Estrategia: B (rango+disclaimer)
 - Consulta: Gratis | Acredita: SÍ | —min
-- Pagos: yape, plin, transferencia, efectivo, 
+- Pagos: yape, plin, transferencia, efectivo,
 - Descuento contado: —
 - Cuotas: —
 
@@ -255,14 +255,14 @@ Nosotros mejor: Nuestro mayor diferenciador es nuestra doctora, quien es reconoc
 **Notas:** —
 
 ## Captación
-- fbads: 
-- gads: 
-- ig: 
-- fb: 
-- seo: 
-- gmb: 
-- referidos: 
-- wa: 
+- fbads:
+- gads:
+- ig:
+- fb:
+- seo:
+- gmb:
+- referidos:
+- wa:
 
 - Mejores clientes vienen de: Google Business, Facebook y Google ads
 - Más problemáticos: —

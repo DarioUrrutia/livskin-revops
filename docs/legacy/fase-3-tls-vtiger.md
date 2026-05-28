@@ -19,7 +19,7 @@ Cliente → Cloudflare → Nginx (Docker) → Vtiger (Docker)
 ## 🔐 TLS
 
 - Cloudflare configurado en modo:
-  
+
   Full (Strict)
 
 - Certificado origin instalado en Nginx:

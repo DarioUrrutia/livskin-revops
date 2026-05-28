@@ -205,5 +205,3 @@ def change_password(
         raise PasswordIncorrecto("La contraseña actual es incorrecta.")
     user.password_hash = hash_password(new_password)
     db.flush()
-
-

@@ -118,7 +118,7 @@ flowchart TD
 stateDiagram-v2
     [*] --> new: Lead inbound 1ra vez
     new --> qualifying: Bot envía Q1 o Q2
-    
+
     state qualifying {
         [*] --> q1
         q1 --> q2: respuesta válida
@@ -126,29 +126,29 @@ stateDiagram-v2
         q3 --> q4: 'averiguando'
         q3 --> [*]: 'asap' o '2-3 sem' → escalated
         q4 --> [*]: cualquier opción → escalated
-        
+
         q1 --> snoozed: 'Más tarde respondo' (F1)
         q2 --> snoozed: 'Más tarde respondo' (F1)
         q3 --> snoozed: 'Más tarde respondo' (F1)
         snoozed --> q1: 24h pasaron, F1 reenvía
-        
+
         q1 --> q5_optin: 'Ya no, gracias' (F1)
         q2 --> q5_optin
         q3 --> q5_optin
     }
-    
+
     qualifying --> escalated: handoff (Q3 close, Q4, red_flag, price_obj, escape, FU_yes)
     qualifying --> closed: Q5_optin respondido (sí o no)
-    
+
     escalated --> [*]: humano (Dario/doctora) toma over
     closed --> [*]: terminal
-    
+
     note right of escalated
         Doctora atiende manualmente.
         Bot ya no responde
         (excepto en internal phones)
     end note
-    
+
     note right of closed
         Lead descartado por decisión.
         Si opt_in=true: queda para promos.

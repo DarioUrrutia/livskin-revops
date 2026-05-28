@@ -169,25 +169,25 @@ PASO 1 — Normalizar
 
 PASO 2 — Cross-system lookup
   match_cliente = SELECT * FROM clientes WHERE phone_e164 = $1
-  match_lead    = SELECT * FROM leads WHERE phone_e164 = $1 
+  match_lead    = SELECT * FROM leads WHERE phone_e164 = $1
                   AND estado NOT IN ('convertido', 'descartado')
 
 PASO 3 — Resolver
-  
+
   CASO A: match_cliente existe (→ reactivación digital)
     - Este humano YA ES Cliente en ERP
     - INSERT en leads con flag `es_reactivacion=true`, `cod_cliente_vinculado=LIVCLIENTxxxx`
     - INSERT en lead_touchpoints (canal, UTMs, etc.)
     - UPDATE clientes SET nuevos campos vacíos con data fresca si procede
     - Action: Conversation Agent trata como "cliente existente regresa"
-  
+
   CASO B: match_lead existe (→ re-engagement del lead)
     - Este lead YA ESTÁ en funnel, este es un touch adicional
     - INSERT en lead_touchpoints (nueva fila con este encuentro)
     - UPDATE leads con data fresca donde las columnas estaban NULL
     - Re-scoring: el agent considera si este touch mejora el score
     - Action: continuar funnel con contexto acumulado
-  
+
   CASO C: ni match_cliente ni match_lead (→ lead realmente nuevo)
     - INSERT en leads (nueva persona)
     - INSERT en lead_touchpoints (primer touch)

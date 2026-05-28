@@ -106,7 +106,7 @@ Razones:
 
 | Sufijo | Significado |
 |---|---|
-| `-template.md` | Plantilla para crear nuevos | 
+| `-template.md` | Plantilla para crear nuevos |
 | `-example` (ej. `.env.example`) | Template config con valores ficticios |
 | `_legacy/` (folder) | Código deprecated en período de gracia (no eliminado todavía) |
 | `-disabled` | Archivo desactivado pero no borrado (típico mu-plugins) |

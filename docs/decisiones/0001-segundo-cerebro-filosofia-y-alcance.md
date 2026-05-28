@@ -211,8 +211,8 @@ Para L4 (conversaciones) un mensaje = un chunk (no chunking). Típicamente <200 
 
 Índice HNSW en cada columna `embedding`:
 ```sql
-CREATE INDEX idx_conv_embedding ON conversations 
-    USING hnsw (content_embedding vector_cosine_ops) 
+CREATE INDEX idx_conv_embedding ON conversations
+    USING hnsw (content_embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
 ```
 
@@ -257,7 +257,7 @@ CREATE TABLE clinic_knowledge (
 );
 
 CREATE INDEX idx_ck_entity ON clinic_knowledge(entity_type, entity_key);
-CREATE INDEX idx_ck_embedding ON clinic_knowledge 
+CREATE INDEX idx_ck_embedding ON clinic_knowledge
     USING hnsw (content_embedding vector_cosine_ops);
 ```
 
@@ -276,7 +276,7 @@ CREATE TABLE project_knowledge (
 );
 
 CREATE INDEX idx_pk_source ON project_knowledge(source_path);
-CREATE INDEX idx_pk_embedding ON project_knowledge 
+CREATE INDEX idx_pk_embedding ON project_knowledge
     USING hnsw (chunk_embedding vector_cosine_ops);
 ```
 
@@ -301,7 +301,7 @@ CREATE TABLE conversations (
 
 CREATE INDEX idx_conv_patient ON conversations(patient_id, created_at DESC);
 CREATE INDEX idx_conv_session ON conversations(session_id, created_at);
-CREATE INDEX idx_conv_embedding ON conversations 
+CREATE INDEX idx_conv_embedding ON conversations
     USING hnsw (content_embedding vector_cosine_ops);
 ```
 
@@ -330,7 +330,7 @@ CREATE TABLE creative_memory (
 );
 
 CREATE INDEX idx_cm_status ON creative_memory(status, treatment_category);
-CREATE INDEX idx_cm_text_embedding ON creative_memory 
+CREATE INDEX idx_cm_text_embedding ON creative_memory
     USING hnsw (text_embedding vector_cosine_ops);
 ```
 
@@ -355,7 +355,7 @@ CREATE TABLE learnings (
 
 CREATE INDEX idx_learn_category ON learnings(category, outcome);
 CREATE INDEX idx_learn_validity ON learnings(valid_from, valid_until);
-CREATE INDEX idx_learn_embedding ON learnings 
+CREATE INDEX idx_learn_embedding ON learnings
     USING hnsw (embedding vector_cosine_ops);
 ```
 
@@ -366,7 +366,7 @@ No hay tablas nuevas. Se crean **vistas** que unifican queries típicos:
 ```sql
 -- Ejemplo: contexto completo de un lead
 CREATE VIEW v_lead_full_context AS
-SELECT 
+SELECT
     l.id AS lead_id,
     l.phone, l.email, l.name,
     l.source, l.campaign, l.utm_content,

@@ -1,0 +1,46 @@
+# Pre-commit hooks Livskin RevOps (Sprint 1.9 — 2026-05-28)
+#
+# Instalar: pip install pre-commit && pre-commit install
+# Run manual: pre-commit run --all-files
+#
+# Hooks defienden contra:
+# - Secretos commiteados accidentalmente (gitleaks)
+# - Archivos grandes (>1MB) que contaminan repo
+# - Caracteres CRLF en archivos sh/yml/py
+# - JSON/YAML mal-formados
+#
+# Bypass de emergencia: git commit --no-verify (NO usar sin justificacion documentada)
+
+repos:
+  # Detectar secretos antes del commit
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+        name: gitleaks (secret scanning)
+        # Excluir histories y docs/templates donde aparecen ejemplos
+        exclude: |
+          (?x)^(
+            docs/sesiones/.*\.md|
+            docs/audits/.*\.md|
+            docs/decisiones/.*\.md|
+            integrations/whatsapp/templates/.*\.md
+          )$
+
+  # Hooks generales (pre-commit-hooks oficial)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-json
+        # Excluir workflow JSON (a veces minified n8n con caracteres especiales)
+        exclude: ^infra/n8n/workflows/.*\.json$
+      - id: check-yaml
+        # Excluir docker-compose con env vars que el parser estricto rechaza
+        exclude: ^integrations/email/.*\.yml$
+      - id: end-of-file-fixer
+        exclude: ^(integrations/whatsapp/templates/.*\.json|infra/n8n/workflows/.*\.json)$
+      - id: trailing-whitespace
+        args: ["--markdown-linebreak-ext=md"]
+      - id: check-merge-conflict

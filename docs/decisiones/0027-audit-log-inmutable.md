@@ -108,32 +108,32 @@ Razones:
 CREATE TABLE audit_log (
     id              BIGSERIAL PRIMARY KEY,
     occurred_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
+
     -- Quién
     user_id         BIGINT REFERENCES users(id),     -- NULL si fue webhook externo o sistema
     user_username   TEXT,                             -- desnormalizado (snapshot — user puede renombrarse)
     user_role       TEXT,                             -- snapshot del rol al momento del evento
-    
+
     -- Qué
     action          TEXT NOT NULL,                    -- 'venta.created', 'auth.login_success', etc.
     category        TEXT NOT NULL,                    -- 'auth', 'venta', 'pago', 'gasto', 'cliente', 'lead', 'admin', 'webhook'
     entity_type     TEXT,                             -- 'venta', 'cliente', etc. (NULL si auth)
     entity_id       TEXT,                             -- 'LIVVENTA0089' o similar
-    
+
     -- Cambio (cuando aplica)
     before_state    JSONB,                            -- estado antes del cambio (NULL si es create)
     after_state     JSONB,                            -- estado después del cambio (NULL si es delete)
-    
+
     -- Contexto del request
     ip              INET,
     user_agent      TEXT,
     session_id      BIGINT REFERENCES user_sessions(id),
     request_id      TEXT,                             -- correlation ID del request (para tracing)
-    
+
     -- Resultado
     result          TEXT NOT NULL DEFAULT 'success',  -- 'success' o 'failure'
     error_detail    TEXT,                             -- descripción si result=failure
-    
+
     -- Metadata adicional flexible
     metadata        JSONB                              -- campo libre para info extra (ej: {affected_rows: 3})
 );

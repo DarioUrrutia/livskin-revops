@@ -366,8 +366,23 @@ def upsert_state():  # type: ignore[no-untyped-def]
         abort(400, description="state requerido en body")
 
     from models.wa_conversation_state import WaConversationState
+    from sqlalchemy import text as sa_text
+    import hashlib
 
     with session_scope() as db:
+        # Sprint 1.15 (2026-05-28): pg_advisory_xact_lock para serializar
+        # writes concurrentes al mismo phone_lead. Defensa contra race conditions
+        # donde 2+ webhooks Meta llegan para el mismo lead simultaneo (Meta puede
+        # re-entregar si tarda >5s, ademas de duplicados naturales).
+        # Lock se libera automaticamente al cierre de la transaccion.
+        # Convertimos phone string a INT64 estable via hash (PG int domain).
+        phone_hash = int.from_bytes(
+            hashlib.sha256(phone.encode("utf-8")).digest()[:8],
+            byteorder="big",
+            signed=True,
+        )
+        db.execute(sa_text("SELECT pg_advisory_xact_lock(:phone_hash)"), {"phone_hash": phone_hash})
+
         # Buscar row activa (no closed) existente
         existing = db.execute(
             select(WaConversationState)

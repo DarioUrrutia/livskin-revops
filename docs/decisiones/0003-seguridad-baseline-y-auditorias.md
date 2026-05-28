@@ -443,7 +443,7 @@ Trigger: paciente solicita su supresión por escrito (WhatsApp, email)
 
 3. Ejecutar supresión en orden:
    a) Vtiger: eliminar Lead/Contact/Account relacionados (o anonimizar)
-   b) livskin_erp: UPDATE cliente SET anonymized=true, nombre='ELIMINADO', 
+   b) livskin_erp: UPDATE cliente SET anonymized=true, nombre='ELIMINADO',
       teléfono=NULL, email=NULL WHERE id = X (preservar ventas por obligación contable)
    c) livskin_brain.conversations: DELETE WHERE patient_id = X
    d) analytics.*: DELETE entradas identificables, preservar agregados

@@ -27,6 +27,14 @@ from services import audit_service
 
 VALID_EVENT_NAMES = {"Lead", "Schedule", "Purchase"}
 
+# Sprint 1.8 (2026-05-28): retry config para errores transitorios.
+# Backoff exponencial 1s, 3s, 9s entre intentos = max ~13s + 3 timeouts default 5s = ~28s worst case.
+# Events que fallan tras 3 intentos quedan en audit_log con action=tracking.capi_event_failed
+# y metadata.attempts=3 — audit_log es nuestro DLQ implicito; query manual para re-emitir.
+RETRY_MAX_ATTEMPTS = 3
+RETRY_BACKOFF_SECONDS = [0, 1, 3, 9]  # delay ANTES de cada attempt N (index 1..3)
+RETRY_ON_STATUS_CODES = {429, 500, 502, 503, 504}  # transient — retry
+
 
 def emit_event(
     db: Session,
@@ -110,7 +118,7 @@ def emit_event(
     if event_source_url:
         payload["event_source_url"] = event_source_url
 
-    # ─── POST a n8n ──────────────────────────────────────────────────
+    # ─── POST a n8n con retry exponencial (Sprint 1.8) ──────────────
     audit_metadata = {
         "event_name": event_name,
         "event_id": event_id,
@@ -118,70 +126,78 @@ def emit_event(
         "trigger_entity_id": trigger_entity_id,
     }
 
-    try:
-        # default=str para serializar Decimal sin error
-        response = requests.post(
-            settings.n8n_capi_webhook_url,
-            json=_serialize_payload(payload),
-            timeout=settings.n8n_capi_timeout_seconds,
-        )
+    last_error: str = ""
+    last_status: Optional[int] = None
+    last_response_body: str = ""
 
-        if response.status_code >= 400:
-            audit_metadata["http_status"] = response.status_code
-            audit_metadata["response_body"] = response.text[:500]
-            audit_service.log(
-                db,
-                action="tracking.capi_event_failed",
-                entity_type=trigger_entity_type,
-                entity_id=trigger_entity_id,
-                metadata=audit_metadata,
-                result="failure",
-                error_detail=f"n8n HTTP {response.status_code}",
-                user_username="capi-emitter",
-                user_role="system",
+    for attempt in range(1, RETRY_MAX_ATTEMPTS + 1):
+        # Backoff antes del retry (no en el primer intento)
+        if attempt > 1:
+            time.sleep(RETRY_BACKOFF_SECONDS[attempt - 1])
+
+        try:
+            response = requests.post(
+                settings.n8n_capi_webhook_url,
+                json=_serialize_payload(payload),
+                timeout=settings.n8n_capi_timeout_seconds,
             )
-            return {
-                "ok": False,
-                "error": f"n8n_http_{response.status_code}",
-                "event_name": event_name,
-                "event_id": event_id,
-            }
 
-        # Success
-        audit_service.log(
-            db,
-            action="tracking.capi_event_emitted",
-            entity_type=trigger_entity_type,
-            entity_id=trigger_entity_id,
-            metadata=audit_metadata,
-            user_username="capi-emitter",
-            user_role="system",
-        )
-        return {
-            "ok": True,
-            "event_name": event_name,
-            "event_id": event_id,
-        }
+            if response.status_code < 400:
+                # SUCCESS
+                audit_metadata["attempts"] = attempt
+                audit_service.log(
+                    db,
+                    action="tracking.capi_event_emitted",
+                    entity_type=trigger_entity_type,
+                    entity_id=trigger_entity_id,
+                    metadata=audit_metadata,
+                    user_username="capi-emitter",
+                    user_role="system",
+                )
+                return {
+                    "ok": True,
+                    "event_name": event_name,
+                    "event_id": event_id,
+                    "attempts": attempt,
+                }
 
-    except requests.RequestException as e:
-        audit_metadata["exception"] = str(e)
-        audit_service.log(
-            db,
-            action="tracking.capi_event_failed",
-            entity_type=trigger_entity_type,
-            entity_id=trigger_entity_id,
-            metadata=audit_metadata,
-            result="failure",
-            error_detail=f"n8n network error: {e}",
-            user_username="capi-emitter",
-            user_role="system",
-        )
-        return {
-            "ok": False,
-            "error": f"n8n_connection_error: {e}",
-            "event_name": event_name,
-            "event_id": event_id,
-        }
+            # Error: ¿retry o give up?
+            last_status = response.status_code
+            last_response_body = response.text[:500]
+            last_error = f"n8n HTTP {response.status_code}"
+
+            # Status 4xx (no 429) son errores permanentes — no retry
+            if response.status_code not in RETRY_ON_STATUS_CODES:
+                break
+
+        except requests.RequestException as e:
+            last_error = f"n8n network error: {e}"
+            last_status = None
+            # Network errors siempre retry (hasta max_attempts)
+
+    # ─── FAILED tras todos los retries — audit log como DLQ ──────────
+    audit_metadata["attempts"] = RETRY_MAX_ATTEMPTS
+    audit_metadata["http_status"] = last_status
+    audit_metadata["response_body"] = last_response_body
+    audit_metadata["dlq"] = True  # marca para re-emit manual queries
+    audit_service.log(
+        db,
+        action="tracking.capi_event_failed",
+        entity_type=trigger_entity_type,
+        entity_id=trigger_entity_id,
+        metadata=audit_metadata,
+        result="failure",
+        error_detail=last_error,
+        user_username="capi-emitter",
+        user_role="system",
+    )
+    return {
+        "ok": False,
+        "error": last_error,
+        "event_name": event_name,
+        "event_id": event_id,
+        "attempts": RETRY_MAX_ATTEMPTS,
+    }
 
 
 def _serialize_payload(payload: dict[str, Any]) -> dict[str, Any]:

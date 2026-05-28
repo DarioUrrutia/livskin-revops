@@ -46,8 +46,8 @@ LEAD WhatsApp ─────►│  [D1] WA Inbound + Parser│
             │   o texto libre    │
             │ - update wa_msgs  │
             └───────────────────┘
-                                                  
-                                                  
+
+
    ┌──────────────────────────┐   ┌──────────────────────────┐
    │ [D3] Conv Manager (cron) │   │ [D4] Doctora Inbound     │
    │ every 5min               │   │  Handler (webhook)       │

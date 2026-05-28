@@ -80,8 +80,8 @@ Original Flask:
 for idx, item in enumerate(items_prep):
     proporcion = item["precio"] / total_items
     credito_item = round(min(credito_restante, credito_aplicado * proporcion))
-    
-    pagos.append_row([..., credito_item, ..., 
+
+    pagos.append_row([..., credito_item, ...,
         "Crédito aplicado",      # NOTAS (string mágico)
         item["cod_item"],         # COD_ITEM vinculado al item
         item["categoria"],        # CATEGORIA original

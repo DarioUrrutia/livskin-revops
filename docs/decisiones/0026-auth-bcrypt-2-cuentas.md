@@ -121,7 +121,7 @@ CREATE TABLE users (
     last_activity_at TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
+
     CONSTRAINT rol_valido CHECK (rol IN ('admin', 'operadora'))
 );
 
@@ -158,7 +158,7 @@ Migration Alembic incluye un script de seed (o un comando admin separado):
 def seed_users():
     if user_count() > 0:
         return  # ya hay usuarios, no re-seed
-    
+
     create_user(
         cod_usuario='LIVUSR0001',
         username='dario',
@@ -167,7 +167,7 @@ def seed_users():
         password_hash=bcrypt.hashpw(SEED_PASSWORD_DARIO, bcrypt.gensalt()),
         rol='admin'
     )
-    
+
     create_user(
         cod_usuario='LIVUSR0002',
         username='doctora',

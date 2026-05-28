@@ -93,12 +93,37 @@ def collect() -> dict[str, Any]:
 
 
 def cleanup_old(retention_days: int = RETENTION_DAYS) -> int:
-    """Borra snapshots más viejos que retention_days. Returns count borrados."""
+    """Borra snapshots más viejos que retention_days. Returns count borrados.
+
+    Sprint 1.7 (2026-05-28): emite audit_log entry para trazabilidad
+    del cron (antes era silencioso).
+    """
     cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
     with session_scope() as db:
         from sqlalchemy import delete
+        from models.audit_log import AuditLog
+
         result = db.execute(delete(InfraSnapshot).where(InfraSnapshot.captured_at < cutoff))
-        return result.rowcount or 0
+        deleted = result.rowcount or 0
+
+        # Audit log entry para trazabilidad (sprint 1.7)
+        db.add(AuditLog(
+            user_id=None,
+            user_username="system_cron",
+            user_role="system",
+            action="infra.retention_executed",
+            category="infra",
+            entity_type="infra_snapshots",
+            entity_id=f"retention_{retention_days}d",
+            result="ok",
+            audit_metadata={
+                "deleted_count": deleted,
+                "retention_days": retention_days,
+                "cutoff_at": cutoff.isoformat(),
+                "executed_via": "cron_infra_snapshot_service",
+            },
+        ))
+        return deleted
 
 
 def latest_per_vps(db: Session) -> dict[str, Optional[InfraSnapshot]]:

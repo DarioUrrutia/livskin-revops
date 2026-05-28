@@ -1,0 +1,47 @@
+# Gitleaks config — Livskin RevOps (Sprint 1.9, 2026-05-28)
+#
+# Hereda reglas default de gitleaks v8 + agrega allowlist para falsos positivos
+# y reglas custom para tokens especificos del proyecto (Meta, Vtiger, etc.)
+
+[extend]
+useDefault = true
+
+# Custom rules: detectar formatos de credenciales del proyecto
+[[rules]]
+id = "meta-system-user-token"
+description = "Meta System User Access Token (EAALen... or EAA... formato Meta long-lived)"
+regex = '''EAAL[a-zA-Z0-9]{60,}'''
+keywords = ["EAAL"]
+
+[[rules]]
+id = "meta-capi-access-token"
+description = "Meta CAPI Conversions API Access Token"
+regex = '''EAAUXui[a-zA-Z0-9]{60,}'''
+keywords = ["EAAUXui"]
+
+[[rules]]
+id = "vtiger-api-accesskey"
+description = "Vtiger API access key (typically 16 chars alphanumeric)"
+regex = '''(?i)VTIGER_API_ACCESSKEY\s*=\s*["']?[a-zA-Z0-9]{12,20}["']?'''
+keywords = ["VTIGER_API_ACCESSKEY"]
+
+[[rules]]
+id = "brevo-smtp-key"
+description = "Brevo SMTP key (Standard 64-char alphanumeric)"
+regex = '''xkeysib-[a-f0-9]{60,}'''
+keywords = ["xkeysib"]
+
+# Allowlist: paths donde permitir matches (ej. docs con ejemplos)
+[allowlist]
+description = "Allowlist global"
+paths = [
+  '''keys/\.env\.example''',
+  '''integrations/.*/\.env\.example''',
+  '''docs/sesiones/.*\.md''',  # session logs pueden contener referencias historicas
+  '''docs/audits/.*''',         # audits documentan estados pasados
+]
+
+# Commits historicos donde sabemos que hubo leaks (ya rotados)
+commits = [
+  "dcc8f5f",  # Meta SU token leak 2026-05-26 - REVOKED + rotated
+]

@@ -122,4 +122,3 @@ docs/brand/raw/*
 .coverage
 htmlcov/
 .pytest_cache/
-
