@@ -1,0 +1,73 @@
+{
+  "submitted_at": "2026-05-27T16:35:55Z",
+  "templates": [
+    {
+      "name": "appointment_cancelled_v1",
+      "status": "SUBMITTED",
+      "id": "1359266289390960",
+      "category": "UTILITY",
+      "lang": null
+    },
+    {
+      "name": "appointment_reschedule_confirmed_v1",
+      "status": "SUBMITTED",
+      "id": "943026055453471",
+      "category": "UTILITY",
+      "lang": null
+    },
+    {
+      "name": "appointment_reminder_1h_v1",
+      "status": "ERROR",
+      "error": "The read operation timed out"
+    },
+    {
+      "name": "promo_botox_v1",
+      "status": "SUBMITTED",
+      "id": "1321370666847674",
+      "category": "MARKETING",
+      "lang": null
+    },
+    {
+      "name": "promo_acido_hialuronico_v1",
+      "status": "SUBMITTED",
+      "id": "2229495761194698",
+      "category": "MARKETING",
+      "lang": null
+    },
+    {
+      "name": "promo_prp_v1",
+      "status": "SUBMITTED",
+      "id": "1558290975944803",
+      "category": "MARKETING",
+      "lang": null
+    },
+    {
+      "name": "promo_limpieza_facial_v1",
+      "status": "SUBMITTED",
+      "id": "2148867762567342",
+      "category": "MARKETING",
+      "lang": null
+    },
+    {
+      "name": "promo_hilos_tensores_v1",
+      "status": "SUBMITTED",
+      "id": "2051018162190750",
+      "category": "MARKETING",
+      "lang": null
+    },
+    {
+      "name": "post_consulta_24h_v1",
+      "status": "SUBMITTED",
+      "id": "867097579085153",
+      "category": "UTILITY",
+      "lang": null
+    },
+    {
+      "name": "reengagement_cliente_60d_v1",
+      "status": "SUBMITTED",
+      "id": "1513538753761499",
+      "category": "MARKETING",
+      "lang": null
+    }
+  ]
+}
