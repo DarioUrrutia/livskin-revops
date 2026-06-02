@@ -1,0 +1,18 @@
+{
+  "created_at": "2026-06-02T23:30:00-05:00",
+  "campaign_id": "120244048878820678",
+  "adset_id": "120244048890560678",
+  "creative_id": "1664848044825832",
+  "ad_id": "120244048893980678",
+  "image_hashes": {
+    "square_1to1": "cb71dfc6dc6408aa1395e26375b3d781",
+    "vertical_4to5": "39b633774f757a060dacc6408cc38eab",
+    "story_9to16": "688c519852468ea63262b268a30e6f49"
+  },
+  "wa_link": "https://wa.me/51980727888?text=Hola%2C%20vi%20su%20publicidad%20de%20tratamientos%20en%20Chalhuahuacho.%20Me%20interesa%20saber%20m%C3%A1s.",
+  "budget_pen": 200,
+  "start_time": "2026-06-03T08:00:00-05:00",
+  "end_time": "2026-06-06T14:00:00-05:00",
+  "status": "PAUSED — pending activation by Dario",
+  "ads_manager_url": "https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=2885433191763149&selected_campaign_ids=120244048878820678"
+}
