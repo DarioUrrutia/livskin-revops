@@ -1,12 +1,14 @@
 #!/bin/bash
 # backup-vps2.sh — corre en VPS 2, respalda:
 # - livskin_db (Vtiger MariaDB)
-# - analytics + metabase (Postgres analytics)
-# - n8n data (workflows + sqlite)
+# - analytics + metabase + n8n (Postgres analytics)
+# - n8n config dir (encryption key, NO DB — DB ahora en Postgres post-Sprint 1.2)
 # Transfiere cross-VPS a livskin-erp:/srv/backups/vps2/.
 #
 # Cron sugerido (en /etc/cron.d/livskin-backups en VPS 2):
 #   0 2 * * * livskin /srv/livskin-revops/infra/scripts/backups/backup-vps2.sh
+#
+# Última actualización: 2026-06-02 — agregado dump n8n PG database (Sprint 1.2).
 
 set -euo pipefail
 
@@ -42,15 +44,20 @@ METABASE_FILE=$(pg_backup postgres-analytics metabase analytics_user \
     "$LOCAL_BACKUP_DIR/metabase-$DATE_TAG.sql")
 cross_vps_transfer "$METABASE_FILE" "$REMOTE_USER" "$REMOTE_HOST" "$REMOTE_PATH"
 
-# 4. n8n data (sqlite + workflows + credentials)
-# CRITICAL: si esto se pierde, los workflows hay que recrearlos manualmente
-N8N_FILE=$(tar_backup "/home/livskin/apps/n8n/data" \
-    "$LOCAL_BACKUP_DIR/n8n-data-$DATE_TAG")
-cross_vps_transfer "$N8N_FILE" "$REMOTE_USER" "$REMOTE_HOST" "$REMOTE_PATH"
+# 4. n8n PG database (Sprint 1.2 — workflows + credentials + executions ahora en PG)
+N8N_DB_FILE=$(pg_backup postgres-analytics n8n analytics_user \
+    "$LOCAL_BACKUP_DIR/n8n-pg-$DATE_TAG.sql")
+cross_vps_transfer "$N8N_DB_FILE" "$REMOTE_USER" "$REMOTE_HOST" "$REMOTE_PATH"
 
-# 5. Cleanup local
+# 5. n8n config dir (SOLO encryption key — post Sprint 1.2 ya no contiene DB)
+# Sin esto, las credentials encrypted en PG n8n DB serían unreadable.
+N8N_CONFIG_FILE=$(tar_backup "/home/livskin/apps/n8n/data" \
+    "$LOCAL_BACKUP_DIR/n8n-config-$DATE_TAG")
+cross_vps_transfer "$N8N_CONFIG_FILE" "$REMOTE_USER" "$REMOTE_HOST" "$REMOTE_PATH"
+
+# 6. Cleanup local
 cleanup_local "$LOCAL_BACKUP_DIR" 30
 
 log "=== backup-vps2.sh complete ==="
 audit_event "infra.backup_completed" \
-    "{\"vps\":\"vps2\",\"files\":[\"$(basename "$VTIGER_FILE")\",\"$(basename "$ANALYTICS_FILE")\",\"$(basename "$METABASE_FILE")\",\"$(basename "$N8N_FILE")\"]}"
+    "{\"vps\":\"vps2\",\"files\":[\"$(basename "$VTIGER_FILE")\",\"$(basename "$ANALYTICS_FILE")\",\"$(basename "$METABASE_FILE")\",\"$(basename "$N8N_DB_FILE")\",\"$(basename "$N8N_CONFIG_FILE")\"]}"

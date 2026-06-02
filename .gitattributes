@@ -1,0 +1,30 @@
+# Prevent CRLF on shell scripts + Python + YAML deployed to Linux VPS.
+# Sin esto, Windows commits agregan \r\n y al desplegarse a VPS los
+# interpretes (bash, python) fallan con "/bin/bash^M: bad interpreter".
+#
+# Documentado el 2026-06-02 tras incident backup-vps2.sh CRLF.
+
+# Force LF for executable scripts
+*.sh        text eol=lf
+*.py        text eol=lf
+
+# Force LF for configs that run on Linux
+*.yml       text eol=lf
+*.yaml      text eol=lf
+Dockerfile  text eol=lf
+*.conf      text eol=lf
+
+# Force LF for JSON (n8n workflows)
+*.json      text eol=lf
+
+# Force LF for SQL / migrations
+*.sql       text eol=lf
+
+# Mark binary files (no normalization)
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.pdf       binary
+*.gz        binary
+*.tar       binary
+*.zip       binary
