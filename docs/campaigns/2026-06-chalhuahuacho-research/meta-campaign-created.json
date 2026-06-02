@@ -19,7 +19,7 @@
       "page_id": "525464061130920"
     },
     "is_dynamic_creative": true,
-    "optimization_goal": "CONVERSATIONS",
+    "optimization_goal": "LINK_CLICKS",
     "billing_event": "IMPRESSIONS",
     "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
     "lifetime_budget_pen": 200,
