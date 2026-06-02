@@ -1,0 +1,53 @@
+# Redis 7 — VPS2 (Sprint 1.1, 2026-05-28)
+#
+# Propósito:
+#   - Distributed locks (SETNX) para F1/F2/F3/B3 crons en n8n (Sprint 1.3)
+#   - Rate limiting endpoints internos (futuro)
+#   - Queue para webhooks burst (futuro Sprint 2+)
+#
+# Red: revops_net (mismo network que n8n, vtiger, postgres-analytics).
+# Acceso desde n8n: hostname `redis`, puerto 6379, password en REDIS_PASSWORD.
+#
+# Persistencia:
+#   - appendonly yes — AOF para durabilidad de locks/queues entre restarts
+#   - maxmemory 200mb — VPS2 tiene ~1GB available, dejamos margen
+#   - eviction allkeys-lru — locks tienen TTL, queues tienen propio cleanup
+#
+# Seguridad:
+#   - Password obligatorio (REDIS_PASSWORD en .env)
+#   - NO expone puerto al host (solo a contenedores en revops_net)
+#   - protected-mode yes (default desde Redis 6)
+#
+# Despliegue:
+#   ssh livskin-ops
+#   cd /home/livskin/apps/redis
+#   docker compose up -d
+#   docker exec redis redis-cli -a $REDIS_PASSWORD ping  # PONG
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - revops_net
+    volumes:
+      - ./data:/data
+      - ./redis.conf:/etc/redis/redis.conf:ro
+    command: ["redis-server", "/etc/redis/redis.conf", "--requirepass", "${REDIS_PASSWORD}"]
+    environment:
+      - TZ=America/Lima
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--no-auth-warning", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+networks:
+  revops_net:
+    external: true
