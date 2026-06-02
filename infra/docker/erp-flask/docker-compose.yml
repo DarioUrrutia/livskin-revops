@@ -17,6 +17,9 @@ services:
       # MVP/dev: usa superuser. Pre-cutover (Fase 6) crear rol erp_user con
       # permisos limitados per ADR-0026.
       ERP_DB_USER: postgres
+      # Sprint 1.3 (2026-05-28) — REDIS_HOST/PORT/PASSWORD vienen via env_file
+      # ../postgres-data/.env (no se redeclaran aquí porque environment: tiene
+      # prioridad sobre env_file: y ${VAR:-} interpolaria a vacío).
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
