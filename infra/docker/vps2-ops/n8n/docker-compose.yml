@@ -1,13 +1,16 @@
 # n8n — orquestador de workflows (ADR-0005)
 #
 # Sirve flow.livskin.site (vía nginx-vps2 con TLS).
-# Webhooks recibidos: SureForms POST, WhatsApp Cloud API (Fase 4).
+# Webhooks recibidos: SureForms POST, WhatsApp Cloud API.
 #
-# Volumen: ./data/ contiene database.sqlite + workflows + credentials.
-# Backup: tarball nightly de ./data/ (cross-VPS).
+# Backend DB: Postgres (postgres-analytics, DB 'n8n') desde Sprint 1.2 2026-05-28.
+# Antes era SQLite local — migrado para soportar concurrencia + replica.
+# Backup SQLite original: /home/livskin/apps/n8n/data.sqlite-bak-20260602
 #
-# Env vars secretas (Vtiger API, ERP audit, etc.): vienen de ./.env
-# (gitignored — copiar desde keys/.env.integrations en setup inicial).
+# Volumen: ./data/ contiene SOLO config (encryption key). DB en Postgres.
+#
+# Env vars secretas: vienen de ./.env (gitignored).
+# Variables DB_POSTGRESDB_* + N8N_ENCRYPTION_KEY críticos para PG backend.
 # Ver infra/n8n/conventions.md § 9 para política de credenciales.
 
 services:
