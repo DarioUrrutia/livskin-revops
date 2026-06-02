@@ -1,6 +1,6 @@
 # Plan Maestro — Livskin RevOps MVP
 
-**Versión:** 3.5 · **Fecha:** 2026-04-18 (creación) · **Última actualización:** 2026-06-02 (Sprint 1 estabilización cerrado 94% + decontaminación docs) · **Estado:** Vivo (actualizado en cada decisión estructural)
+**Versión:** 3.6 · **Fecha:** 2026-04-18 (creación) · **Última actualización:** 2026-06-02 (scope reducido — 4A.5 email + 4A.6 interludio + Sprint 3 velocidad campaña DIFERIDOS) · **Estado:** Vivo (actualizado en cada decisión estructural)
 
 > Este documento es la **referencia autoritativa del proyecto**. Cualquier decisión o conversación estratégica debe ser reflejada aquí. Lo que no está escrito aquí no existe para el proyecto.
 
@@ -1387,7 +1387,28 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 
 ## 19. Changelog
 
-### v3.5 — 2026-06-02 — DECONTAMINACIÓN + AUDIT COMPREHENSIVO
+### v3.6 — 2026-06-02 (PM) — SCOPE REDUCIDO
+
+**Decisión Dario 2026-06-02 tras sesión decontaminación**: reducir scope a lo mínimo necesario para lanzar 3ra campaña paga FB Ads con confianza. Diferir indefinidamente capas no esenciales.
+
+**DIFERIDOS indefinidamente** (mantener docs/workbooks intactos, pero NO ejecutar):
+- **Fase 4A.5 Email marketing**: no MailerLite, no flujos welcome/post-cita, no re-engagement cron. Email institucional `info@livskin.site` queda funcional para correspondencia humana solamente.
+- **Fase 4A.6 Interludio doctora presencial**: no encuentro 3-4h, no codificación 12 outputs brand. Bot Yossie + copy de campañas operará con voice actual.
+- **Sprint 3 "Velocidad campaña"** (YAML config + Marketing API + dashboard live): defer. Setup-de-campaña sigue manual (28-35h) hasta que volumen justifique inversión en tooling (~30h).
+- **Sprint 1.10 parte 2 Vtiger DB rotation**: defer, requiere downtime planificado.
+
+**ÚNICO scope para próxima sesión** (~6-10h):
+1. Fase 4A.4 — Smoke E2E un solo flow real (lead WA → cita → asistencia → venta → CAPI Purchase)
+2. Fixes derivados post-mortem 2da campaña (eliminar Botox ad set, edad 35-64, solo FB Feed + Stories, distribución 40/35/25)
+3. Pre-flight checklist 3ra campaña (Meta account quality, pixel firing, Custom Audiences updated)
+4. Setup 3ra campaña en Ads Manager (manual UI con cambios diseñados)
+5. Lanzar + smoke mobile + monitorear primeras 24h
+
+**Bootstrap principio #13**: sin cambio — sigue ABIERTO hasta post-mortem 3ra campaña.
+
+**Memoria persistente**: `project_scope_diferido_2026_06_02.md` documenta esta decisión + condiciones para reapertura.
+
+### v3.5 — 2026-06-02 (AM) — DECONTAMINACIÓN + AUDIT COMPREHENSIVO
 
 - **Sprint 1 Estabilización CERRADO 94%** (15 de 16 tareas) — backbone determinístico mucho más sólido:
   - **Concurrencia**: n8n SQLite→Postgres migration (Sprint 1.2 = bottleneck #1 mitigado), distributed locks Redis SETNX en F1/F2/F3/B3 (Sprint 1.3), pg_advisory_xact_lock UPSERT wa-state (Sprint 1.15)

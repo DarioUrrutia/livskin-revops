@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.
-> **Última actualización canónica: 2026-06-02 v3.5** — decontaminación + reorganización post-Sprint 1 (auditoría comprehensiva del sistema + 3 ADRs faltantes + 5 memorias nuevas + 4 docs nuevos + fix backups 25d off + fix deploys 9d red).
+> **Última actualización canónica: 2026-06-02 v3.6** — scope reducido + decontaminación. Email marketing (4A.5) + Interludio doctora (4A.6) + "Velocidad campaña" Sprint 3 **DIFERIDOS fuera del scope inmediato**. Foco actual: cerrar mínimo viable para lanzar 3ra campaña FB Ads con confianza.
 
 ---
 
@@ -44,15 +44,15 @@
 | **4A.2** WhatsApp Cloud API doctora | ✅ COMPLETO | `+51947741117` productivo, 20 templates APPROVED, webhook activo |
 | **4A.3** Bot Yossie v2 rule-based | ✅ COMPLETO | State machine + buttons + handoff + Gap K + wa_messages logging + q2 re-ask |
 | **4A.3 sub** Workflow A2 sync ERP→Vtiger | ✅ COMPLETO 2026-05-10 | ADR-0036 |
-| **4A.4** Smoke E2E un solo flow | ⏳ **PENDIENTE** | Partes validadas individualmente; falta correr 1 flow real lead WA→cita→asistencia→venta→CAPI Purchase |
-| **4A.5** Email marketing + flujos + re-engagement | ⏳ **PARCIAL** | Email institucional ✅ 2026-05-13. **Falta**: MailerLite Free + welcome + post-cita + cron re-engagement |
-| **4A.6** Interludio doctora presencial | ⏳ **PENDIENTE** | Workbook 89KB listo, **falta encuentro 3-4h** + codificar 12 outputs brand |
+| **4A.4** Smoke E2E un solo flow | ⏳ **PENDIENTE** | Único bloqueo real antes de 3ra campaña. Falta correr 1 flow real lead WA→cita→asistencia→venta→CAPI Purchase para validar pipeline end-to-end |
+| ~~**4A.5** Email marketing + flujos~~ | 🚫 **DIFERIDO indefinidamente** | Decisión Dario 2026-06-02: NO emails ahora. Email institucional `info@livskin.site` queda funcional para correspondencia humana. Marketing tool + flujos automatizados NO se implementan. |
+| ~~**4A.6** Interludio doctora presencial~~ | 🚫 **DIFERIDO indefinidamente** | Decisión Dario 2026-06-02: NO encuentro doctora ahora. Workbook 89KB queda guardado para futuro si se decide ejecutar. Bot Yossie + copy de campañas operará con voice actual (sin v1.0 doctora-firmado). |
 
 ### Bootstrap principio #13: ABIERTO hasta 3ra campaña paga
 
 - **1ra (Bridge Episode 2026-05-03→08)**: 6 leads, insuficiente. ARCHIVED.
-- **2da (Click-to-WA 2026-05-25→27)**: pausada con S/134.58 spent (38.5% cap), 1 lead útil Emilia (soft commit), 0 ventas. Bootstrap NO cierra.
-- **3ra (futura)**: cerrará bootstrap si campaña ejecuta + post-mortem revela hipótesis validadas. Pre-requisitos: Sprint 2 cierre + fixes derivados 2da campaña.
+- **2da (Click-to-WA 2026-05-25→27)**: **FINALIZADA**. S/134.58 spent (38.5% cap), 1 lead útil Emilia (soft commit), 0 ventas. Post-mortem cerrado.
+- **3ra (próxima)**: cerrará bootstrap si campaña ejecuta + post-mortem revela hipótesis validadas. **Pre-requisitos para lanzar 3ra**: ver sección "Próxima sesión" más abajo.
 
 ### Arquitectura actual (post Sprint 1)
 
@@ -89,16 +89,36 @@ RAM avail 390MB (vs 195MB pre)        ├── metabase ✓                    
 - 🆕 [`project_system_analysis_4_dimensions_2026_05_27`](~/.claude/projects/.../memory/project_system_analysis_4_dimensions_2026_05_27.md)
 - 🆕 [`project_second_paid_campaign_2026_05_draft`](~/.claude/projects/.../memory/project_second_paid_campaign_2026_05_draft.md)
 
-### Próxima sesión recomendada
+### Pre-requisitos para lanzar 3ra campaña FB Ads
 
-**Sprint 2 — Cierre Fase 4A** (~40h trabajo + 4h encuentro presencial doctora):
-1. Smoke E2E un solo flow real lead WA → cita → venta → CAPI Purchase
-2. MailerLite Free + 2 flujos email (welcome + post-cita) + re-engagement queue cron
-3. Encuentro Interludio doctora (3-4h presencial) + codificar 12 outputs brand
-4. Actualizar copy bot Yossie + email flows con voice-v1.0
-5. ADRs cierre 4A.4 + 4A.5 + 4A.6
+**Objetivo único de la próxima sesión**: dejar el sistema listo para lanzar 3ra campaña paga FB Ads con confianza, aprendizajes 2da campaña aplicados. **Sin emails. Sin interludio. Sin tooling de velocidad campaña.**
 
-**O alternativamente Sprint 3** (~30h) — Velocidad campaña (YAML config + Marketing API + dashboard live).
+**Checklist mínimo (estimado ~6-10h trabajo)**:
+
+| # | Tarea | Estado actual | Acción necesaria |
+|---|---|---|---|
+| 1 | **Smoke E2E un solo flow real** (4A.4) | ⏳ Pendiente | Lead test → WA → bot → cita en ERP → asistencia marcada → venta registrada → CAPI Purchase emitido → Meta confirma evento. Validar pipeline E2E con cliente prueba. ~3h |
+| 2 | **Fixes derivados post-mortem 2da campaña** | ⏳ Pendiente | Aplicar mejoras identificadas: eliminar Botox ad set, edad 35-64 (no 18-34), solo FB Feed + Stories (no Reels/InStream), distribución 40/35/25 PRP/Limpieza/AH. ~1h diseño |
+| 3 | **Templates Meta — verificar pool listo** | ✅ 20 APPROVED | NO acción (ya hecho Sprint 1.12) |
+| 4 | **Backups funcionando** | ✅ Restablecidos 2026-06-02 | NO acción (cron activo) |
+| 5 | **Deploys CI/CD verdes** | ✅ Verde post-fix 2026-06-02 | NO acción (último deploy success 18:03) |
+| 6 | **Pre-flight checklist 3ra campaña** | ⏳ Pendiente | Verificar: account quality Meta, pixel firing, Custom Audiences actualizadas con clientes ERP, copy bot OK, F1 follow-up timing correcto. ~1h |
+| 7 | **Configurar 3ra campaña en Ads Manager** | ⏳ Pendiente | Setup manual UI con cambios punto #2. ~2h |
+| 8 | **Lanzar 3ra campaña** | ⏳ Pendiente | Activate campaña + smoke test mobile clic→WA→bot. ~30 min |
+| 9 | **Monitorear primeras 24h** | — | Verificar bot responde + leads llegan al ERP. Daily report |
+
+**Post 3ra campaña**:
+- Si conversion mejora vs 2da → bootstrap principio #13 CIERRA (con post-mortem)
+- Si NO mejora → análisis de root cause (creative, audiencia, copy, oferta)
+
+### Lo que NO está en scope ahora (diferido explícitamente)
+
+| Item | Razón |
+|---|---|
+| Email marketing automatizado (4A.5) | Decisión Dario 2026-06-02. No es necesario para captación inicial. |
+| Interludio presencial doctora (4A.6) | Decisión Dario 2026-06-02. Workbook queda para futuro. |
+| Sprint 3 "Velocidad campaña" (YAML + Marketing API + dashboard live) | Diferido. Era plan para reducir setup-campaña 28-35h → 10-15h via tooling. Se evalúa después de 3-4 campañas pagas exitosas, cuando los patterns sean claros. |
+| Sprint 1.10 parte 2 Vtiger DB rotation | Defer. Requiere downtime planificado, no bloquea operación. |
 
 ---
 
