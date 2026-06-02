@@ -81,8 +81,9 @@ RAM avail 390MB (vs 195MB pre)        ├── metabase ✓                    
 - [`feedback_no_campana_sin_whatsapp_automatico`](~/.claude/projects/.../memory/feedback_no_campana_sin_whatsapp_automatico.md) — Doctrina #11 derivada
 - [`feedback_sesion_estrategica_agentes_dedicada`](~/.claude/projects/.../memory/feedback_sesion_estrategica_agentes_dedicada.md) — Doctrina #14
 - [`feedback_session_warmup_obligatorio`](~/.claude/projects/.../memory/feedback_session_warmup_obligatorio.md) — protocolo arranque
-- 🆕 [`feedback_deploy_never_sudo_cp_to_repo`](~/.claude/projects/.../memory/feedback_deploy_never_sudo_cp_to_repo.md) — NUNCA sudo cp a /srv/livskin-revops/
-- 🆕 [`feedback_git_lf_eol_policy`](~/.claude/projects/.../memory/feedback_git_lf_eol_policy.md) — .gitattributes obligatorio
+- [`feedback_deploy_never_sudo_cp_to_repo`](~/.claude/projects/.../memory/feedback_deploy_never_sudo_cp_to_repo.md) — NUNCA sudo cp a /srv/livskin-revops/
+- [`feedback_git_lf_eol_policy`](~/.claude/projects/.../memory/feedback_git_lf_eol_policy.md) — .gitattributes obligatorio
+- 🆕 [`feedback_never_delete_ad_campaigns`](~/.claude/projects/.../memory/feedback_never_delete_ad_campaigns.md) — NUNCA borrar campañas Meta Ads (son data histórica)
 
 📸 Snapshots canónicos (estado capturado en momento):
 - 🆕 [`project_sprint_1_estabilizacion_cierre_2026_05_28`](~/.claude/projects/.../memory/project_sprint_1_estabilizacion_cierre_2026_05_28.md)
@@ -98,7 +99,7 @@ RAM avail 390MB (vs 195MB pre)        ├── metabase ✓                    
 | # | Tarea | Estado actual | Acción necesaria |
 |---|---|---|---|
 | 1 | **Smoke E2E un solo flow real** (4A.4) | ⏳ Pendiente | Lead test → WA → bot → cita en ERP → asistencia marcada → venta registrada → CAPI Purchase emitido → Meta confirma evento. Validar pipeline E2E con cliente prueba. ~3h |
-| 2 | **Fixes derivados post-mortem 2da campaña** | ⏳ Pendiente | Aplicar mejoras identificadas: eliminar Botox ad set, edad 35-64 (no 18-34), solo FB Feed + Stories (no Reels/InStream), distribución 40/35/25 PRP/Limpieza/AH. ~1h diseño |
+| 2 | **Fixes derivados post-mortem 2da campaña** | ⏳ Pendiente | 3ra campaña usa SOLO 3 ad sets (PRP/Limpieza/AH — sin Botox que floppeó en 2da). Edad 35-64 only (no 18-34). Solo FB Feed + Stories (no Reels/InStream). Distribución budget 40/35/25 PRP/Limpieza/AH. ⚠️ **2da campaña queda pausada en Ads Manager — NO borrar, su data es histórica valiosa**. ~1h diseño |
 | 3 | **Templates Meta — verificar pool listo** | ✅ 20 APPROVED | NO acción (ya hecho Sprint 1.12) |
 | 4 | **Backups funcionando** | ✅ Restablecidos 2026-06-02 | NO acción (cron activo) |
 | 5 | **Deploys CI/CD verdes** | ✅ Verde post-fix 2026-06-02 | NO acción (último deploy success 18:03) |

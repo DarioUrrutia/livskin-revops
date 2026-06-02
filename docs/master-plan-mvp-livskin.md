@@ -1399,9 +1399,9 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 
 **ÚNICO scope para próxima sesión** (~6-10h):
 1. Fase 4A.4 — Smoke E2E un solo flow real (lead WA → cita → asistencia → venta → CAPI Purchase)
-2. Fixes derivados post-mortem 2da campaña (eliminar Botox ad set, edad 35-64, solo FB Feed + Stories, distribución 40/35/25)
+2. Diseñar 3ra campaña con learnings de 2da: NO incluir Botox (floppeó), edad 35-64, solo FB Feed + Stories, distribución 40/35/25 PRP/Limpieza/AH. **⚠️ 2da campaña queda pausada en Ads Manager — NO borrar (data histórica valiosa, doctrina `feedback_never_delete_ad_campaigns`)**
 3. Pre-flight checklist 3ra campaña (Meta account quality, pixel firing, Custom Audiences updated)
-4. Setup 3ra campaña en Ads Manager (manual UI con cambios diseñados)
+4. Setup 3ra campaña NUEVA en Ads Manager (crear nueva — NO editar la 2da)
 5. Lanzar + smoke mobile + monitorear primeras 24h
 
 **Bootstrap principio #13**: sin cambio — sigue ABIERTO hasta post-mortem 3ra campaña.
