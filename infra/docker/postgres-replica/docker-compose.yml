@@ -1,0 +1,52 @@
+# PostgreSQL 16 streaming replica VPS2 (Sprint 1.4, 2026-05-28)
+#
+# Streaming replica de postgres-data en VPS3 — mitigates SPOF crítico:
+# si VPS3 cae, replica en VPS2 mantiene los datos read-only.
+# Failover manual (promote) documentado en runbook DR drill (Sprint 1.5).
+#
+# Setup inicial:
+#   1. En primary (VPS3): replicator user creado + hba entry + replication slot
+#   2. pg_basebackup desde VPS2 a /home/livskin/apps/postgres-replica/data
+#   3. Standby signal + primary_conninfo en postgresql.auto.conf (auto via -R)
+#   4. docker compose up -d
+#
+# Verificar replication lag:
+#   docker exec postgres-replica psql -U postgres -c "SELECT pg_last_wal_replay_lsn(), pg_last_xact_replay_timestamp();"
+#   docker exec postgres-data psql -U postgres -c "SELECT * FROM pg_stat_replication;"  # corre en VPS3
+#
+# Promote (failover manual — solo si VPS3 muere):
+#   docker exec postgres-replica psql -U postgres -c "SELECT pg_promote();"
+
+services:
+  postgres-replica:
+    image: pgvector/pgvector:pg16
+    container_name: postgres-replica
+    restart: unless-stopped
+    volumes:
+      - /home/livskin/apps/postgres-replica/data:/var/lib/postgresql/data
+    networks:
+      - revops_net
+    # Bind a VPC privada VPS2 (10.114.0.2:5433) — read-only consulta cross-VPS
+    # 5433 (no 5432) para no chocar con postgres-analytics
+    ports:
+      - "10.114.0.2:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres || true"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      # Standby no necesita POSTGRES_USER/PASSWORD/DB (vienen del basebackup).
+      # Solo TZ por consistencia.
+      TZ: UTC
+      PGTZ: UTC
+
+networks:
+  revops_net:
+    external: true
