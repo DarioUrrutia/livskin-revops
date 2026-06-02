@@ -31,10 +31,11 @@ Notas históricas relevantes:
 
 - **2026-05-09**: agregado ADR-0035 (Módulo Agenda Mínima ERP) tras implementación Fase 4A.1.
 - **2026-05-10**: agregado ADR-0036 (Workflow A2 sync ERP→Vtiger). Status ADR-0034 cambió `💤 Diferida` → `🔄 Supersedida` por doctrina #14 nueva.
+- **2026-05-28**: agregados ADR-0037 (Distributed locks Redis SETNX), ADR-0038 (PG streaming replica VPS3→VPS2), ADR-0039 (n8n SQLite→PG migration) — documentación retroactiva de Sprint 1 estabilización backbone (commits `e7a3118`, `488493e`, `4a70211`, `e1faffa`).
 
 ---
 
-## ADRs físicos verificados (22 archivos al 2026-05-10)
+## ADRs físicos verificados (25 archivos al 2026-05-28)
 
 ### Arquitectura y datos (Fase 0-1)
 
@@ -92,6 +93,14 @@ Notas históricas relevantes:
 | [0035](0035-modulo-agenda-minima-erp.md) | Módulo Agenda Mínima ERP | ✅ | 4A.1 |
 | [0036](0036-workflow-a2-sync-erp-vtiger.md) | Workflow [A2] sync ERP→Vtiger (cierra bidireccional lead lifecycle) | ✅ | 4A.3 (sub) |
 
+### Sprint 1 estabilización backbone (post Fase 4A)
+
+| ADR | Título | Estado | Fase |
+|---|---|---|---|
+| [0037](0037-distributed-locks-redis-setnx.md) | Distributed locks Redis SETNX para crons n8n (F1/F2/F3/B3) | ✅ | Sprint 1.3 |
+| [0038](0038-postgres-streaming-replica-vps2.md) | Postgres streaming replica VPS3→VPS2 (failover manual) | ✅ | Sprint 1.4 |
+| [0039](0039-n8n-backend-postgres-migration.md) | Migración n8n SQLite → Postgres backend | ✅ | Sprint 1.2 |
+
 ### Agentes IA — supersedida por doctrina #14 (2026-05-10)
 
 | ADR | Título | Estado | Fase |
@@ -113,9 +122,9 @@ Estas son decisiones que el proyecto va a necesitar formalizar cuando lleguen. *
 
 | Concepto | Cuándo se materializa | Notas (post-doctrina #14) |
 |---|---|---|
-| **0037 Conversation Agent v0 rule-based** | Sesión estratégica agentes IA post-backbone cerrado | Supersede ADR-0034. Documenta arquitectura formal del rule-based de Fase 4A.3 |
-| **0038 Brand Orchestrator V0 BOOTSTRAP** | Si excepción Brand Orchestrator V0 BOOTSTRAP se ejecutó durante backbone | Documenta lecciones aprendidas + scope refinado + herramientas validadas |
-| **0039 Brand Orchestrator V1 multi-agent** | Sesión estratégica agentes IA post-backbone | 5 subagentes formal (research/concept/copy/visual/implementation) |
+| **Conversation Agent v0 rule-based** | Sesión estratégica agentes IA post-backbone cerrado | Supersede ADR-0034. Documenta arquitectura formal del rule-based de Fase 4A.3. Número se asigna al escribir (≥0040) |
+| **Brand Orchestrator V0 BOOTSTRAP** | Si excepción Brand Orchestrator V0 BOOTSTRAP se ejecutó durante backbone | Documenta lecciones aprendidas + scope refinado + herramientas validadas |
+| **Brand Orchestrator V1 multi-agent** | Sesión estratégica agentes IA post-backbone | 5 subagentes formal (research/concept/copy/visual/implementation) |
 | ADR Acquisition synthesizer script | Sesión estratégica agentes IA | Script con LLM ocasional, NO agente formal |
 | ADR Growth narrative script | Sesión estratégica agentes IA | Script con LLM mensual |
 | ADR Infra+Security agent | Sesión estratégica agentes IA — timing construcción Fase 7 | Diferido — skills cubren V1 |
@@ -167,16 +176,17 @@ Decisiones conscientes de NO abordar en el MVP. Documentadas para evitar re-aper
 
 ---
 
-## Estadísticas (al 2026-05-03)
+## Estadísticas (al 2026-05-28)
 
-- **20 ADRs físicos** verificados (físicamente como archivo `.md`)
-- **18 ADRs ✅ aprobadas** (operativas)
-- **1 ADR 💤 diferida** (0034)
+- **25 ADRs físicos** verificados (físicamente como archivo `.md`)
+- **23 ADRs ✅ aprobadas** (operativas)
+- **0 ADRs 💤 diferidas** (0034 ya pasó a 🔄 Supersedida 2026-05-10)
+- **1 ADR 🔄 supersedida** (0034 por doctrina #14)
 - **1 conflicto de numeración histórico** documentado (0033/0034 vs index legacy)
 - **0 ADRs 🔒 en revisión** activos
-- **0 ADRs 🔄 superseded** todavía (esperado: 0034 será superseded por ADR Conversation Agent v0)
+- **3 ADRs documentación retroactiva Sprint 1** (0037, 0038, 0039 — implementados 2026-05-28, ADRs escritos misma sesión)
 - **~30 ADRs fantasma** removidos del index legacy (eran números con metadata ✅ pero sin archivo)
 
 ---
 
-**Última actualización:** 2026-05-03 (auditoría integral — index reescrito desde verificación física de archivos)
+**Última actualización:** 2026-05-28 (Sprint 1 estabilización backbone — 3 ADRs retroactivos agregados: 0037, 0038, 0039)

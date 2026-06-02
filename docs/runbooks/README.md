@@ -1,10 +1,15 @@
 ---
 type: runbooks-index
-version: 2.2
-last_updated: 2026-05-13
+version: 2.3
+last_updated: 2026-06-02
 authoritative: true
-description: Índice de runbooks operativos. Cada runbook tiene frontmatter YAML ejecutable consumible por skills MCP. 2.2 agrega email-institucional-setup (#22).
+description: Índice de runbooks operativos. Cada runbook tiene frontmatter YAML ejecutable consumible por skills MCP. 2.3 (2026-06-02) agrega pg-failover-replica + fix-deploy-vps3-divergence + restore-postgres-backup (28 runbooks ops).
 ---
+
+> **Cambios v2.3 (2026-06-02)** — runbooks nuevos post-Sprint 1 + auditoría comprehensiva:
+> - `pg-failover-replica.md` (Sprint 1.5) — failover manual streaming replica + cadencia DR drill trimestral
+> - `fix-deploy-vps3-divergence.md` — diagnostico/fix git divergence en VPS3 (incident 2026-06-02)
+> - `restore-postgres-backup.md` 🔴 CRITICAL — gap latente cubrir 5 PG databases con safety net + rollback
 
 # 📘 Runbooks Operativos — Livskin
 

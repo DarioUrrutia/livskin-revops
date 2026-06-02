@@ -1,8 +1,104 @@
 # CLAUDE.md — Contexto maestro del proyecto Livskin
 
-> Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
-> Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: **2026-05-28 v3.4 (Sprint 1 estabilización 94% completo — 15 de 16 tareas; Redis VPC + distributed locks 4 workflows + PG streaming replica VPS3→VPS2 + DR drill validado + n8n migrated SQLite→Postgres + PG-analytics rotada + wa_messages retention + 18 templates Meta APPROVED + gitleaks/swap/pool/CAPI retry/advisory_lock; backbone determinístico mucho más sólido; pendiente Sprint 1.10 parte 2 Vtiger DB rotation; bootstrap #13 sigue ABIERTO hasta 3ra campaña paga)**
+> Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.
+> Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.
+> **Última actualización canónica: 2026-06-02 v3.5** — decontaminación + reorganización post-Sprint 1 (auditoría comprehensiva del sistema + 3 ADRs faltantes + 5 memorias nuevas + 4 docs nuevos + fix backups 25d off + fix deploys 9d red).
+
+---
+
+## 🚦 ESTADO ACTUAL AL 2026-06-02 (canónico — leer ANTES de cualquier tarea)
+
+### Sprint 1 Estabilización: 94% completo (15 de 16 tareas)
+
+**✅ COMPLETADAS (validadas E2E + commit en git)**:
+- 1.1 Redis container VPS2 (200MB AOF, password-protected, VPC bind 10.114.0.2:6379)
+- 1.2 **n8n migrated SQLite → Postgres** (postgres-analytics DB `n8n`, MVCC concurrencia)
+- 1.3 Distributed locks SETNX en F1/F2/F3/B3 workflows + ERP HTTP wrapper service
+- 1.4 **PG streaming replica VPS3 → VPS2:5433** (postgres-replica container, async)
+- 1.5 DR drill validado + runbook [`pg-failover-replica.md`](docs/runbooks/pg-failover-replica.md)
+- 1.6 wa_messages retention 365d cron + audit log
+- 1.7 infra_snapshots cleanup audit log emit
+- 1.8 CAPI emit retry exponencial 3x (1s/3s/9s) + DLQ via audit
+- 1.9 Pre-commit gitleaks + 6 hooks defensivos + `.gitattributes` LF policy
+- 1.10p1 PG-analytics password rotada (40-char random, "livskin" literal eliminada)
+- 1.11 VPS1 PHP-FPM tuned + 1GB swap (RAM disp 195→390MB, 2x)
+- 1.12 Templates Meta batch (10 nuevos → **20 APPROVED total**)
+- 1.13 PG pool sizing erp-flask (5→20 base, 15→40 max, 4x)
+- 1.14 A2 drift = NO bug (verificado, 30/hr exacto)
+- 1.15 pg_advisory_xact_lock en UPSERT wa-state (race condition fix)
+
+**⏳ PENDIENTE**:
+- 1.10p2 **Vtiger DB rotation** (passwords + access keys) — requiere ~15min downtime Vtiger planificado
+
+**+ 4 fixes post-Sprint 1 críticos (2026-06-02 auditoría comprehensiva)**:
+- Deploys VPS3 (9 días red) — root cause: divergencia git por sudo cp + CRLF. **Fixed**. Runbook `fix-deploy-vps3-divergence.md`.
+- Backups OFF 25 días — root cause: exec bit perdido. **Fixed** + restaurado en git con `update-index --chmod=+x`.
+- backup-vps2.sh no incluía n8n PG DB post-migration. **Fixed** + smoke E2E.
+- 3 ADRs faltantes formalizados (0037 locks + 0038 replica + 0039 n8n migration).
+
+### Fase 4A Backbone Determinístico: 4 de 6 sub-fases cerradas
+
+| Sub-fase | Status | Notas |
+|---|---|---|
+| **4A.1** Módulo Agenda ERP | ✅ COMPLETO 2026-05-09 | ADR-0035, deployed con feature flag, doctora valida |
+| **4A.2** WhatsApp Cloud API doctora | ✅ COMPLETO | `+51947741117` productivo, 20 templates APPROVED, webhook activo |
+| **4A.3** Bot Yossie v2 rule-based | ✅ COMPLETO | State machine + buttons + handoff + Gap K + wa_messages logging + q2 re-ask |
+| **4A.3 sub** Workflow A2 sync ERP→Vtiger | ✅ COMPLETO 2026-05-10 | ADR-0036 |
+| **4A.4** Smoke E2E un solo flow | ⏳ **PENDIENTE** | Partes validadas individualmente; falta correr 1 flow real lead WA→cita→asistencia→venta→CAPI Purchase |
+| **4A.5** Email marketing + flujos + re-engagement | ⏳ **PARCIAL** | Email institucional ✅ 2026-05-13. **Falta**: MailerLite Free + welcome + post-cita + cron re-engagement |
+| **4A.6** Interludio doctora presencial | ⏳ **PENDIENTE** | Workbook 89KB listo, **falta encuentro 3-4h** + codificar 12 outputs brand |
+
+### Bootstrap principio #13: ABIERTO hasta 3ra campaña paga
+
+- **1ra (Bridge Episode 2026-05-03→08)**: 6 leads, insuficiente. ARCHIVED.
+- **2da (Click-to-WA 2026-05-25→27)**: pausada con S/134.58 spent (38.5% cap), 1 lead útil Emilia (soft commit), 0 ventas. Bootstrap NO cierra.
+- **3ra (futura)**: cerrará bootstrap si campaña ejecuta + post-mortem revela hipótesis validadas. Pre-requisitos: Sprint 2 cierre + fixes derivados 2da campaña.
+
+### Arquitectura actual (post Sprint 1)
+
+```
+VPS1 livskin-wp                      VPS2 livskin-ops                  VPS3 livskin-erp
+─────────────────                    ──────────────────                 ──────────────────
+WordPress 6.9 ✓                      n8n (PG backend NEW)               erp-flask (pool 20/40)
+GTM tracking ✓                       postgres-analytics:5432              postgres-data:5432 ✓ PRIMARY
+PHP-FPM tuned + 1GB swap NEW          ├── analytics ✓                     ├── livskin_erp ✓
+RAM avail 390MB (vs 195MB pre)        ├── metabase ✓                      └── livskin_brain ✓ (pgvector)
+                                       └── n8n (NEW Sprint 1.2)           postgres-data:5432 → WAL stream
+                                      postgres-replica:5433 NEW Sprint 1.4    │
+                                      Redis 7 NEW Sprint 1.1                  ▼
+                                       ├── distributed locks F1/F2/F3/B3   postgres-replica VPS2
+                                       └── revops_net (200MB maxmem)
+                                      Vtiger CRM ✓
+                                      metabase ✓ (datos.livskin.site NO DNS yet)
+                                      nginx-vps2 ✓
+                                      livskin-sensor ✓
+```
+
+### Memorias críticas (.claude/.../memory/) — leer SOLO si tarea lo requiere
+
+🔥 Releer LITERAL antes de tarea cross-system o decisión agentes IA:
+- [`feedback_deterministic_backbone_first`](~/.claude/projects/.../memory/feedback_deterministic_backbone_first.md) — Doctrina #11 rectora
+- [`feedback_no_campana_sin_whatsapp_automatico`](~/.claude/projects/.../memory/feedback_no_campana_sin_whatsapp_automatico.md) — Doctrina #11 derivada
+- [`feedback_sesion_estrategica_agentes_dedicada`](~/.claude/projects/.../memory/feedback_sesion_estrategica_agentes_dedicada.md) — Doctrina #14
+- [`feedback_session_warmup_obligatorio`](~/.claude/projects/.../memory/feedback_session_warmup_obligatorio.md) — protocolo arranque
+- 🆕 [`feedback_deploy_never_sudo_cp_to_repo`](~/.claude/projects/.../memory/feedback_deploy_never_sudo_cp_to_repo.md) — NUNCA sudo cp a /srv/livskin-revops/
+- 🆕 [`feedback_git_lf_eol_policy`](~/.claude/projects/.../memory/feedback_git_lf_eol_policy.md) — .gitattributes obligatorio
+
+📸 Snapshots canónicos (estado capturado en momento):
+- 🆕 [`project_sprint_1_estabilizacion_cierre_2026_05_28`](~/.claude/projects/.../memory/project_sprint_1_estabilizacion_cierre_2026_05_28.md)
+- 🆕 [`project_system_analysis_4_dimensions_2026_05_27`](~/.claude/projects/.../memory/project_system_analysis_4_dimensions_2026_05_27.md)
+- 🆕 [`project_second_paid_campaign_2026_05_draft`](~/.claude/projects/.../memory/project_second_paid_campaign_2026_05_draft.md)
+
+### Próxima sesión recomendada
+
+**Sprint 2 — Cierre Fase 4A** (~40h trabajo + 4h encuentro presencial doctora):
+1. Smoke E2E un solo flow real lead WA → cita → venta → CAPI Purchase
+2. MailerLite Free + 2 flujos email (welcome + post-cita) + re-engagement queue cron
+3. Encuentro Interludio doctora (3-4h presencial) + codificar 12 outputs brand
+4. Actualizar copy bot Yossie + email flows con voice-v1.0
+5. ADRs cierre 4A.4 + 4A.5 + 4A.6
+
+**O alternativamente Sprint 3** (~30h) — Velocidad campaña (YAML config + Marketing API + dashboard live).
 
 ---
 
@@ -275,6 +371,15 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 10. **Saltar el trámite WhatsApp Business API.** 5-10 días hábiles de Meta, bloqueo real.
 11. **Tocar VPS en producción sin snapshot previo y sin staging validado.**
 12. **Borrar/modificar historial git** sin autorización explícita.
+
+---
+
+# 📚 HISTÓRICO DE CIERRES — trazabilidad cronológica (NO ES estado actual)
+
+> ⚠️ **Las secciones siguientes son LOG HISTÓRICO de sesiones pasadas**, NO el estado actual.
+> Estado actual canónico está en § "ESTADO ACTUAL AL 2026-06-02" al inicio de este documento.
+> Las secciones de "Estado al X cierre" se preservan para trazabilidad de decisiones cronológicas.
+> Si encuentras contradicción entre histórico e inicio: **inicio gana**.
 
 ---
 

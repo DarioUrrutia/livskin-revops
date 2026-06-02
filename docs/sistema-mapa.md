@@ -102,15 +102,21 @@ containers:
     port_internal: 5678
     public_url: https://flow.livskin.site
     nginx_proxy: vps2-ops/nginx/sites/n8n.conf
+    backend_db: postgres-analytics:5432/n8n   # NEW Sprint 1.2 (2026-05-28)
     volumes:
       - host: ./n8n/data
         container: /home/node/.n8n
-        contents: workflows + sqlite db + credentials
-    backup: tarball-daily-cross-vps
+        contents: SOLO encryption key config (DB ahora en Postgres)
+    backup: backup-vps2.sh dumpea n8n PG DB + tar config dir
     repo_compose: infra/docker/vps2-ops/n8n/docker-compose.yml
     role: orquestador workflows + webhook receiver
-    depends_on: []
-    impacted_by_failure_of: [nginx-vps2]
+    config:
+      - DB_TYPE: postgresdb
+      - DB_POSTGRESDB_HOST: postgres-analytics
+      - DB_POSTGRESDB_DATABASE: n8n
+      - N8N_ENCRYPTION_KEY: persistente (ver §8 secrets)
+    depends_on: [postgres-analytics]   # crítico: si PG cae, n8n no funciona
+    impacted_by_failure_of: [nginx-vps2, postgres-analytics]
 
   - name: vtiger
     vps: livskin-ops
@@ -166,11 +172,49 @@ containers:
       - name: metabase
         owner: analytics_user
         purpose: backend interno de metabase
+      - name: n8n
+        owner: analytics_user
+        purpose: backend n8n (workflows + credentials + executions) — migrated Sprint 1.2 (2026-05-28)
     volumes:
       - host: ./postgres-analytics/data
         container: /var/lib/postgresql/data
     backup: pg_dump-daily-cross-vps
-    role: warehouse OLAP de Livskin
+    role: warehouse OLAP + backend n8n + metabase
+    depends_on: []
+    impacted_by_failure_of: []
+
+  - name: postgres-replica          # NEW Sprint 1.4 (2026-05-28)
+    vps: livskin-ops
+    image: pgvector/pgvector:pg16
+    network: revops_net
+    port_internal: 5432
+    port_host: "10.114.0.2:5433"   # VPC-only, read-only standby
+    role: streaming standby de postgres-data (VPS3) — mitiga SPOF principal
+    config:
+      - wal_level: replica
+      - replication_slot: vps2_replica_slot
+      - replay_lag: <5ms typical (validado DR drill 2026-05-28)
+    backup: included en backup-vps2.sh (n8n-pg.sql.gz contiene snapshot)
+    failover_runbook: docs/runbooks/pg-failover-replica.md
+    depends_on:
+      - postgres-data (VPS3)
+    impacted_by_failure_of: []  # standby read-only
+
+  - name: redis                     # NEW Sprint 1.1 (2026-05-28)
+    vps: livskin-ops
+    image: redis:7-alpine
+    network: revops_net
+    port_internal: 6379
+    port_host: "10.114.0.2:6379"   # VPC-only, password-protected
+    role: distributed locks F1/F2/F3/B3 crons + futuro rate limiting + queue buffering
+    config:
+      - maxmemory: 200mb
+      - maxmemory-policy: allkeys-lru
+      - persistence: AOF appendfsync everysec + RDB snapshots
+      - auth: REDIS_PASSWORD obligatorio
+    volumes:
+      - host: ./redis/data
+        container: /data
     depends_on: []
     impacted_by_failure_of: []
 
@@ -730,14 +774,37 @@ secrets_inventory:
     location: VPS 3 .env file (gitignored) + Bitwarden
     rotation_target: anual
 
-  - name: postgres-analytics password
-    location: VPS 2 .env file + Bitwarden
+  - name: postgres-analytics password (analytics_user)
+    location: VPS 2 .env file + keys/.env.integrations + Bitwarden
     last_rotated: 2026-05-28 (Sprint 1.10) — 40-char random base64
     rotation_target: anual
+    consumers: Metabase + n8n PG backend + ETL workflows
 
   - name: vtiger-db root + user passwords
     location: VPS 2 .env + Bitwarden
-    current_value: "livskin" literal (DEUDA TÉCNICA — rotar en Bloque 0.7)
+    current_value: "livskin" literal (DEUDA TÉCNICA — rotar Sprint 1.10 parte 2, defer)
+
+  - name: REDIS_PASSWORD                    # NEW Sprint 1.1 (2026-05-28)
+    location: keys/.env.integrations + /home/livskin/apps/redis/.env + Bitwarden
+    last_rotated: 2026-05-28 (creación inicial)
+    rotation_target: anual
+    consumers: n8n workflows F1/F2/F3/B3 (lock acquire) + erp-flask distributed_lock_service
+    impact_if_lost: locks no funcionan → workflows pueden hacer overlap, no critical (fail-OPEN)
+
+  - name: PG_REPLICATOR_PASSWORD            # NEW Sprint 1.4 (2026-05-28)
+    location: keys/.env.integrations + postgres-data hba.conf entry + Bitwarden
+    last_rotated: 2026-05-28 (creación inicial)
+    rotation_target: anual
+    consumers: postgres-replica VPS2:5433 (streaming WAL)
+    impact_if_lost: replica deja de sincronizar → SPOF #2 vuelve a estar expuesto
+
+  - name: N8N_ENCRYPTION_KEY                # NEW Sprint 1.2 (2026-05-28)
+    location: keys/.env.integrations + /home/livskin/apps/n8n/.env + Bitwarden CRITICAL
+    last_rotated: 2026-05-28 (preservado de pre-migration SQLite→PG)
+    rotation_target: anual con re-encrypt manual (riesgo HIGH — planificar downtime)
+    consumers: n8n container (encrypta TODAS las credentials en n8n PG DB)
+    impact_if_lost: CRITICAL — todas credentials encrypted en DB quedan UNREADABLE
+    backup_strategy: triple (keys/.env.integrations + VPS2 .env + Bitwarden) — sin redundancia perdemos workflows
 
   - name: ERP user passwords (Dario, Claudia)
     location: bcrypt hash en livskin_erp.users

@@ -1,6 +1,6 @@
 # Plan Maestro — Livskin RevOps MVP
 
-**Versión:** 3.2 · **Fecha:** 2026-04-18 (creación) · **Última actualización:** 2026-05-10 · **Estado:** Vivo (actualizado en cada decisión estructural)
+**Versión:** 3.5 · **Fecha:** 2026-04-18 (creación) · **Última actualización:** 2026-06-02 (Sprint 1 estabilización cerrado 94% + decontaminación docs) · **Estado:** Vivo (actualizado en cada decisión estructural)
 
 > Este documento es la **referencia autoritativa del proyecto**. Cualquier decisión o conversación estratégica debe ser reflejada aquí. Lo que no está escrito aquí no existe para el proyecto.
 
@@ -1386,6 +1386,45 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 ---
 
 ## 19. Changelog
+
+### v3.5 — 2026-06-02 — DECONTAMINACIÓN + AUDIT COMPREHENSIVO
+
+- **Sprint 1 Estabilización CERRADO 94%** (15 de 16 tareas) — backbone determinístico mucho más sólido:
+  - **Concurrencia**: n8n SQLite→Postgres migration (Sprint 1.2 = bottleneck #1 mitigado), distributed locks Redis SETNX en F1/F2/F3/B3 (Sprint 1.3), pg_advisory_xact_lock UPSERT wa-state (Sprint 1.15)
+  - **SPOF mitigation**: PG streaming replica VPS3→VPS2:5433 + DR drill validado (Sprint 1.4 + 1.5)
+  - **Estabilidad**: VPS1 swap + PHP-FPM tune (1.11), PG pool 5/15→20/40 (1.13), CAPI retry exponencial + DLQ (1.8), pg_advisory_lock UPSERT (1.15)
+  - **Security**: gitleaks pre-commit + 6 hooks (1.9), PG-analytics rotada de "livskin" literal (1.10p1)
+  - **Datos**: wa_messages retention 365d (1.6), infra_snapshots audit log (1.7)
+  - **Marketing**: 20 templates Meta APPROVED (1.12)
+- **Pendiente Sprint 1**: 1.10p2 Vtiger DB rotation (requiere downtime planificado)
+- **3 ADRs nuevos**: 0037 Distributed locks Redis SETNX + 0038 PG streaming replica + 0039 n8n SQLite→Postgres migration
+- **4 fixes post-Sprint 1 (auditoría comprehensiva 2026-06-02)**:
+  1. Deploys CI/CD VPS3 (9 días red): fix divergencia git + runbook `fix-deploy-vps3-divergence.md`
+  2. Backups OFF 25 días: exec bit restaurado en git via `update-index --chmod=+x`
+  3. backup-vps2.sh sin n8n DB: actualizado + .gitattributes LF policy
+  4. Runbook DR crítico nuevo: `restore-postgres-backup.md` (gap latente)
+- **Memorias reorganizadas**: 5 nuevas (sprint cierre + system analysis + 2da campaña + 2 doctrinas técnicas) + 1 archivada (Bridge Episode efímero) + MEMORY.md index actualizado
+- **Sistema-mapa.md actualizado**: § 2 catálogo agrega Redis + postgres-replica + n8n PG backend, § 8 secrets agrega REDIS_PASSWORD + PG_REPLICATOR_PASSWORD + N8N_ENCRYPTION_KEY CRITICAL
+- **CLAUDE.md decontaminado**: estado actual canónico al inicio + secciones históricas explícitamente marcadas como log no-autoritativo
+- **Fase 4A status REAL al 2026-06-02**:
+  - 4A.1 ✅ Agenda (2026-05-09, ADR-0035)
+  - 4A.2 ✅ WhatsApp Cloud API productivo (+51947741117, 20 templates APPROVED)
+  - 4A.3 ✅ Bot Yossie v2 rule-based deployed (+ fixes wa_messages + q2 re-ask 2026-05-27)
+  - 4A.3 sub ✅ Workflow A2 (2026-05-10, ADR-0036)
+  - 4A.4 ⏳ Smoke E2E un solo flow real lead WA→cita→venta→CAPI Purchase
+  - 4A.5 ⏳ Email marketing + flujos welcome/post-cita + re-engagement (institucional ✅, herramienta+flows pendientes)
+  - 4A.6 ⏳ Encuentro doctora 3-4h presencial + codificar 12 outputs brand
+- **2da campaña paga**: pausada 2026-05-27 con S/134.58 spent (38.5% cap), 1 lead útil Emilia (soft commit), 0 ventas. Bootstrap principio #13 **sigue ABIERTO** hasta 3ra campaña paga real.
+- **Estado próxima sesión**: Sprint 2 cierre Fase 4A (~40h trabajo + 4h encuentro doctora) o alternativamente Sprint 3 velocidad campaña (~30h).
+
+### v3.4 — 2026-05-24 — SESIÓN MASIVA REMEDIACIÓN
+
+Ver §"Estado al 2026-05-24 cierre" en CLAUDE.md HISTÓRICO. Resumen:
+- 2da campaña FB Ads S/350 en DRAFT
+- Pipeline E2E validado WA→Vtiger→ERP→CAPI Purchase
+- Live patches productivos reconciliados al repo (legacy_forms.py + api_internal_sync.py + formulario.html + 8 workflows n8n)
+- Migration 0009 `is_test` flag aplicada en 5 tablas
+- Test data limpiado cross-system preservando audit_log
 
 ### v1.0 — 2026-04-18
 - **Creación del plan maestro consolidado.**
