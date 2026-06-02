@@ -1,18 +1,48 @@
 {
   "created_at": "2026-06-02T23:30:00-05:00",
+  "last_modified_at": "2026-06-03T00:30:00-05:00",
+  "modification_notes": "Migrado de TRAFFIC + wa.me workaround a Click-to-WhatsApp NATIVO. Page Livskin tiene WA Click-to-Message habilitado con número +51 980 727 888 (doctora). Setup viejo (4 entidades sin data) borrado per doctrina refinada feedback_never_delete_ad_campaigns.",
   "campaign_id": "120244048878820678",
-  "adset_id": "120244048890560678",
-  "creative_id": "1664848044825832",
-  "ad_id": "120244048893980678",
+  "adset_id": "120244049387870678",
+  "creative_id": "1644066400185905",
+  "ad_id": "120244049390270678",
   "image_hashes": {
     "square_1to1": "cb71dfc6dc6408aa1395e26375b3d781",
     "vertical_4to5": "39b633774f757a060dacc6408cc38eab",
     "story_9to16": "688c519852468ea63262b268a30e6f49"
   },
-  "wa_link": "https://wa.me/51980727888?text=Hola%2C%20vi%20su%20publicidad%20de%20tratamientos%20en%20Chalhuahuacho.%20Me%20interesa%20saber%20m%C3%A1s.",
-  "budget_pen": 200,
-  "start_time": "2026-06-03T08:00:00-05:00",
-  "end_time": "2026-06-06T14:00:00-05:00",
-  "status": "PAUSED — pending activation by Dario",
-  "ads_manager_url": "https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=2885433191763149&selected_campaign_ids=120244048878820678"
+  "config": {
+    "objective": "OUTCOME_TRAFFIC",
+    "buying_type": "AUCTION",
+    "destination_type": "WHATSAPP",
+    "promoted_object": {
+      "page_id": "525464061130920"
+    },
+    "is_dynamic_creative": true,
+    "optimization_goal": "CONVERSATIONS",
+    "billing_event": "IMPRESSIONS",
+    "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+    "lifetime_budget_pen": 200,
+    "lifetime_budget_cents": 20000,
+    "start_time": "2026-06-03T08:00:00-05:00",
+    "end_time": "2026-06-06T14:00:00-05:00",
+    "targeting": {
+      "geo": "Chalhuahuacho lat -13.9794 lon -72.3267 + 15km",
+      "age": "18-65",
+      "gender": "female",
+      "placements": "Advantage+ Placements (Meta optimiza)",
+      "advantage_audience_expansion": "OFF"
+    },
+    "cta": "WHATSAPP_MESSAGE",
+    "destination_phone": "+51 980 727 888 (doctora directa via Page WhatsApp Click-to-Message)",
+    "pre_text": "Hola, vi su publicidad de tratamientos en Chalhuahuacho. Me interesa saber más."
+  },
+  "status": "PAUSED — pending activation 2026-06-03 08:00 Lima",
+  "ads_manager_url": "https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=2885433191763149&selected_campaign_ids=120244048878820678",
+  "deleted_drafts": [
+    {"id": "120244048890560678", "type": "adset", "name": "AS — Chalhuahuacho 15km mujeres 18-65 (TRAFFIC+wa.me workaround)", "reason": "Replaced by WHATSAPP native ad set", "had_data": false},
+    {"id": "120244048893980678", "type": "ad", "name": "Ad — Chalhuahuacho banner — multi-ratio", "reason": "Was in deleted ad set", "had_data": false},
+    {"id": "1664848044825832", "type": "creative", "name": "Creative v1 CTA=CONTACT_US", "reason": "Replaced before serving any impression", "had_data": false},
+    {"id": "1524682786116305", "type": "creative", "name": "Creative v2 CTA=WHATSAPP_MESSAGE + wa.me link", "reason": "Replaced by native WhatsApp creative", "had_data": false}
+  ]
 }
