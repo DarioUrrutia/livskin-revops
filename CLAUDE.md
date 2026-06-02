@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.  
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.  
-> Última actualización: **2026-05-24 v3.3 (SESIÓN MASIVA REMEDIACIÓN — campaña FB Ads handoff humano S/350 en DRAFT como 2da campaña paga; pipeline E2E validado WA→Vtiger→ERP→CAPI Purchase; live patches productivos reconciliados al repo (legacy_forms.py + api_internal_sync.py + formulario.html + 8 workflows n8n); migration 0009 `is_test` flag aplicada en 5 tablas; test data limpiado cross-system (ERP+Vtiger+Analytics) preservando audit_log; 134 clientes son histórico boca a boca pre-Livskin RevOps; bootstrap #13 sigue ABIERTO hasta post-mortem 2da campaña)**
+> Última actualización: **2026-05-28 v3.4 (Sprint 1 estabilización 94% completo — 15 de 16 tareas; Redis VPC + distributed locks 4 workflows + PG streaming replica VPS3→VPS2 + DR drill validado + n8n migrated SQLite→Postgres + PG-analytics rotada + wa_messages retention + 18 templates Meta APPROVED + gitleaks/swap/pool/CAPI retry/advisory_lock; backbone determinístico mucho más sólido; pendiente Sprint 1.10 parte 2 Vtiger DB rotation; bootstrap #13 sigue ABIERTO hasta 3ra campaña paga)**
 
 ---
 
@@ -275,6 +275,76 @@ Para mí (Claude Code): si una decisión es **reversible y pequeña**, ejecuto y
 10. **Saltar el trámite WhatsApp Business API.** 5-10 días hábiles de Meta, bloqueo real.
 11. **Tocar VPS en producción sin snapshot previo y sin staging validado.**
 12. **Borrar/modificar historial git** sin autorización explícita.
+
+---
+
+## 📝 Estado al 2026-05-28 cierre (Sprint 1 estabilización 94% completo)
+
+Sesión masiva con 15 de 16 tareas Sprint 1 completas. **Backbone determinístico considerablemente más sólido** post-análisis 2026-05-27.
+
+### Sprint 1 — Estabilización backbone (completado)
+
+| Tarea | Estado | Impacto |
+|---|---|---|
+| 1.1 Redis container VPS2 | ✅ | Infra base (200MB AOF, VPC 10.114.0.2:6379, password-protected) |
+| 1.3 Distributed locks (4 workflows + ERP service) | ✅ | F1/F2/F3/B3 protegidos contra overlap concurrente |
+| 1.4 PG streaming replica VPS3→VPS2 | ✅ | SPOF #2 mitigado; replica continua streaming en VPS2:5433 |
+| 1.5 DR drill validado + runbook | ✅ | Failover documentado, re-validación trimestral |
+| 1.6 wa_messages retention 365d | ✅ | Cron diario 03:30 UTC, DELETE + audit log |
+| 1.7 infra_snapshots audit_log | ✅ | Trazabilidad cron retention 30d |
+| 1.8 CAPI emit retry exponencial + DLQ | ✅ | 3 retries (1s/3s/9s), audit dlq=true cuando fails |
+| 1.9 Pre-commit gitleaks | ✅ | Bloquea secrets pre-commit + 6 hooks adicionales |
+| 1.10 parte 1 PG-analytics rotada | ✅ | Password "livskin" literal eliminada (40-char random) |
+| 1.11 VPS1 swap + PHP-FPM tune | ✅ | RAM disponible 195MB→390MB (2x), 1GB swap |
+| 1.13 PG pool sizing erp-flask | ✅ | 5→20 base, 15→40 max (4x capacidad) |
+| 1.14 A2 drift investigation | ✅ | NO bug — 30 exec/hour exacto |
+| 1.15 pg_advisory_lock UPSERT wa-state | ✅ | Race condition concurrent webhooks fix |
+| **1.2 n8n SQLite→Postgres migration** | ✅ | Bottleneck #1 mitigado (concurrencia MVCC) |
+| 18 templates Meta APPROVED batch | ✅ | Pool listo para 3ra campaña sin esperar Meta 48-72h |
+
+### Pendiente Sprint 1
+
+- **1.10 parte 2 Vtiger DB rotation** (defer — requiere downtime Vtiger planificado)
+
+### Arquitectura post-sprint
+
+```
+VPS1 (livskin-wp)          VPS2 (livskin-ops)              VPS3 (livskin-erp)
+─────────────────          ──────────────────              ─────────────────
+WordPress + GTM            n8n (PG backend NEW!)           ERP Flask (pool 20/40)
+PHP-FPM tuned              postgres-analytics              postgres-data (PRIMARY)
++ swap 1GB                  ├── n8n DB (NEW)                ├── livskin_erp
+RAM avail 390MB             ├── analytics (rotated)          └── livskin_brain
+                            └── metabase                      ▲
+                           Redis 7 (NEW)                       │ WAL streaming
+                            ├── distributed locks               │
+                            └── revops_net                  postgres-replica (NEW)
+                           postgres-replica (NEW)               (en VPS2)
+                            └── streaming standby
+                           Vtiger CRM
+```
+
+### 16 commits Sprint 1 push'd hoy (2026-05-28)
+
+```
+e1faffa feat(n8n): Sprint 1.2 — n8n SQLite → Postgres migration completada
+4a70211 feat(infra): Sprint 1.4+1.5 — PG streaming replica VPS3→VPS2 + DR drill
+7008bdd fix(security): Sprint 1.10 — rotada password postgres-analytics
+190955b feat(infra): Sprint 1.6 — wa_messages retention cron (365d DELETE)
+488493e feat(n8n): Sprint 1.3 — workflows F1/F2/F3/B3 con distributed lock guard
+e7a3118 feat(infra): Sprint 1.3 — distributed lock backbone (Redis SETNX wrapper)
+fc91c97 feat(infra): Sprint 1.1 — Redis container VPS2 para distributed locks
+fef5be6 feat(infra+stability): Sprint 1 estabilizacion batch (S1.7-1.15 batch)
+```
+
+### Próxima sesión recomendada
+
+**Sprint 2 — Cerrar Fase 4A**:
+- 4A.4 Smoke E2E un solo flow (lead WA → cita → asistencia → venta → CAPI Purchase)
+- 4A.5 Email marketing tool + flujos welcome/post-cita + re-engagement queue
+- 4A.6 Interludio doctora presencial (3-4h, workbook listo)
+
+O Sprint 3 — Velocidad campaña (YAML config + Marketing API + dashboard live).
 
 ---
 
