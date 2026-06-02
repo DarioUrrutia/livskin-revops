@@ -732,7 +732,8 @@ secrets_inventory:
 
   - name: postgres-analytics password
     location: VPS 2 .env file + Bitwarden
-    current_value: "livskin" literal (DEUDA TÉCNICA — rotar en Bloque 0.7)
+    last_rotated: 2026-05-28 (Sprint 1.10) — 40-char random base64
+    rotation_target: anual
 
   - name: vtiger-db root + user passwords
     location: VPS 2 .env + Bitwarden
