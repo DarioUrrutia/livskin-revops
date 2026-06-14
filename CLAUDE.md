@@ -2,11 +2,34 @@
 
 > Este archivo es leído automáticamente por Claude Code al iniciar cada sesión.
 > Su propósito: cargar en memoria el contexto operativo suficiente para trabajar sin fricción.
-> **Última actualización canónica: 2026-06-02 v3.6** — scope reducido + decontaminación. Email marketing (4A.5) + Interludio doctora (4A.6) + "Velocidad campaña" Sprint 3 **DIFERIDOS fuera del scope inmediato**. Foco actual: cerrar mínimo viable para lanzar 3ra campaña FB Ads con confianza.
+> **Última actualización canónica: 2026-06-14 v3.7** — 🚀 **3ra campaña Chalhuahuacho EXITOSA + Bootstrap principio #13 CIERRA**. 62 conversaciones, 10 citas confirmadas, ROAS proyectado 13-44x. Hipótesis fundamentales validadas con datos reales. Modelo replicable identificado. Sesión estratégica agentes IA desbloqueada (Doctrina #14).
 
 ---
 
-## 🚦 ESTADO ACTUAL AL 2026-06-02 (canónico — leer ANTES de cualquier tarea)
+## 🚦 ESTADO ACTUAL AL 2026-06-14 (canónico — leer ANTES de cualquier tarea)
+
+### 🚀 HITO MAYOR: Bootstrap principio #13 CIERRA con 3ra campaña EXITOSA
+
+**3ra campaña paga Chalhuahuacho (Apurímac)** finalizada 2026-06-06:
+- S/91.34 spent (de S/200 cap, 45% usado — Meta paró al agotar audiencia)
+- **62 conversaciones WhatsApp** iniciadas (vs 8 en 2da Wanchaq)
+- **10 citas confirmadas** reales (vs 0-1 en 2da)
+- CPL: S/1.47/conversación, **S/9.13/cita**
+- CTR 2.15%, conversion click→msg **8.6%** (vs 0.56% en 2da)
+- **ROAS proyectado 13-44x** (vs 0x en 2da)
+
+**Hipótesis fundamentales VALIDADAS con datos reales**:
+- ✅ Mercado virgen + atención 1-día presencial + WA nativo = fórmula ganadora
+- ✅ Modelo replicable identificado (pueblos rurales Andes)
+- ✅ Sistema técnico operó sin bugs P0 durante campaña
+- ✅ Bootstrap CIERRA → modos PROYECTO/CAMPAÑA separados estrictos, doctrina marca ascendable v0.X→v1.0
+
+**Insights ROMPE-PARADIGMAS** (memoria `feedback_learnings_no_son_universalizables_entre_mercados`):
+- ❌ Edad sweet spot NO es universal: Wanchaq=45-64, Chalhuahuacho=18-34 (OPUESTO)
+- ❌ Reels NO es universalmente malo: Wanchaq=0 conv, Chalhuahuacho=17 conv (3er placement)
+- ✅ Instagram=ruido total en mercado rural (0 conv)
+
+Detalles: [post-mortem](docs/campaigns/2026-06-chalhuahuacho-research/post-mortem.md), [memoria 3ra campaña EXITOSA](~/.claude/projects/.../memory/project_third_paid_campaign_2026_06_chalhuahuacho_EXITOSA.md), [memoria bootstrap CERRADO](~/.claude/projects/.../memory/project_bootstrap_principio_13_CERRADO_2026_06_14.md).
 
 ### Sprint 1 Estabilización: 94% completo (15 de 16 tareas)
 
@@ -44,15 +67,22 @@
 | **4A.2** WhatsApp Cloud API doctora | ✅ COMPLETO | `+51947741117` productivo, 20 templates APPROVED, webhook activo |
 | **4A.3** Bot Yossie v2 rule-based | ✅ COMPLETO | State machine + buttons + handoff + Gap K + wa_messages logging + q2 re-ask |
 | **4A.3 sub** Workflow A2 sync ERP→Vtiger | ✅ COMPLETO 2026-05-10 | ADR-0036 |
-| **4A.4** Smoke E2E un solo flow | ⏳ **PENDIENTE** | Único bloqueo real antes de 3ra campaña. Falta correr 1 flow real lead WA→cita→asistencia→venta→CAPI Purchase para validar pipeline end-to-end |
-| ~~**4A.5** Email marketing + flujos~~ | 🚫 **DIFERIDO indefinidamente** | Decisión Dario 2026-06-02: NO emails ahora. Email institucional `info@livskin.site` queda funcional para correspondencia humana. Marketing tool + flujos automatizados NO se implementan. |
-| ~~**4A.6** Interludio doctora presencial~~ | 🚫 **DIFERIDO indefinidamente** | Decisión Dario 2026-06-02: NO encuentro doctora ahora. Workbook 89KB queda guardado para futuro si se decide ejecutar. Bot Yossie + copy de campañas operará con voice actual (sin v1.0 doctora-firmado). |
+| **4A.4** Smoke E2E un solo flow | ✅ **VALIDADO DE FACTO** | 3ra campaña Chalhuahuacho fue E2E real con 62 conversaciones + 10 citas. Pipeline ad→WA→doctora→cita confirmada VALIDADO. Solo falta capturar asistencia→venta→CAPI Purchase para el caso "flujo completo formal" (PENDIENTE registrar 10 citas + ventas en ERP). |
+| ~~**4A.5** Email marketing + flujos~~ | 🚫 **DIFERIDO indefinidamente** | Decisión Dario 2026-06-02: NO emails ahora. Email institucional `info@livskin.site` queda funcional para correspondencia humana. |
+| ~~**4A.6** Interludio doctora presencial~~ | 🚫 **DIFERIDO indefinidamente** | Decisión Dario 2026-06-02: NO encuentro doctora ahora. PERO con datos reales de 3ra campaña ya hay suficiente para ascender doctrina marca v0.X→v1.0 sin encuentro presencial. |
 
-### Bootstrap principio #13: ABIERTO hasta 3ra campaña paga
+### Bootstrap principio #13: ✅ **CIERRA 2026-06-14**
 
 - **1ra (Bridge Episode 2026-05-03→08)**: 6 leads, insuficiente. ARCHIVED.
-- **2da (Click-to-WA 2026-05-25→27)**: **FINALIZADA**. S/134.58 spent (38.5% cap), 1 lead útil Emilia (soft commit), 0 ventas. Post-mortem cerrado.
-- **3ra (próxima)**: cerrará bootstrap si campaña ejecuta + post-mortem revela hipótesis validadas. **Pre-requisitos para lanzar 3ra**: ver sección "Próxima sesión" más abajo.
+- **2da (Click-to-WA 2026-05-25→27)**: FINALIZADA. S/134.58 spent, 1 lead útil Emilia, 0 ventas. NO cerró bootstrap.
+- **3ra (Chalhuahuacho 2026-06-03→06)**: 🚀 **EXITOSA**. S/91.34 spent, 62 conversaciones, **10 citas confirmadas**, ROAS proyectado 13-44x. **CIERRA bootstrap**.
+
+**Consecuencias inmediatas del cierre**:
+- Modos PROYECTO/CAMPAÑA ahora separados estrictos (no más mezclar contextos)
+- Doctrina marca ascendable v0.X→v1.0 con datos reales validados
+- **Sesión estratégica agentes IA DESBLOQUEADA** (Doctrina #14)
+- Brand Orchestrator V0 BOOTSTRAP queda disponible (discrecional Dario)
+- Replicación modelo Chalhuahuacho a otros mercados habilitada
 
 ### Arquitectura actual (post Sprint 1)
 
@@ -90,36 +120,26 @@ RAM avail 390MB (vs 195MB pre)        ├── metabase ✓                    
 - 🆕 [`project_system_analysis_4_dimensions_2026_05_27`](~/.claude/projects/.../memory/project_system_analysis_4_dimensions_2026_05_27.md)
 - 🆕 [`project_second_paid_campaign_2026_05_draft`](~/.claude/projects/.../memory/project_second_paid_campaign_2026_05_draft.md)
 
-### Pre-requisitos para lanzar 3ra campaña FB Ads
+### Próximos pasos post-cierre bootstrap (decisión Dario)
 
-**Objetivo único de la próxima sesión**: dejar el sistema listo para lanzar 3ra campaña paga FB Ads con confianza, aprendizajes 2da campaña aplicados. **Sin emails. Sin interludio. Sin tooling de velocidad campaña.**
+**El proyecto entró fase nueva** post-cierre bootstrap. 4 caminos estratégicos posibles (no excluyentes):
 
-**Checklist mínimo (estimado ~6-10h trabajo)**:
+| Camino | Descripción | Esfuerzo |
+|---|---|---|
+| **A) Replicar Chalhuahuacho** | Lanzar misma fórmula en otro pueblo rural (Anta, Sicuani, Limatambo, Quillabamba, Andahuaylas). Aplicar config validada (edad 18-44, sin IG, hyper-local). | ~2-3h setup + corrida 3-5 días |
+| **B) Re-correr Wanchaq con learnings** | Volver al mercado urbano con insights de Chalhuahuacho (probar Reels, probar 18-34, hyper-local). Validar si funcionó en rural también funciona en urbano. | ~2-3h setup + corrida 5 días |
+| **C) Sesión estratégica agentes IA** | Doctrina #14: ahora desbloqueada. Diseñar Brand Orchestrator V1 (5 subagentes), Conversation Agent post-Yossie, Infra+Security agent. 4-8h totales divisibles en 1-3 sesiones. | 4-8h estratégico |
+| **D) Brand Orchestrator V0 BOOTSTRAP** | Excepción discrecional pre-sesión estratégica. Arrancar Brand Orchestrator monolítico (solo briefs+copy) para alimentar campañas próximas. | 6-10h build |
 
-| # | Tarea | Estado actual | Acción necesaria |
-|---|---|---|---|
-| 1 | **Smoke E2E un solo flow real** (4A.4) | ⏳ Pendiente | Lead test → WA → bot → cita en ERP → asistencia marcada → venta registrada → CAPI Purchase emitido → Meta confirma evento. Validar pipeline E2E con cliente prueba. ~3h |
-| 2 | **Fixes derivados post-mortem 2da campaña** | ⏳ Pendiente | 3ra campaña usa SOLO 3 ad sets (PRP/Limpieza/AH — sin Botox que floppeó en 2da). Edad 35-64 only (no 18-34). Solo FB Feed + Stories (no Reels/InStream). Distribución budget 40/35/25 PRP/Limpieza/AH. ⚠️ **2da campaña queda pausada en Ads Manager — NO borrar, su data es histórica valiosa**. ~1h diseño |
-| 3 | **Templates Meta — verificar pool listo** | ✅ 20 APPROVED | NO acción (ya hecho Sprint 1.12) |
-| 4 | **Backups funcionando** | ✅ Restablecidos 2026-06-02 | NO acción (cron activo) |
-| 5 | **Deploys CI/CD verdes** | ✅ Verde post-fix 2026-06-02 | NO acción (último deploy success 18:03) |
-| 6 | **Pre-flight checklist 3ra campaña** | ⏳ Pendiente | Verificar: account quality Meta, pixel firing, Custom Audiences actualizadas con clientes ERP, copy bot OK, F1 follow-up timing correcto. ~1h |
-| 7 | **Configurar 3ra campaña en Ads Manager** | ⏳ Pendiente | Setup manual UI con cambios punto #2. ~2h |
-| 8 | **Lanzar 3ra campaña** | ⏳ Pendiente | Activate campaña + smoke test mobile clic→WA→bot. ~30 min |
-| 9 | **Monitorear primeras 24h** | — | Verificar bot responde + leads llegan al ERP. Daily report |
+### Pendientes operativos menores
 
-**Post 3ra campaña**:
-- Si conversion mejora vs 2da → bootstrap principio #13 CIERRA (con post-mortem)
-- Si NO mejora → análisis de root cause (creative, audiencia, copy, oferta)
-
-### Lo que NO está en scope ahora (diferido explícitamente)
-
-| Item | Razón |
-|---|---|
-| Email marketing automatizado (4A.5) | Decisión Dario 2026-06-02. No es necesario para captación inicial. |
-| Interludio presencial doctora (4A.6) | Decisión Dario 2026-06-02. Workbook queda para futuro. |
-| Sprint 3 "Velocidad campaña" (YAML + Marketing API + dashboard live) | Diferido. Era plan para reducir setup-campaña 28-35h → 10-15h via tooling. Se evalúa después de 3-4 campañas pagas exitosas, cuando los patterns sean claros. |
-| Sprint 1.10 parte 2 Vtiger DB rotation | Defer. Requiere downtime planificado, no bloquea operación. |
+| Item | Severidad | Acción |
+|---|---|---|
+| Trackear **asistencias reales** 10 citas Chalhuahuacho | 🟡 P1 | Registrar en ERP cuántas atendieron sábado 06/06 |
+| Registrar **ventas reales** de las que asistieron | 🟡 P1 | Capturar revenue real → calcular ROAS final |
+| **Emit CAPI Purchase** por cada venta confirmada | 🟡 P1 | Cierra atribución full-funnel Meta |
+| Sprint 1.10p2 Vtiger DB rotation | 🟢 P2 | Defer continúa |
+| Doctrina marca ascender a `docs/brand/voice-v1.md` etc. | 🟢 P2 | Bootstrap cerrado lo habilita pero no es urgente |
 
 ---
 

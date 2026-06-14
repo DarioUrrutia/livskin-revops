@@ -1,6 +1,6 @@
 # Plan Maestro — Livskin RevOps MVP
 
-**Versión:** 3.6 · **Fecha:** 2026-04-18 (creación) · **Última actualización:** 2026-06-02 (scope reducido — 4A.5 email + 4A.6 interludio + Sprint 3 velocidad campaña DIFERIDOS) · **Estado:** Vivo (actualizado en cada decisión estructural)
+**Versión:** 3.7 · **Fecha:** 2026-04-18 (creación) · **Última actualización:** 2026-06-14 (🚀 3ra campaña Chalhuahuacho EXITOSA + Bootstrap #13 CIERRA) · **Estado:** Vivo (actualizado en cada decisión estructural)
 
 > Este documento es la **referencia autoritativa del proyecto**. Cualquier decisión o conversación estratégica debe ser reflejada aquí. Lo que no está escrito aquí no existe para el proyecto.
 
@@ -1386,6 +1386,54 @@ Principio 6 del proyecto: "respeto al equipo humano — la tecnología está al 
 ---
 
 ## 19. Changelog
+
+### v3.7 — 2026-06-14 — 🚀 BOOTSTRAP #13 CIERRA + 3ra CAMPAÑA EXITOSA
+
+**Hito mayor**: Tras post-mortem 3ra campaña paga Chalhuahuacho **EXITOSA**, bootstrap principio #13 CIERRA con hipótesis fundamentales validadas con datos reales.
+
+**3ra campaña paga Chalhuahuacho (Apurímac) — finalizada 2026-06-06**:
+- S/91.34 spent (de S/200 cap, 45% usado — Meta paró al agotar audiencia)
+- **62 conversaciones WhatsApp iniciadas** (vs 8 en 2da Wanchaq)
+- **10 citas confirmadas** reales (vs 0-1 en 2da Wanchaq)
+- CPL conversación: S/1.47, CPL cita: **S/9.13**
+- CTR 2.15%, conversion click→msg 8.6% (vs 0.56% en 2da)
+- **ROAS proyectado conservador: 13.4x**, optimista: 44.8x
+- Detalles: `docs/campaigns/2026-06-chalhuahuacho-research/post-mortem.md`
+
+**Insights ROMPE-PARADIGMAS (memoria `feedback_learnings_no_son_universalizables_entre_mercados`)**:
+- Edad sweet spot NO es universal: Wanchaq urbano=45-64 / Chalhuahuacho rural=18-34 (OPUESTO)
+- Reels NO es universalmente malo: Wanchaq=0 conv / Chalhuahuacho=17 conv (3er placement)
+- Cada mercado requiere validación demográfica + placement propia
+- Instagram=ruido total en rural Apurímac (cross-validable)
+
+**Hipótesis CONFIRMADAS estructurales (sí universalizables)**:
+- Mercado virgen + atención presencial 1-día + Click-to-WA nativo = fórmula ganadora replicable
+- WHATSAPP_MESSAGE CTA + destination_type=WHATSAPP + promoted_object.page_id > wa.me workaround
+- LINK_CLICKS optimization > CONVERSATIONS (más barato + más volumen con buen targeting)
+- Hyper-local 15km (ignorar warning Meta) > radio amplio
+
+**Consecuencias inmediatas del cierre bootstrap #13**:
+- Modos PROYECTO / CAMPAÑA ahora SEPARADOS ESTRICTOS (no más mezclar contextos)
+- Doctrina marca ascendable v0.X → v1.0 con datos reales (sin necesitar Interludio presencial)
+- **Sesión estratégica agentes IA DESBLOQUEADA** (Doctrina #14)
+- Brand Orchestrator V0 BOOTSTRAP queda disponible como excepción discrecional
+- Replicación modelo Chalhuahuacho a otros mercados rurales habilitada
+
+**Memorias creadas**:
+- `project_third_paid_campaign_2026_06_chalhuahuacho_EXITOSA.md`
+- `feedback_learnings_no_son_universalizables_entre_mercados.md`
+- `project_bootstrap_principio_13_CERRADO_2026_06_14.md`
+
+**Estado Fase 4A actualizado**:
+- 4A.4 Smoke E2E ✅ **VALIDADO DE FACTO** vía 3ra campaña (62 conv + 10 citas reales = pipeline E2E real)
+  - Solo falta capturar asistencias + ventas + CAPI Purchase de los 10 leads
+- 4A.5 + 4A.6 siguen DIFERIDOS (decisión Dario 2026-06-02 confirmada — bootstrap cerrado sin necesitarlos)
+
+**Próximos pasos estratégicos (decisión Dario)**:
+1. Replicar modelo Chalhuahuacho en otro pueblo rural
+2. Re-correr Wanchaq con learnings nuevos (probar 18-34 + Reels)
+3. Sesión estratégica agentes IA (Doctrina #14 desbloqueada)
+4. Brand Orchestrator V0 BOOTSTRAP (excepción discrecional)
 
 ### v3.6 — 2026-06-02 (PM) — SCOPE REDUCIDO
 
