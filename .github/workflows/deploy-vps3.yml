@@ -3,8 +3,12 @@ name: Deploy to VPS 3 (livskin-vps-erp)
 # VPS 3 hosts: ERP refactorizado + Postgres + pgvector (brain) + embeddings + nginx
 # Path: /srv/livskin-revops/infra/docker/<servicio>/ (paths legacy — ver
 # infra/docker/README.md sobre asimetria intencional con vps2-ops/)
-# Last validated: 2026-06-02 — fix divergencia git local en VPS3 (15 deploys fallidos
-# 2026-05-24 → 2026-06-02). Root cause + fix en docs/runbooks/fix-deploy-vps3-divergence.md
+# Last validated: 2026-07-15 — 2do incident divergencia git VPS3: cambios manuales
+# residuales (chmod +x / sed CRLF del 2026-06-02) quedaron sin commitear en el VPS y
+# ningún deploy corrió en 6 semanas para detectarlo. Fix: runbook
+# docs/runbooks/fix-deploy-vps3-divergence.md (reset --hard origin/main).
+# Lección: tras CUALQUIER cambio manual en /srv/livskin-revops/, ejecutar
+# `git reset --hard origin/main` apenas el cambio equivalente esté en git.
 
 on:
   push:
