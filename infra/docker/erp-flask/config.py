@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     # Si False: todos los endpoints /api/appointments retornan 404 + UI no muestra pestaña.
     agenda_feature_enabled: bool = False
 
+    # ADR-0040 — Corrección controlada de registros (2026-07-15).
+    # Permite PATCH de campos NO-monetarios (fecha/notas/proxima_cita/categoria)
+    # en ventas y pagos ya guardados, con audit trail before/after.
+    # Si False: endpoints /api/ventas/<id>/corregir retornan 404 + Libro no muestra botón.
+    corrections_enabled: bool = False
+
     @property
     def database_url(self) -> str:
         return (

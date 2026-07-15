@@ -101,6 +101,12 @@ Notas históricas relevantes:
 | [0038](0038-postgres-streaming-replica-vps2.md) | Postgres streaming replica VPS3→VPS2 (failover manual) | ✅ | Sprint 1.4 |
 | [0039](0039-n8n-backend-postgres-migration.md) | Migración n8n SQLite → Postgres backend | ✅ | Sprint 1.2 |
 
+### Operación continua (post-bootstrap)
+
+| ADR | Título | Estado | Fase |
+|---|---|---|---|
+| [0040](0040-correccion-controlada-registros-erp.md) | Corrección controlada de registros ERP (campos no-monetarios + audit trail) + guard CAPI backfill | ✅ | Post-bootstrap |
+
 ### Agentes IA — supersedida por doctrina #14 (2026-05-10)
 
 | ADR | Título | Estado | Fase |
@@ -178,7 +184,7 @@ Decisiones conscientes de NO abordar en el MVP. Documentadas para evitar re-aper
 
 ## Estadísticas (al 2026-05-28)
 
-- **25 ADRs físicos** verificados (físicamente como archivo `.md`)
+- **26 ADRs físicos** verificados (físicamente como archivo `.md`)
 - **23 ADRs ✅ aprobadas** (operativas)
 - **0 ADRs 💤 diferidas** (0034 ya pasó a 🔄 Supersedida 2026-05-10)
 - **1 ADR 🔄 supersedida** (0034 por doctrina #14)
@@ -189,4 +195,4 @@ Decisiones conscientes de NO abordar en el MVP. Documentadas para evitar re-aper
 
 ---
 
-**Última actualización:** 2026-05-28 (Sprint 1 estabilización backbone — 3 ADRs retroactivos agregados: 0037, 0038, 0039)
+**Última actualización:** 2026-07-15 (ADR-0040 corrección controlada registros ERP + guard CAPI backfill)

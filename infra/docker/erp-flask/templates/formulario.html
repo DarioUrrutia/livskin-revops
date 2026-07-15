@@ -1468,6 +1468,8 @@ let itemCount = 0;
 const CLIENTES_CODIGOS = {{ clientes_codigos | tojson }};
 const CLIENTES_DATA    = {{ clientes_data    | tojson }};
 const NEXT_CLIENT_NUM  = {{ next_client_num }};
+// ADR-0040 — corrección controlada en Libro (fecha/notas/etc, nunca montos)
+const CORRECCIONES_ENABLED = {{ 'true' if corrections_enabled else 'false' }};
 
 // Configuración dinámica cargada desde Google Sheets (hoja "Listas")
 let APP_CONFIG = { tipos: [], categorias: {}, areas: [] };
@@ -3682,11 +3684,35 @@ document.querySelectorAll('form').forEach(form => {
     });
 });
 
-// Fechas de hoy por defecto
-['fecha-venta', 'fecha-gasto', 'fecha-pago'].forEach(id => {
+// Fechas de hoy por defecto (gasto y pago siempre hoy)
+['fecha-gasto', 'fecha-pago'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.valueAsDate = new Date();
 });
+
+// Fecha de VENTA con memoria "sticky" (ADR-0040, incidente 2026-07-15):
+// al ingresar lotes históricos, la fecha default (hoy) era un footgun — se
+// olvidaba cambiarla y la venta quedaba mal fechada. Ahora: si la sesión ya
+// envió una venta, se precarga ESA fecha y se resalta si difiere de hoy.
+(function initFechaVentaSticky() {
+    const el = document.getElementById('fecha-venta');
+    if (!el) return;
+    const hoyISO = new Date().toISOString().slice(0, 10);
+    const guardada = sessionStorage.getItem('ultima_fecha_venta');
+    el.value = guardada || hoyISO;
+    if (el.value !== hoyISO) {
+        // Highlight visual: la fecha precargada NO es hoy (modo backfill)
+        el.style.background = '#fff3cd';
+        el.style.border = '2px solid #e67e22';
+        el.title = 'Fecha recordada de tu última venta (distinta de hoy) — verifícala';
+    }
+    const formVenta = document.getElementById('form-venta');
+    if (formVenta) {
+        formVenta.addEventListener('submit', () => {
+            if (el.value) sessionStorage.setItem('ultima_fecha_venta', el.value);
+        });
+    }
+})();
 
 // Cargar primer ítem al iniciar
 cargarConfig().then(() => agregarItem());
@@ -3986,7 +4012,12 @@ function mostrarDetalleLibro(idx) {
             <div style="background:#f8f8f8;padding:10px;border-radius:6px;margin-top:6px;font-family:monospace;font-size:11px;line-height:1.8;word-break:break-all;">
                 ${Object.entries(raw).map(([k,v]) => `<strong>${k}</strong>=${v}`).join(' · ')}
             </div>
-        </details>`;
+        </details>
+        ${CORRECCIONES_ENABLED ? `
+        <button onclick="abrirCorreccionLibro(${idx})" style="margin-top:14px;width:100%;padding:10px;background:#fff;border:2px solid #e67e22;color:#e67e22;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">
+            ✏️ Corregir fecha / notas / próxima cita / categoría
+        </button>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;text-align:center;">Los montos no son editables — queda registro de cada corrección</div>` : ''}`;
 
     } else if (m._tipo === 'pago') {
         // Buscar la venta asociada a este COD_ITEM
@@ -4035,7 +4066,12 @@ function mostrarDetalleLibro(idx) {
             <div style="background:#f8f8f8;padding:10px;border-radius:6px;margin-top:6px;font-family:monospace;font-size:11px;line-height:1.8;word-break:break-all;">
                 ${Object.entries(raw).map(([k,v]) => `<strong>${k}</strong>=${v}`).join(' · ')}
             </div>
-        </details>`;
+        </details>
+        ${CORRECCIONES_ENABLED ? `
+        <button onclick="abrirCorreccionLibro(${idx})" style="margin-top:14px;width:100%;padding:10px;background:#fff;border:2px solid #e67e22;color:#e67e22;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">
+            ✏️ Corregir fecha / notas
+        </button>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;text-align:center;">El monto no es editable — queda registro de cada corrección</div>` : ''}`;
 
     } else if (m._tipo === 'gasto') {
         html = `
@@ -4072,6 +4108,101 @@ function mostrarDetalleLibro(idx) {
 
 function cerrarDetalleLibro() {
     document.getElementById('libro-detalle-overlay').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ═══ CORRECCIÓN CONTROLADA (ADR-0040) — solo campos no-monetarios ════
+// ══════════════════════════════════════════════════════════════════════
+
+function abrirCorreccionLibro(idx) {
+    const m = libroFiltrado[idx];
+    if (!m || (m._tipo !== 'venta' && m._tipo !== 'pago')) return;
+    const raw = m._raw;
+    const esVenta = m._tipo === 'venta';
+    const codigo = esVenta ? raw.cod_item : raw.cod_pago;
+
+    let html = `
+    <div style="font-size:11px;text-transform:uppercase;color:#e67e22;font-weight:bold;letter-spacing:1px;margin-bottom:8px;">Corregir ${esVenta ? 'Venta' : 'Pago'}</div>
+    <div style="font-size:15px;font-weight:bold;margin-bottom:2px;">${codigo}</div>
+    <div style="font-size:12px;color:#888;margin-bottom:14px;">${raw.cliente || ''} · S/ ${Math.round(esVenta ? raw.total : raw.monto)} <span style="color:#bbb;">(monto no editable)</span></div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="font-size:12px;font-weight:bold;color:#555;">Fecha
+            <input type="date" id="corr-fecha" value="${raw.fecha || ''}" style="display:block;width:100%;padding:8px;margin-top:3px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+        </label>
+        <label style="font-size:12px;font-weight:bold;color:#555;">Notas
+            <input type="text" id="corr-notas" value="${(raw.notas || '').replace(/"/g, '&quot;')}" placeholder="(vacío)" style="display:block;width:100%;padding:8px;margin-top:3px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+        </label>`;
+    if (esVenta) {
+        html += `
+        <label style="font-size:12px;font-weight:bold;color:#555;">Próxima cita
+            <input type="date" id="corr-proxima-cita" value="${raw.proxima_cita || ''}" style="display:block;width:100%;padding:8px;margin-top:3px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+        </label>
+        <label style="font-size:12px;font-weight:bold;color:#555;">Categoría
+            <input type="text" id="corr-categoria" value="${(raw.categoria || '').replace(/"/g, '&quot;')}" style="display:block;width:100%;padding:8px;margin-top:3px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+        </label>`;
+    }
+    html += `
+    </div>
+    <div id="corr-error" style="color:#C0392B;font-size:12px;margin-top:8px;display:none;"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+        <button onclick="mostrarDetalleLibro(${idx})" style="flex:1;padding:10px;background:#f5f5f5;border:1px solid #ccc;border-radius:8px;font-size:13px;cursor:pointer;">Cancelar</button>
+        <button onclick="enviarCorreccionLibro(${idx})" style="flex:1;padding:10px;background:#e67e22;border:none;color:#fff;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">Guardar corrección</button>
+    </div>
+    <div style="font-size:11px;color:#aaa;margin-top:8px;text-align:center;">Se guardará quién corrigió, cuándo y los valores anteriores</div>`;
+
+    document.getElementById('libro-detalle-contenido').innerHTML = html;
+}
+
+function enviarCorreccionLibro(idx) {
+    const m = libroFiltrado[idx];
+    if (!m) return;
+    const raw = m._raw;
+    const esVenta = m._tipo === 'venta';
+    const codigo = esVenta ? raw.cod_item : raw.cod_pago;
+    const url = esVenta ? `/api/ventas/${codigo}/corregir` : `/api/pagos/${codigo}/corregir`;
+
+    // Solo enviar campos que CAMBIARON (PATCH semántico)
+    const body = {};
+    const nuevaFecha = document.getElementById('corr-fecha')?.value || '';
+    if (nuevaFecha && nuevaFecha !== (raw.fecha || '')) body.fecha = nuevaFecha;
+    const nuevasNotas = document.getElementById('corr-notas')?.value ?? '';
+    if (nuevasNotas !== (raw.notas || '')) body.notas = nuevasNotas;
+    if (esVenta) {
+        const nuevaCita = document.getElementById('corr-proxima-cita')?.value || '';
+        if (nuevaCita !== (raw.proxima_cita || '')) body.proxima_cita = nuevaCita;
+        const nuevaCat = document.getElementById('corr-categoria')?.value ?? '';
+        if (nuevaCat !== (raw.categoria || '')) body.categoria = nuevaCat;
+    }
+
+    const errEl = document.getElementById('corr-error');
+    if (Object.keys(body).length === 0) {
+        errEl.textContent = 'No hay cambios que guardar.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    })
+        .then(r => r.json().then(data => ({ status: r.status, data })))
+        .then(({ status, data }) => {
+            if (status !== 200) {
+                errEl.textContent = data.description || data.message || `Error ${status} al corregir.`;
+                errEl.style.display = 'block';
+                return;
+            }
+            // Éxito: invalidar cache y recargar Libro
+            libroData = null;
+            cerrarDetalleLibro();
+            cargarLibro();
+        })
+        .catch(() => {
+            errEl.textContent = 'Error de conexión al guardar la corrección.';
+            errEl.style.display = 'block';
+        });
 }
 
 function limpiarFiltrosLibro() {

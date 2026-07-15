@@ -24,14 +24,17 @@ KNOWN_ACTIONS = {
     "auth.logout_expired",
     "auth.password_changed",
     "auth.password_reset_by_admin",
-    # Venta (3)
+    # Venta (5)
     "venta.created",
     "venta.updated",
     "venta.deleted",
-    # Pago (3)
+    "venta.corrected",          # corrección controlada campos no-monetarios (ADR-0040)
+    "venta.corrected_manual",   # corrección SQL directa documentada (hotfix)
+    # Pago (4)
     "pago.created",
     "pago.updated",
     "pago.deleted",
+    "pago.corrected",           # corrección controlada campos no-monetarios (ADR-0040)
     # Gasto (3)
     "gasto.created",
     "gasto.updated",
@@ -85,6 +88,7 @@ KNOWN_ACTIONS = {
     # Tracking (Mini-bloque 3.4) — CAPI emission server-side via n8n
     "tracking.capi_event_emitted",  # event Lead/Schedule/Purchase enviado a Meta via n8n exitosamente
     "tracking.capi_event_failed",   # n8n unreachable o Meta retornó 4xx/5xx — non-blocking
+    "tracking.capi_event_skipped_backfill",  # venta histórica (fecha >7d atrás) — Purchase NO emitido (2026-07-15)
     # Appointment (ADR-0035, Fase 4A) — modulo agenda minima ERP
     "appointment.created",
     "appointment.updated",

@@ -120,6 +120,8 @@ def index() -> str:
         messages=messages,
         # ADR-0035 — feature flag para mostrar/ocultar pestaña AGENDA
         agenda_feature_enabled=getattr(settings, "agenda_feature_enabled", False),
+        # ADR-0040 — feature flag botón Corregir en panel detalle del Libro
+        corrections_enabled=getattr(settings, "corrections_enabled", False),
         leads_pendientes=leads_pendientes,
         leads_sin_cita=leads_sin_cita,
     )

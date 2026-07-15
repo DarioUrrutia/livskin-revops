@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import BigInteger, CheckConstraint, Date, ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, Date, ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base, TimestampMixin
@@ -47,6 +47,10 @@ class Venta(Base, TimestampMixin):
     descuento: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0"))
 
     notas: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Migración 0009 (2026-05-24) — smoke tests marcan is_test=true; dashboards
+    # filtran WHERE is_test = false. Alineado al ORM el 2026-07-15 (antes solo DB).
+    is_test: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     created_by: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("users.id"), nullable=True

@@ -42,6 +42,7 @@ def _venta_row(v: Venta) -> dict[str, Any]:
         "tc": str(v.tc) if v.tc else "",
         "precio_lista": _f(v.precio_lista),
         "descuento": _f(v.descuento or 0),
+        "notas": v.notas or "",  # ADR-0040 — precarga del modal de corrección
     }
 
 

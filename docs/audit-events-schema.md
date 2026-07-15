@@ -84,14 +84,17 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 | `venta.created` | POST /venta exitoso | `{cliente, cod_items, items_count, credito_generado, abonos_deudas}` |
 | `venta.updated` | UPDATE rare en MVP | `{}` (con before/after_state) |
 | `venta.deleted` | Solo SQL admin | `{reason}` |
+| `venta.corrected` | PATCH /api/ventas/<cod_item>/corregir (ADR-0040) | before/after_state con campos corregidos (solo no-monetarios) |
+| `venta.corrected_manual` | Corrección SQL directa documentada (hotfix excepcional) | `{campo, antes, despues, motivo, operador, metodo}` |
 
-### pago.* (3)
+### pago.* (4)
 
 | Action | Cuándo | Metadata |
 |---|---|---|
 | `pago.created` | POST /pagos | `{cliente, cod_items, fecha}` |
 | `pago.updated` | Rare | `{}` |
 | `pago.deleted` | Solo SQL admin | `{}` |
+| `pago.corrected` | PATCH /api/pagos/<cod_pago>/corregir (ADR-0040) | before/after_state con campos corregidos (fecha/notas) |
 
 ### gasto.* (3)
 
@@ -175,6 +178,7 @@ a nivel DB (migration 0003). Ni `postgres` superuser puede modificar entries.
 |---|---|---|
 | `tracking.capi_event_emitted` | capi_emitter_service (n8n [G3] → Meta CAPI) | `{event_name, fbclid, event_id, response_code}` |
 | `tracking.capi_event_failed` | idem ante error 4xx/5xx/network | `{event_name, error_code, error_message}` |
+| `tracking.capi_event_skipped_backfill` | Venta con fecha >7 días atrás (backfill histórico) — Purchase NO emitido para no contaminar atribución Meta (2026-07-15) | `{reason, fecha_venta, dias_atras, umbral_dias}` |
 | `tracking.vtiger_leadstatus_synced` | n8n Workflow [A2] update Vtiger leadstatus exitoso (ADR-0036) | `{cod_lead, vtiger_id, old_leadstatus, new_leadstatus, source_audit_log_id}` |
 | `tracking.vtiger_leadstatus_sync_failed` | n8n Workflow [A2] error en update Vtiger | `{cod_lead, vtiger_id, attempted_leadstatus, error_message, source_audit_log_id}` |
 

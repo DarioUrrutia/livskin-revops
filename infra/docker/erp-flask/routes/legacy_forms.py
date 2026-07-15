@@ -22,6 +22,11 @@ from services import audit_service, capi_emitter_service, cliente_service, gasto
 
 bp = Blueprint("legacy_forms", __name__)
 
+# Ventas con fecha más antigua que este umbral se consideran BACKFILL de data
+# histórica: NO emiten CAPI Purchase (contaminaría atribución Meta con
+# conversiones falsas fechadas "hoy"). Decisión Dario 2026-07-15.
+CAPI_BACKFILL_MAX_DAYS = 7
+
 
 def _to_decimal(raw: Optional[str], default: Decimal = Decimal("0")) -> Decimal:
     if raw is None or str(raw).strip() == "":
@@ -228,8 +233,29 @@ def venta_form():  # type: ignore[no-untyped-def]
                     )
 
             # --- CAPI Purchase emit (atribución full-funnel Lead → Purchase) ---
+            # Guard backfill (2026-07-15): ventas con fecha >7 días atrás son
+            # ingreso de data histórica — emitir Purchase contaminaría la
+            # atribución de Meta con conversiones falsas "de hoy". Skip + audit.
+            _is_backfill = bool(
+                fecha and (date.today() - fecha).days > CAPI_BACKFILL_MAX_DAYS
+            )
+            if _is_backfill and result.ventas:
+                audit_service.log(
+                    db,
+                    action="tracking.capi_event_skipped_backfill",
+                    entity_type="venta",
+                    entity_id=",".join(cod_items) if cod_items else None,
+                    metadata={
+                        "reason": "fecha_historica_backfill",
+                        "fecha_venta": fecha.isoformat(),
+                        "dias_atras": (date.today() - fecha).days,
+                        "umbral_dias": CAPI_BACKFILL_MAX_DAYS,
+                    },
+                    user_username="capi-emitter",
+                    user_role="system",
+                )
             try:
-                if result.ventas:
+                if result.ventas and not _is_backfill:
                     cliente_db = db.execute(
                         select(Cliente).where(
                             Cliente.cod_cliente == result.ventas[0].cod_cliente
